@@ -20,6 +20,7 @@ class Part extends Equatable {
     required this.sellerRating,
     required this.imageUrl,
     required this.description,
+    this.imageUrls = const [],
     this.isAdminListing = false,
     this.compatibility = const [],
   });
@@ -38,8 +39,11 @@ class Part extends Equatable {
   final double sellerRating;
   final String imageUrl;
   final String description;
+  final List<String> imageUrls;
   final bool isAdminListing;
   final List<String> compatibility;
+
+  List<String> get displayImages => imageUrls.isNotEmpty ? imageUrls : [imageUrl];
 
   String get fullTitle => '$name $make $model $year';
 
@@ -69,6 +73,7 @@ class Part extends Equatable {
     double? sellerRating,
     String? imageUrl,
     String? description,
+    List<String>? imageUrls,
     bool? isAdminListing,
     List<String>? compatibility,
   }) {
@@ -87,6 +92,7 @@ class Part extends Equatable {
       sellerRating: sellerRating ?? this.sellerRating,
       imageUrl: imageUrl ?? this.imageUrl,
       description: description ?? this.description,
+      imageUrls: imageUrls ?? this.imageUrls,
       isAdminListing: isAdminListing ?? this.isAdminListing,
       compatibility: compatibility ?? this.compatibility,
     );
@@ -140,6 +146,25 @@ class Order extends Equatable {
         return 'Cancelled';
     }
   }
+
+  @override
+  List<Object?> get props => [id];
+}
+
+class AppNotification extends Equatable {
+  const AppNotification({
+    required this.id,
+    required this.title,
+    required this.body,
+    required this.timestamp,
+    this.isRead = false,
+  });
+
+  final String id;
+  final String title;
+  final String body;
+  final DateTime timestamp;
+  final bool isRead;
 
   @override
   List<Object?> get props => [id];

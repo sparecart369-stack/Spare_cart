@@ -44,39 +44,58 @@ class _SearchScreenState extends State<SearchScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 0, r.horizontalPadding(), 16),
-            child: TextField(
-              controller: _controller,
-              onChanged: (q) => context.read<ListingsBloc>().add(ListingSearchChanged(q)),
-              style: AppTypography.textTheme.bodyLarge,
-              decoration: InputDecoration(
-                hintText: 'Search by name, brand, location...',
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentSoft,
-                      borderRadius: BorderRadius.circular(8),
+          BlocBuilder<ListingsBloc, ListingsState>(
+            builder: (context, state) {
+              final chips = state.filters.activeChips;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      r.horizontalPadding(),
+                      0,
+                      r.horizontalPadding(),
+                      chips.isEmpty ? 16 : 10,
                     ),
-                    child: const Icon(Icons.camera_alt_rounded, color: AppColors.accent, size: 18),
+                    child: TextField(
+                      controller: _controller,
+                      onChanged: (q) => context.read<ListingsBloc>().add(ListingSearchChanged(q)),
+                      style: AppTypography.textTheme.bodyLarge,
+                      decoration: InputDecoration(
+                        hintText: 'Search by name, brand, location...',
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        suffixIcon: IconButton(
+                          icon: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.accentSoft,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.camera_alt_rounded, color: AppColors.accent, size: 18),
+                          ),
+                          onPressed: () => Navigator.pushNamed(context, AppRoutes.aiFinder),
+                        ),
+                      ),
+                    ),
                   ),
-                  onPressed: () => Navigator.pushNamed(context, AppRoutes.aiFinder),
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: r.horizontalPadding()),
-            child: BlocBuilder<ListingsBloc, ListingsState>(
-              builder: (context, state) {
-                return Text(
-                  '${state.filteredParts.length} parts found',
-                  style: AppTypography.textTheme.labelMedium?.copyWith(color: AppColors.textTertiary),
-                );
-              },
-            ),
+                  if (chips.isNotEmpty)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 0, r.horizontalPadding(), 10),
+                      child: ActiveFilterChips(
+                        chips: chips,
+                        onClear: (field) => context.read<ListingsBloc>().add(ListingFilterCleared(field)),
+                      ),
+                    ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: r.horizontalPadding()),
+                    child: Text(
+                      '${state.filteredParts.length} parts found',
+                      style: AppTypography.textTheme.labelMedium?.copyWith(color: AppColors.textTertiary),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 12),
           Expanded(

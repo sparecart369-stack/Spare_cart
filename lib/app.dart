@@ -21,6 +21,8 @@ import 'package:spare_kart/features/cart/cart_screen.dart';
 import 'package:spare_kart/features/cart/checkout_screen.dart';
 import 'package:spare_kart/features/main/main_shell.dart';
 import 'package:spare_kart/features/messages/chat_detail_screen.dart';
+import 'package:spare_kart/features/messages/messages_screen.dart';
+import 'package:spare_kart/features/notifications/notifications_screen.dart';
 import 'package:spare_kart/features/onboarding/welcome_screen.dart';
 import 'package:spare_kart/features/product/product_detail_screen.dart';
 import 'package:spare_kart/features/product/seller_profile_screen.dart';
@@ -90,9 +92,13 @@ class SpareKartApp extends StatelessWidget {
         return _page(const PaymentMethodsScreen(), settings);
       case AppRoutes.settings:
         return _page(const SettingsScreen(), settings);
+      case AppRoutes.messages:
+        return _page(const MessagesScreen(), settings);
       case AppRoutes.chatDetail:
         final thread = settings.arguments as MessageThread?;
         return _page(ChatDetailScreen(thread: thread), settings);
+      case AppRoutes.notifications:
+        return _page(const NotificationsScreen(), settings);
       default:
         return _page(const SplashScreen(), settings);
     }

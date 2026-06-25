@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spare_kart/bloc/cart/cart_bloc.dart';
+import 'package:spare_kart/core/constants/app_commission.dart';
 import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
@@ -20,12 +21,25 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  final int _imageIndex = 0;
-  final _images = List.generate(3, (i) => i);
+  int _imageIndex = 0;
+  late final PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final part = widget.part;
+    final images = part.displayImages;
     final r = Responsive(context);
     final inCart = context.watch<CartBloc>().state.contains(part.id);
 
@@ -52,11 +66,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(
-                    '${part.imageUrl}&index=$_imageIndex',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Container(
-                      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+                  PageView.builder(
+                    controller: _pageController,
+                    itemCount: images.length,
+                    onPageChanged: (i) => setState(() => _imageIndex = i),
+                    itemBuilder: (_, i) => Image.network(
+                      images[i],
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+                        child: Center(
+                          child: Icon(
+                            Icons.image_not_supported_rounded,
+                            color: Colors.white.withValues(alpha: 0.5),
+                            size: 48,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   Container(
@@ -68,24 +94,35 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: 16,
-                    left: 0,
-                    right: 0,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: _images.map((i) => AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            width: _imageIndex == i ? 24 : 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(4),
-                              color: _imageIndex == i ? Colors.white : Colors.white54,
-                            ),
-                          )).toList(),
+                  if (images.length > 1)
+                    Positioned(
+                      bottom: 16,
+                      left: 0,
+                      right: 0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(images.length, (i) => GestureDetector(
+                              onTap: () {
+                                setState(() => _imageIndex = i);
+                                _pageController.animateToPage(
+                                  i,
+                                  duration: const Duration(milliseconds: 250),
+                                  curve: Curves.easeOut,
+                                );
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                margin: const EdgeInsets.symmetric(horizontal: 4),
+                                width: _imageIndex == i ? 24 : 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(4),
+                                  color: _imageIndex == i ? Colors.white : Colors.white54,
+                                ),
+                              ),
+                            )),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -129,6 +166,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     Text(part.fullTitle, style: AppTypography.textTheme.displaySmall),
                     const SizedBox(height: 12),
                     Text(AppCurrency.format(part.price), style: AppTypography.priceLarge),
+                    const SizedBox(height: 20),
+                    _DetailSection(
+                      title: 'Part Info',
+                      children: [
+                        _DetailRow(label: 'Category', value: part.category),
+                        _DetailRow(label: 'Make', value: part.make),
+                        _DetailRow(label: 'Model', value: part.model),
+                        _DetailRow(label: 'Year', value: '${part.year}'),
+                        _DetailRow(label: 'Condition', value: part.conditionLabel),
+                      ],
+                    ),
                     const SizedBox(height: 20),
                     GestureDetector(
                       onTap: () => Navigator.pushNamed(context, AppRoutes.sellerProfile, arguments: part),
@@ -199,6 +247,56 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     Text('Description', style: AppTypography.textTheme.titleMedium),
                     const SizedBox(height: 10),
                     Text(part.description, style: AppTypography.textTheme.bodyMedium?.copyWith(height: 1.6)),
+                    if (part.isAdminListing) ...[
+                      const SizedBox(height: 24),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Seller Earnings', style: AppTypography.textTheme.titleSmall),
+                            const SizedBox(height: 10),
+                            _DetailRow(
+                              label: 'Listing price',
+                              value: AppCurrency.format(part.price),
+                            ),
+                            _DetailRow(
+                              label: 'Commission (${AppCommission.percent.toStringAsFixed(0)}%)',
+                              value: AppCurrency.format(AppCommission.fee(part.price)),
+                            ),
+                            const Divider(height: 20),
+                            _DetailRow(
+                              label: 'You receive',
+                              value: AppCurrency.format(AppCommission.sellerEarnings(part.price)),
+                              emphasized: true,
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(Icons.schedule_rounded, size: 16, color: AppColors.primary.withValues(alpha: 0.8)),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    AppCommission.payoutScheduleMessage,
+                                    style: AppTypography.textTheme.bodySmall?.copyWith(
+                                      color: AppColors.textSecondary,
+                                      height: 1.45,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 120),
                   ],
                 ),
@@ -229,20 +327,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 Expanded(
                   flex: 2,
                   child: DecoratedBox(
-                    decoration: inCart
-                        ? BoxDecoration(
-                            color: AppColors.successSoft,
-                            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                            border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
-                          )
-                        : AppDecorations.premiumButton(),
+                    decoration: AppDecorations.premiumButton(),
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () {
-                          if (!inCart) context.read<CartBloc>().add(CartItemAdded(part));
+                          if (inCart) {
+                            Navigator.pushNamed(context, AppRoutes.checkout);
+                            return;
+                          }
+                          context.read<CartBloc>().add(CartItemAdded(part));
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(inCart ? 'Already in cart' : 'Added to cart ✓')),
+                            const SnackBar(content: Text('Added to cart ✓')),
                           );
                         },
                         borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
@@ -252,15 +348,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                inCart ? Icons.check_circle_rounded : Icons.shopping_bag_rounded,
-                                color: inCart ? AppColors.success : Colors.white,
+                                inCart ? Icons.shopping_cart_checkout_rounded : Icons.shopping_bag_rounded,
+                                color: Colors.white,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                inCart ? 'In Cart' : 'Add to Cart',
+                                inCart ? 'Checkout' : 'Add to Cart',
                                 style: AppTypography.textTheme.labelLarge?.copyWith(
-                                  color: inCart ? AppColors.success : Colors.white,
+                                  color: Colors.white,
                                 ),
                               ),
                             ],
@@ -274,6 +370,61 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DetailSection extends StatelessWidget {
+  const _DetailSection({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: AppTypography.textTheme.titleMedium),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: AppDecorations.card(radius: AppDecorations.radiusMd),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value, this.emphasized = false});
+
+  final String label;
+  final String value;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: AppTypography.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+            ),
+          ),
+          Text(
+            value,
+            style: emphasized
+                ? AppTypography.textTheme.titleSmall?.copyWith(color: AppColors.primary)
+                : AppTypography.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
     );
   }

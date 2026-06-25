@@ -6,9 +6,27 @@ import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/features/account/account_screen.dart';
 import 'package:spare_kart/features/admin/admin_home_screen.dart';
 import 'package:spare_kart/features/home/home_screen.dart';
-import 'package:spare_kart/features/messages/messages_screen.dart';
+import 'package:spare_kart/bloc/cart/cart_bloc.dart';
+import 'package:spare_kart/features/cart/cart_screen.dart';
 import 'package:spare_kart/features/search/search_screen.dart';
 import 'package:spare_kart/features/sell/sell_screen.dart';
+
+class MainShellTabController extends InheritedWidget {
+  const MainShellTabController({
+    super.key,
+    required this.selectTab,
+    required super.child,
+  });
+
+  final ValueChanged<int> selectTab;
+
+  static MainShellTabController? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<MainShellTabController>();
+  }
+
+  @override
+  bool updateShouldNotify(MainShellTabController oldWidget) => false;
+}
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -32,11 +50,15 @@ class _MainShellState extends State<MainShell> {
           const HomeScreen(),
           const SearchScreen(),
           const SellScreen(),
-          const MessagesScreen(),
+          const CartScreen(),
           const AccountScreen(),
         ];
 
-        return Scaffold(
+        final cartCount = context.watch<CartBloc>().state.itemCount;
+
+        return MainShellTabController(
+          selectTab: (i) => setState(() => _index = i),
+          child: Scaffold(
           backgroundColor: AppColors.background,
           body: IndexedStack(index: _index, children: screens),
           extendBody: true,
@@ -64,13 +86,14 @@ class _MainShellState extends State<MainShell> {
                       selectedIcon: _SellNavIcon(selected: true),
                       label: 'Sell',
                     ),
-                    _navDest(Icons.chat_bubble_rounded, Icons.chat_bubble_outline_rounded, 'Messages', 3),
+                    _cartNavDest(cartCount),
                     _navDest(Icons.person_rounded, Icons.person_outline_rounded, 'Account', 4),
                   ],
                 ),
               ),
             ),
           ),
+        ),
         );
       },
     );
@@ -81,6 +104,22 @@ class _MainShellState extends State<MainShell> {
       icon: Icon(unselected),
       selectedIcon: Icon(selected),
       label: label,
+    );
+  }
+
+  NavigationDestination _cartNavDest(int cartCount) {
+    return NavigationDestination(
+      icon: Badge(
+        isLabelVisible: cartCount > 0,
+        label: Text('$cartCount'),
+        child: const Icon(Icons.shopping_bag_outlined),
+      ),
+      selectedIcon: Badge(
+        isLabelVisible: cartCount > 0,
+        label: Text('$cartCount'),
+        child: const Icon(Icons.shopping_bag_rounded),
+      ),
+      label: 'Cart',
     );
   }
 }

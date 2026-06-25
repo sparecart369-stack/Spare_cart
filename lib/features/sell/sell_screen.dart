@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spare_kart/bloc/auth/auth_bloc.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
+import 'package:spare_kart/core/constants/app_commission.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
@@ -29,7 +30,11 @@ class _SellScreenState extends State<SellScreen> {
   int? _year;
   PartCondition _condition = PartCondition.used;
   final _priceController = TextEditingController();
-  final List<int> _photos = [0, 1, 2];
+  final List<String> _photoUrls = [
+    'https://picsum.photos/seed/sell-photo-0/400/300',
+    'https://picsum.photos/seed/sell-photo-1/400/300',
+    'https://picsum.photos/seed/sell-photo-2/400/300',
+  ];
 
   static const _steps = ['Details', 'Photos', 'Review'];
 
@@ -267,12 +272,18 @@ class _SellScreenState extends State<SellScreen> {
             mainAxisSpacing: gap,
             childAspectRatio: 1,
           ),
-          itemCount: _photos.length < 6 ? _photos.length + 1 : _photos.length,
+          itemCount: _photoUrls.length < 6 ? _photoUrls.length + 1 : _photoUrls.length,
           itemBuilder: (context, i) {
-            if (i == _photos.length && _photos.length < 6) {
-              return _PhotoAddTile(compact: compact, onTap: () => setState(() => _photos.add(_photos.length)));
+            if (i == _photoUrls.length && _photoUrls.length < 6) {
+              return _PhotoAddTile(
+                compact: compact,
+                onTap: () => setState(() {
+                  final seed = 'sell-${DateTime.now().millisecondsSinceEpoch}-${_photoUrls.length}';
+                  _photoUrls.add('https://picsum.photos/seed/$seed/400/300');
+                }),
+              );
             }
-            return _PhotoTile(index: i, compact: compact);
+            return _PhotoTile(url: _photoUrls[i], index: i, compact: compact);
           },
         ),
       ],
@@ -298,15 +309,31 @@ class _SellScreenState extends State<SellScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: compact ? 64 : 72,
-                    height: compact ? 64 : 72,
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: const Icon(Icons.image_rounded, color: AppColors.primary, size: 32),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+                    child: _photoUrls.isNotEmpty
+                        ? Image.network(
+                            _photoUrls.first,
+                            width: compact ? 64 : 72,
+                            height: compact ? 64 : 72,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Container(
+                              width: compact ? 64 : 72,
+                              height: compact ? 64 : 72,
+                              color: AppColors.primaryLight,
+                              child: const Icon(Icons.image_rounded, color: AppColors.primary, size: 32),
+                            ),
+                          )
+                        : Container(
+                            width: compact ? 64 : 72,
+                            height: compact ? 64 : 72,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryLight,
+                              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: const Icon(Icons.image_rounded, color: AppColors.primary, size: 32),
+                          ),
                   ),
                   SizedBox(width: gap + 2),
                   Expanded(
@@ -339,6 +366,32 @@ class _SellScreenState extends State<SellScreen> {
               Text(
                 AppCurrency.format(double.tryParse(price) ?? 0),
                 style: AppTypography.price.copyWith(fontSize: compact ? 22 : 26),
+              ),
+              SizedBox(height: gap),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(compact ? 10 : 12),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+                ),
+                child: Column(
+                  children: [
+                    _ReviewPriceRow(
+                      label: 'Commission (${AppCommission.percent.toStringAsFixed(0)}%)',
+                      value: AppCurrency.format(AppCommission.fee(double.tryParse(price) ?? 0)),
+                      compact: compact,
+                    ),
+                    SizedBox(height: compact ? 4 : 6),
+                    _ReviewPriceRow(
+                      label: 'You receive',
+                      value: AppCurrency.format(AppCommission.sellerEarnings(double.tryParse(price) ?? 0)),
+                      compact: compact,
+                      emphasized: true,
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: gap),
               if (_category != null)
@@ -375,8 +428,26 @@ class _SellScreenState extends State<SellScreen> {
                   Icon(Icons.photo_library_outlined, size: compact ? 14 : 16, color: AppColors.textTertiary),
                   const SizedBox(width: 6),
                   Text(
-                    '${_photos.length} photo${_photos.length == 1 ? '' : 's'} attached',
+                    '${_photoUrls.length} photo${_photoUrls.length == 1 ? '' : 's'} attached',
                     style: AppTypography.textTheme.labelSmall?.copyWith(fontSize: compact ? 10 : 11),
+                  ),
+                ],
+              ),
+              SizedBox(height: gap),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.schedule_rounded, size: compact ? 14 : 16, color: AppColors.primary),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      AppCommission.payoutScheduleMessage,
+                      style: AppTypography.textTheme.bodySmall?.copyWith(
+                        fontSize: compact ? 11 : 12,
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -390,22 +461,31 @@ class _SellScreenState extends State<SellScreen> {
   void _publishListing() {
     final user = context.read<AuthBloc>().state.user;
     final id = 'admin-${DateTime.now().millisecondsSinceEpoch}';
+    final price = double.tryParse(_priceController.text) ?? 999;
+    final make = _make ?? 'Toyota';
+    final model = _model ?? 'Corolla';
+    final year = _year ?? 2020;
+    final imageUrls = _photoUrls.isEmpty
+        ? ['https://picsum.photos/seed/$id/400/300']
+        : List<String>.from(_photoUrls);
     final part = Part(
       id: id,
       name: _nameController.text.isEmpty ? 'My Part' : _nameController.text,
       category: _category ?? 'Engine',
-      make: _make ?? 'Toyota',
-      model: _model ?? 'Corolla',
-      year: _year ?? 2020,
+      make: make,
+      model: model,
+      year: year,
       condition: _condition,
-      price: double.tryParse(_priceController.text) ?? 999,
+      price: price,
       location: 'Your Location',
       sellerId: 'admin',
       sellerName: user?.name ?? 'You',
       sellerRating: 5.0,
-      imageUrl: 'https://picsum.photos/seed/$id/400/300',
+      imageUrl: imageUrls.first,
+      imageUrls: imageUrls,
       description: _descController.text.isEmpty ? 'Listed part' : _descController.text,
       isAdminListing: true,
+      compatibility: ['$make $model $year', '$make $model ${year - 1}', '$make $model ${year + 1}'],
     );
     context.read<ListingsBloc>().add(ListingAdded(part));
     setState(() {
@@ -418,9 +498,87 @@ class _SellScreenState extends State<SellScreen> {
       _model = null;
       _year = null;
       _condition = PartCondition.used;
+      _photoUrls
+        ..clear()
+        ..addAll([
+          'https://picsum.photos/seed/sell-photo-0/400/300',
+          'https://picsum.photos/seed/sell-photo-1/400/300',
+          'https://picsum.photos/seed/sell-photo-2/400/300',
+        ]);
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Listing published! Switch to Admin mode to view.')),
+    _showPublishedDialog(price);
+  }
+
+  void _showPublishedDialog(double price) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.successSoft,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_rounded, color: AppColors.success, size: 22),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(child: Text('Listing Published')),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your part is now live on SpareKart.',
+              style: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            _ReviewPriceRow(label: 'Listing price', value: AppCurrency.format(price)),
+            const SizedBox(height: 8),
+            _ReviewPriceRow(
+              label: 'Commission (${AppCommission.percent.toStringAsFixed(0)}%)',
+              value: AppCurrency.format(AppCommission.fee(price)),
+            ),
+            const SizedBox(height: 8),
+            _ReviewPriceRow(
+              label: 'You receive',
+              value: AppCurrency.format(AppCommission.sellerEarnings(price)),
+              emphasized: true,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.schedule_rounded, size: 18, color: AppColors.primary.withValues(alpha: 0.85)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      AppCommission.payoutScheduleMessage,
+                      style: AppTypography.textTheme.bodySmall?.copyWith(height: 1.45),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -758,8 +916,9 @@ class _ConditionChip extends StatelessWidget {
 }
 
 class _PhotoTile extends StatelessWidget {
-  const _PhotoTile({required this.index, required this.compact});
+  const _PhotoTile({required this.url, required this.index, required this.compact});
 
+  final String url;
   final int index;
   final bool compact;
 
@@ -772,10 +931,15 @@ class _PhotoTile extends StatelessWidget {
         border: Border.all(color: AppColors.border),
         boxShadow: AppDecorations.shadowSm,
       ),
+      clipBehavior: Clip.antiAlias,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          const Icon(Icons.image_rounded, color: AppColors.primary, size: 36),
+          Image.network(
+            url,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => const Icon(Icons.image_rounded, color: AppColors.primary, size: 36),
+          ),
           Positioned(
             top: 6,
             right: 6,
@@ -841,6 +1005,49 @@ class _PhotoAddTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ReviewPriceRow extends StatelessWidget {
+  const _ReviewPriceRow({
+    required this.label,
+    required this.value,
+    this.compact = false,
+    this.emphasized = false,
+  });
+
+  final String label;
+  final String value;
+  final bool compact;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: AppTypography.textTheme.bodySmall?.copyWith(
+              fontSize: compact ? 11 : 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: emphasized
+              ? AppTypography.textTheme.titleSmall?.copyWith(
+                  fontSize: compact ? 13 : 15,
+                  color: AppColors.primary,
+                )
+              : AppTypography.textTheme.bodyMedium?.copyWith(
+                  fontSize: compact ? 12 : 14,
+                  fontWeight: FontWeight.w600,
+                ),
+        ),
+      ],
     );
   }
 }

@@ -79,6 +79,11 @@ Part _part(
     sellerName: sellerName,
     sellerRating: rating,
     imageUrl: 'https://picsum.photos/seed/spare$id/400/300',
+    imageUrls: [
+      'https://picsum.photos/seed/spare$id-a/400/300',
+      'https://picsum.photos/seed/spare$id-b/400/300',
+      'https://picsum.photos/seed/spare$id-c/400/300',
+    ],
     description:
         'High-quality $name for $make $model ($year). Professionally inspected and ready to ship. '
         'Compatible with multiple trim levels. Contact seller for fitment verification.',
@@ -156,6 +161,44 @@ List<MessageThread> generateDummyMessages() {
       timestamp: DateTime.now().subtract(const Duration(days: 3)),
       unreadCount: 0,
       partTitle: 'Brake Caliper Nissan Altima',
+    ),
+  ];
+}
+
+List<AppNotification> generateDummyNotifications() {
+  return [
+    AppNotification(
+      id: 'n1',
+      title: 'Order Shipped',
+      body: 'Your order #SK-1042 has been shipped. Track it in My Orders.',
+      timestamp: DateTime.now().subtract(const Duration(minutes: 20)),
+    ),
+    AppNotification(
+      id: 'n2',
+      title: 'New Message',
+      body: 'Mike Auto Parts replied about the Alternator Toyota Corolla 2016.',
+      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
+    ),
+    AppNotification(
+      id: 'n3',
+      title: 'Price Drop',
+      body: 'LED Headlight Pair BMW 3 Series is now 10% off.',
+      timestamp: DateTime.now().subtract(const Duration(hours: 5)),
+      isRead: true,
+    ),
+    AppNotification(
+      id: 'n4',
+      title: 'Listing Approved',
+      body: 'Your listing "Brake Pads Honda Accord" is now live.',
+      timestamp: DateTime.now().subtract(const Duration(days: 1)),
+      isRead: true,
+    ),
+    AppNotification(
+      id: 'n5',
+      title: 'Welcome to SpareKart',
+      body: 'Start browsing quality auto parts from trusted sellers.',
+      timestamp: DateTime.now().subtract(const Duration(days: 3)),
+      isRead: true,
     ),
   ];
 }

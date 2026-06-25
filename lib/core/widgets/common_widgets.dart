@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:spare_kart/bloc/listings/listings_bloc.dart';
 import 'package:spare_kart/core/constants/app_assets.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
@@ -185,6 +186,88 @@ class ConditionChip extends StatelessWidget {
           fontWeight: FontWeight.w700,
           letterSpacing: 0.2,
         ),
+      ),
+    );
+  }
+}
+
+class ActiveFilterChips extends StatelessWidget {
+  const ActiveFilterChips({
+    super.key,
+    required this.chips,
+    required this.onClear,
+  });
+
+  final List<ActiveFilterChip> chips;
+  final void Function(FilterChipField field) onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    if (chips.isEmpty) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 34,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: chips.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final chip = chips[i];
+          return _RemovableFilterChip(
+            label: chip.label,
+            onClear: () => onClear(chip.field),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _RemovableFilterChip extends StatelessWidget {
+  const _RemovableFilterChip({
+    required this.label,
+    required this.onClear,
+  });
+
+  final String label;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(left: 12, right: 4),
+      decoration: BoxDecoration(
+        color: AppColors.chipBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: AppTypography.textTheme.labelSmall?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onClear,
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 16,
+                  color: AppColors.textTertiary,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

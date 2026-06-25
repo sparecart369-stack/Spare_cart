@@ -43,14 +43,6 @@ class SellerProfileScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {},
-                child: const Text('View All Listings'),
-              ),
-            ),
-            const SizedBox(height: 24),
             const Align(
               alignment: Alignment.centerLeft,
               child: Text('From This Seller', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),

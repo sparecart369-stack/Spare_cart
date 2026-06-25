@@ -17,5 +17,7 @@ class AppRoutes {
   static const addresses = '/addresses';
   static const paymentMethods = '/payment-methods';
   static const settings = '/settings';
+  static const messages = '/messages';
   static const chatDetail = '/chat-detail';
+  static const notifications = '/notifications';
 }

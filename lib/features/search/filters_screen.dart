@@ -11,6 +11,12 @@ import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/data/models/models.dart';
 
+class FiltersRouteArgs {
+  const FiltersRouteArgs({this.goToSearchOnApply = false});
+
+  final bool goToSearchOnApply;
+}
+
 class FiltersScreen extends StatefulWidget {
   const FiltersScreen({super.key});
 
@@ -25,8 +31,25 @@ class _FiltersScreenState extends State<FiltersScreen> {
   int? _year;
   PartCondition? _condition;
   double _minPrice = 0;
-  double _maxPrice = 2000;
+  double _maxPrice = AppCurrency.maxFilterPrice;
   SortOption _sort = SortOption.relevance;
+  bool _loadedFromBloc = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_loadedFromBloc) return;
+    _loadedFromBloc = true;
+    final filters = context.read<ListingsBloc>().state.filters;
+    _category = filters.category;
+    _make = filters.make;
+    _model = filters.model;
+    _year = filters.year;
+    _condition = filters.condition;
+    _minPrice = filters.minPrice;
+    _maxPrice = filters.maxPrice;
+    _sort = filters.sortBy;
+  }
 
   void _reset() {
     setState(() {
@@ -36,9 +59,14 @@ class _FiltersScreenState extends State<FiltersScreen> {
       _year = null;
       _condition = null;
       _minPrice = 0;
-      _maxPrice = 2000;
+      _maxPrice = AppCurrency.maxFilterPrice;
       _sort = SortOption.relevance;
     });
+  }
+
+  bool get _goToSearchOnApply {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    return args is FiltersRouteArgs && args.goToSearchOnApply;
   }
 
   void _apply() {
@@ -52,7 +80,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
           maxPrice: _maxPrice,
           sortBy: _sort,
         )));
-    Navigator.pop(context);
+    Navigator.pop(context, _goToSearchOnApply);
   }
 
   @override
@@ -736,8 +764,8 @@ class _PriceRangeCard extends StatelessWidget {
               child: RangeSlider(
                 values: RangeValues(minPrice, maxPrice),
                 min: 0,
-                max: 2000,
-                divisions: 40,
+                max: AppCurrency.maxFilterPrice,
+                divisions: 100,
                 onChanged: (v) => onChanged(v.start, v.end),
               ),
             ),

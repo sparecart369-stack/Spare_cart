@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spare_kart/bloc/app_mode/app_mode_bloc.dart';
 import 'package:spare_kart/bloc/auth/auth_bloc.dart';
-import 'package:spare_kart/bloc/cart/cart_bloc.dart';
+import 'package:spare_kart/bloc/messages/messages_bloc.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
 import 'package:spare_kart/core/constants/app_assets.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
@@ -14,6 +14,8 @@ import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/core/widgets/part_card.dart';
 import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/features/home/widgets/marketplace_hero_banner.dart';
+import 'package:spare_kart/features/main/main_shell.dart';
+import 'package:spare_kart/features/search/filters_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,11 +29,41 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _selectedModel;
   int? _selectedYear;
 
+  Future<void> _openFilters({bool goToSearchOnApply = false}) async {
+    final goToSearch = await Navigator.pushNamed(
+      context,
+      AppRoutes.filters,
+      arguments: FiltersRouteArgs(goToSearchOnApply: goToSearchOnApply),
+    );
+    if (!mounted || goToSearch != true) return;
+    MainShellTabController.maybeOf(context)?.selectTab(1);
+  }
+
+  void _applyFiltersAndGoToSearch(PartFilters filters) {
+    context.read<ListingsBloc>().add(ListingFiltersApplied(filters));
+    MainShellTabController.maybeOf(context)?.selectTab(1);
+  }
+
+  void _applyVehicleFiltersAndGoToSearch({
+    required String make,
+    required String model,
+    required int year,
+  }) {
+    final current = context.read<ListingsBloc>().state.filters;
+    _applyFiltersAndGoToSearch(current.copyWith(make: make, model: model, year: year));
+  }
+
+  void _applyCategoryAndGoToSearch(String category) {
+    final current = context.read<ListingsBloc>().state.filters;
+    _applyFiltersAndGoToSearch(current.copyWith(category: category));
+  }
+
   @override
   Widget build(BuildContext context) {
     final r = Responsive(context);
     final user = context.watch<AuthBloc>().state.user;
-    final cartCount = context.watch<CartBloc>().state.itemCount;
+    final unreadCount = context.watch<MessagesBloc>().state.threads
+        .fold(0, (sum, thread) => sum + thread.unreadCount);
     final firstName = (user?.name ?? 'Guest').split(' ').first;
 
     return Scaffold(
@@ -74,18 +106,21 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             _AdminModeButton(),
                             const SizedBox(width: 8),
-                            PremiumIconButton(icon: Icons.notifications_none_rounded, onPressed: () {}),
+                            PremiumIconButton(
+                              icon: Icons.notifications_none_rounded,
+                              onPressed: () => Navigator.pushNamed(context, AppRoutes.notifications),
+                            ),
                             const SizedBox(width: 8),
                             PremiumIconButton(
-                              icon: Icons.shopping_bag_outlined,
-                              onPressed: () => Navigator.pushNamed(context, AppRoutes.cart),
-                              badge: cartCount > 0 ? '$cartCount' : null,
+                              icon: Icons.chat_bubble_outline_rounded,
+                              onPressed: () => Navigator.pushNamed(context, AppRoutes.messages),
+                              badge: unreadCount > 0 ? '$unreadCount' : null,
                             ),
                           ],
                         ),
                         const SizedBox(height: 22),
                         PremiumSearchBar(
-                          onTap: () => Navigator.pushNamed(context, AppRoutes.filters),
+                          onTap: () => _openFilters(goToSearchOnApply: true),
                         ),
                         const SizedBox(height: 22),
                         Container(
@@ -94,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             boxShadow: AppDecorations.shadowLg,
                           ),
                           child: MarketplaceHeroBanner(
-                            onExplore: () => Navigator.pushNamed(context, AppRoutes.filters),
+                            onExplore: () => _openFilters(goToSearchOnApply: true),
                           ),
                         ),
                         const SizedBox(height: 28),
@@ -115,7 +150,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             _selectedModel = v;
                             _selectedYear = null;
                           }),
-                          onYearChanged: (v) => setState(() => _selectedYear = v),
+                          onYearChanged: (v) {
+                            setState(() => _selectedYear = v);
+                            if (v != null && _selectedMake != null && _selectedModel != null) {
+                              _applyVehicleFiltersAndGoToSearch(
+                                make: _selectedMake!,
+                                model: _selectedModel!,
+                                year: v,
+                              );
+                            }
+                          },
                         ),
                         const SizedBox(height: 8),
                         SectionHeader(
@@ -142,11 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   _ => null,
                                 },
                                 index: i,
-                                onTap: () {
-                                  context.read<ListingsBloc>().add(ListingFiltersApplied(
-                                        const PartFilters().copyWith(category: name),
-                                      ));
-                                },
+                                onTap: () => _applyCategoryAndGoToSearch(name),
                               );
                             },
                           ),

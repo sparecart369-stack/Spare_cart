@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/data/models/models.dart';
 
@@ -23,6 +24,23 @@ class ListingSearchChanged extends ListingsEvent {
 class ListingFiltersApplied extends ListingsEvent {
   ListingFiltersApplied(this.filters);
   final PartFilters filters;
+}
+
+enum FilterChipField { category, make, model, year, condition, price, sort }
+
+class ListingFilterCleared extends ListingsEvent {
+  ListingFilterCleared(this.field);
+  final FilterChipField field;
+}
+
+class ActiveFilterChip extends Equatable {
+  const ActiveFilterChip({required this.label, required this.field});
+
+  final String label;
+  final FilterChipField field;
+
+  @override
+  List<Object?> get props => [label, field];
 }
 
 class ListingsState extends Equatable {
@@ -79,7 +97,7 @@ class PartFilters extends Equatable {
     this.year,
     this.condition,
     this.minPrice = 0,
-    this.maxPrice = 2000,
+    this.maxPrice = AppCurrency.maxFilterPrice,
     this.sortBy = SortOption.relevance,
   });
 
@@ -121,7 +139,55 @@ class PartFilters extends Equatable {
 
   @override
   List<Object?> get props => [category, make, model, year, condition, minPrice, maxPrice, sortBy];
+
+  List<ActiveFilterChip> get activeChips {
+    final chips = <ActiveFilterChip>[];
+    if (category != null) {
+      chips.add(ActiveFilterChip(label: category!, field: FilterChipField.category));
+    }
+    if (make != null) {
+      chips.add(ActiveFilterChip(label: make!, field: FilterChipField.make));
+    }
+    if (model != null) {
+      chips.add(ActiveFilterChip(label: model!, field: FilterChipField.model));
+    }
+    if (year != null) {
+      chips.add(ActiveFilterChip(label: '$year', field: FilterChipField.year));
+    }
+    if (condition != null) {
+      chips.add(ActiveFilterChip(
+        label: _filterConditionLabel(condition!),
+        field: FilterChipField.condition,
+      ));
+    }
+    if (minPrice > 0 || maxPrice < AppCurrency.maxFilterPrice) {
+      chips.add(ActiveFilterChip(
+        label: '${AppCurrency.format(minPrice)} - ${AppCurrency.format(maxPrice)}',
+        field: FilterChipField.price,
+      ));
+    }
+    if (sortBy != SortOption.relevance) {
+      chips.add(ActiveFilterChip(
+        label: _filterSortLabel(sortBy),
+        field: FilterChipField.sort,
+      ));
+    }
+    return chips;
+  }
 }
+
+String _filterConditionLabel(PartCondition condition) => switch (condition) {
+      PartCondition.used => 'Used',
+      PartCondition.refurbished => 'Refurbished',
+      PartCondition.newPart => 'New',
+    };
+
+String _filterSortLabel(SortOption sort) => switch (sort) {
+      SortOption.relevance => 'Relevance',
+      SortOption.priceLow => 'Price ↑',
+      SortOption.priceHigh => 'Price ↓',
+      SortOption.newest => 'Newest',
+    };
 
 enum SortOption { relevance, priceLow, priceHigh, newest }
 
@@ -131,6 +197,7 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
     on<ListingAdded>(_onAdded);
     on<ListingSearchChanged>(_onSearch);
     on<ListingFiltersApplied>(_onFilters);
+    on<ListingFilterCleared>(_onFilterCleared);
   }
 
   void _onLoaded(ListingsLoaded event, Emitter<ListingsState> emit) {
@@ -164,6 +231,29 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
     emit(state.copyWith(
       filters: event.filters,
       filteredParts: _applyFilters(state.allParts, state.searchQuery, event.filters),
+    ));
+  }
+
+  void _onFilterCleared(ListingFilterCleared event, Emitter<ListingsState> emit) {
+    final filters = switch (event.field) {
+      FilterChipField.category => state.filters.copyWith(clearCategory: true),
+      FilterChipField.make => state.filters.copyWith(
+          clearMake: true,
+          clearModel: true,
+          clearYear: true,
+        ),
+      FilterChipField.model => state.filters.copyWith(clearModel: true, clearYear: true),
+      FilterChipField.year => state.filters.copyWith(clearYear: true),
+      FilterChipField.condition => state.filters.copyWith(clearCondition: true),
+      FilterChipField.price => state.filters.copyWith(
+          minPrice: 0,
+          maxPrice: AppCurrency.maxFilterPrice,
+        ),
+      FilterChipField.sort => state.filters.copyWith(sortBy: SortOption.relevance),
+    };
+    emit(state.copyWith(
+      filters: filters,
+      filteredParts: _applyFilters(state.allParts, state.searchQuery, filters),
     ));
   }
 
