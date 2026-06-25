@@ -19,89 +19,24 @@ class AccountScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 200,
-            pinned: true,
-            backgroundColor: AppColors.background,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFFEEF2FF), AppColors.background],
-                  ),
-                ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 48, r.horizontalPadding(), 0),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            shape: BoxShape.circle,
-                            boxShadow: AppDecorations.shadowMd,
-                            border: Border.all(color: Colors.white, width: 3),
-                          ),
-                          child: Center(
-                            child: Text(
-                              initial,
-                              style: AppTypography.textTheme.displaySmall?.copyWith(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(user?.name ?? 'Guest', style: AppTypography.textTheme.titleLarge),
-                              const SizedBox(height: 4),
-                              Text(user?.phone ?? '', style: AppTypography.textTheme.bodyMedium),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.successSoft,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  'Verified Member',
-                                  style: AppTypography.textTheme.labelSmall?.copyWith(
-                                    color: AppColors.success,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: AppDecorations.iconButtonBg(),
-                            child: const Icon(Icons.edit_rounded, size: 18),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+      body: Column(
+        children: [
+          _ProfileHeader(
+            initial: initial,
+            name: user?.name ?? 'Guest',
+            phone: user?.phone ?? '',
+            horizontalPadding: r.horizontalPadding(),
           ),
-          SliverPadding(
-            padding: EdgeInsets.all(r.horizontalPadding()),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
+          Expanded(
+            child: ListView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(
+                r.horizontalPadding(),
+                8,
+                r.horizontalPadding(),
+                r.bottomNavPadding(),
+              ),
+              children: [
                 _MenuSection(
                   title: 'Shopping',
                   items: [
@@ -127,11 +62,97 @@ class AccountScreen extends StatelessWidget {
                   context.read<AuthBloc>().add(AuthLogoutRequested());
                   Navigator.pushNamedAndRemoveUntil(context, AppRoutes.welcome, (_) => false);
                 }),
-                const SizedBox(height: 24),
-              ]),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProfileHeader extends StatelessWidget {
+  const _ProfileHeader({
+    required this.initial,
+    required this.name,
+    required this.phone,
+    required this.horizontalPadding,
+  });
+
+  final String initial;
+  final String name;
+  final String phone;
+  final double horizontalPadding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFEEF2FF), AppColors.background],
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(horizontalPadding, 16, horizontalPadding, 20),
+          child: Row(
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  shape: BoxShape.circle,
+                  boxShadow: AppDecorations.shadowMd,
+                  border: Border.all(color: Colors.white, width: 3),
+                ),
+                child: Center(
+                  child: Text(
+                    initial,
+                    style: AppTypography.textTheme.displaySmall?.copyWith(color: Colors.white),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name, style: AppTypography.textTheme.titleLarge),
+                    const SizedBox(height: 4),
+                    Text(phone, style: AppTypography.textTheme.bodyMedium),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.successSoft,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Verified Member',
+                        style: AppTypography.textTheme.labelSmall?.copyWith(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: AppDecorations.iconButtonBg(),
+                  child: const Icon(Icons.edit_rounded, size: 18),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

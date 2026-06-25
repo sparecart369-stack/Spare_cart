@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
+import 'package:spare_kart/core/constants/app_assets.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
@@ -69,42 +70,57 @@ class _FiltersScreenState extends State<FiltersScreen> {
           children: [
             _Header(onReset: _reset),
             Expanded(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(pad, compact ? 4 : 8, pad, 0),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(pad, compact ? 4 : 8, pad, compact ? 12 : 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _SectionLabel('Category', compact: compact),
                     SizedBox(height: gap),
-                    Expanded(
-                      flex: compact ? 22 : 24,
-                      child: GridView.builder(
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: catColumns,
-                          mainAxisSpacing: gap,
-                          crossAxisSpacing: gap,
-                          childAspectRatio: r.width < 360 ? 1.05 : 1.15,
-                        ),
-                        itemCount: categories.length,
-                        itemBuilder: (context, i) {
-                          final c = categories[i];
-                          final selected = _category == c.$1;
-                          return _CategoryTile(
-                            label: c.$1,
-                            icon: _categoryIcon(c.$2),
-                            selected: selected,
-                            compact: compact,
-                            onTap: () => setState(() => _category = selected ? null : c.$1),
-                          );
-                        },
-                      ),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final aspectRatio = r.width < 360 ? 1.05 : 1.15;
+                        final cellWidth =
+                            (constraints.maxWidth - (catColumns - 1) * gap) / catColumns;
+                        final cellHeight = cellWidth / aspectRatio;
+                        final rowCount = (categories.length / catColumns).ceil();
+                        final gridHeight = rowCount * cellHeight + (rowCount - 1) * gap + 6;
+
+                        return SizedBox(
+                          height: gridHeight,
+                          child: GridView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            clipBehavior: Clip.none,
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: catColumns,
+                              mainAxisSpacing: gap,
+                              crossAxisSpacing: gap,
+                              childAspectRatio: aspectRatio,
+                            ),
+                            itemCount: categories.length,
+                            itemBuilder: (context, i) {
+                              final c = categories[i];
+                              final selected = _category == c.$1;
+                              return _CategoryTile(
+                                label: c.$1,
+                                icon: _categoryIcon(c.$2),
+                                imageAsset: _categoryImageAsset(c.$1),
+                                index: i,
+                                selected: selected,
+                                compact: compact,
+                                onTap: () => setState(() => _category = selected ? null : c.$1),
+                              );
+                            },
+                          ),
+                        );
+                      },
                     ),
                     SizedBox(height: sectionGap),
                     _SectionLabel('Vehicle', compact: compact),
                     SizedBox(height: gap),
-                    Expanded(
-                      flex: compact ? 20 : 22,
+                    SizedBox(
+                      height: compact ? 108 : 120,
                       child: _VehicleCard(
                         make: _make,
                         model: _model,
@@ -159,8 +175,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
                     SizedBox(height: sectionGap),
                     _SectionLabel('Price Range', compact: compact),
                     SizedBox(height: gap),
-                    Expanded(
-                      flex: compact ? 14 : 16,
+                    SizedBox(
+                      height: compact ? 72 : 84,
                       child: _PriceRangeCard(
                         minPrice: _minPrice,
                         maxPrice: _maxPrice,
@@ -174,24 +190,36 @@ class _FiltersScreenState extends State<FiltersScreen> {
                     SizedBox(height: sectionGap),
                     _SectionLabel('Sort By', compact: compact),
                     SizedBox(height: gap),
-                    Expanded(
-                      flex: compact ? 14 : 16,
-                      child: GridView.count(
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: 2,
-                        mainAxisSpacing: gap,
-                        crossAxisSpacing: gap,
-                        childAspectRatio: compact ? 3.8 : 4.2,
-                        children: SortOption.values.map((s) {
-                          final selected = _sort == s;
-                          return _SortTile(
-                            label: _sortLabel(s),
-                            selected: selected,
-                            compact: compact,
-                            onTap: () => setState(() => _sort = s),
-                          );
-                        }).toList(),
-                      ),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final aspectRatio = compact ? 3.8 : 4.2;
+                        const sortColumns = 2;
+                        final cellWidth =
+                            (constraints.maxWidth - (sortColumns - 1) * gap) / sortColumns;
+                        final cellHeight = cellWidth / aspectRatio;
+                        final rowCount = (SortOption.values.length / sortColumns).ceil();
+                        final gridHeight = rowCount * cellHeight + (rowCount - 1) * gap;
+
+                        return SizedBox(
+                          height: gridHeight,
+                          child: GridView.count(
+                            physics: const NeverScrollableScrollPhysics(),
+                            crossAxisCount: sortColumns,
+                            mainAxisSpacing: gap,
+                            crossAxisSpacing: gap,
+                            childAspectRatio: aspectRatio,
+                            children: SortOption.values.map((s) {
+                              final selected = _sort == s;
+                              return _SortTile(
+                                label: _sortLabel(s),
+                                selected: selected,
+                                compact: compact,
+                                onTap: () => setState(() => _sort = s),
+                              );
+                            }).toList(),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -222,6 +250,14 @@ class _FiltersScreenState extends State<FiltersScreen> {
         'height' => Icons.height_rounded,
         'bolt' => Icons.bolt_rounded,
         _ => Icons.category_rounded,
+      };
+
+  String? _categoryImageAsset(String name) => switch (name) {
+        'Engine' => AppAssets.categoryEngine,
+        'Transmission' => AppAssets.categoryTransmission,
+        'Body Parts' => AppAssets.categoryBodyParts,
+        'Lighting' => AppAssets.categoryLighting,
+        _ => null,
       };
 
   String _sortLabel(SortOption s) => switch (s) {
@@ -308,6 +344,8 @@ class _CategoryTile extends StatelessWidget {
   const _CategoryTile({
     required this.label,
     required this.icon,
+    this.imageAsset,
+    required this.index,
     required this.selected,
     required this.compact,
     required this.onTap,
@@ -315,12 +353,28 @@ class _CategoryTile extends StatelessWidget {
 
   final String label;
   final IconData icon;
+  final String? imageAsset;
+  final int index;
   final bool selected;
   final bool compact;
   final VoidCallback onTap;
 
+  static const _iconColors = [
+    Color(0xFF2563EB),
+    Color(0xFF059669),
+    Color(0xFFD97706),
+    Color(0xFF9333EA),
+    Color(0xFFDC2626),
+    Color(0xFF0284C7),
+    Color(0xFF7C3AED),
+    Color(0xFF10B981),
+  ];
+
   @override
   Widget build(BuildContext context) {
+    final iconSize = compact ? 28.0 : 32.0;
+    final iconColor = _iconColors[index % _iconColors.length];
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -328,43 +382,85 @@ class _CategoryTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: EdgeInsets.symmetric(horizontal: compact ? 4 : 6, vertical: compact ? 6 : 8),
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            gradient: selected ? AppColors.primaryGradient : null,
-            color: selected ? null : AppColors.surface,
+            color: const Color(0xFF141414),
             borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
             border: Border.all(
-              color: selected ? Colors.transparent : AppColors.border,
+              color: selected ? AppColors.primary : Colors.transparent,
+              width: selected ? 2 : 0,
             ),
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.28),
-                      blurRadius: 10,
+                      color: AppColors.primary.withValues(alpha: 0.35),
+                      blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
                   ]
                 : AppDecorations.shadowSm,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              Icon(
-                icon,
-                size: compact ? 16 : 18,
-                color: selected ? Colors.white : AppColors.primary,
+              if (imageAsset != null)
+                Image.asset(
+                  imageAsset!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                )
+              else
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        iconColor.withValues(alpha: 0.35),
+                        const Color(0xFF141414),
+                      ],
+                    ),
+                  ),
+                  child: Align(
+                    alignment: const Alignment(0, -0.15),
+                    child: Icon(icon, size: iconSize, color: iconColor.withValues(alpha: 0.85)),
+                  ),
+                ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.55),
+                      Colors.black.withValues(alpha: 0.92),
+                    ],
+                    stops: const [0.35, 0.72, 1.0],
+                  ),
+                ),
               ),
-              SizedBox(height: compact ? 3 : 5),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.textTheme.labelSmall?.copyWith(
-                  fontSize: compact ? 9 : 10,
-                  fontWeight: FontWeight.w700,
-                  height: 1.15,
-                  color: selected ? Colors.white : AppColors.textPrimary,
+              if (selected)
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.18),
+                  ),
+                ),
+              Positioned(
+                left: compact ? 6 : 8,
+                right: compact ? 6 : 8,
+                bottom: compact ? 6 : 8,
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.textTheme.labelSmall?.copyWith(
+                    fontSize: compact ? 9 : 10,
+                    fontWeight: FontWeight.w700,
+                    height: 1.15,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],

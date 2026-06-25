@@ -28,4 +28,10 @@ class Responsive {
     if (isTablet || isDesktop) return tablet;
     return mobile;
   }
+
+  /// Bottom inset for tab screens inside [MainShell] (nav bar + safe area).
+  double bottomNavPadding({double extra = 16}) {
+    const navBarHeight = 76.0; // SafeArea + 8 + NavigationBar(64) + 4
+    return MediaQuery.paddingOf(context).bottom + navBarHeight + extra;
+  }
 }
