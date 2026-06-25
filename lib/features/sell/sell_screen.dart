@@ -6,6 +6,7 @@ import 'package:spare_kart/bloc/listings/listings_bloc.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
+import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/data/dummy_data.dart';
@@ -225,7 +226,7 @@ class _SellScreenState extends State<SellScreen> {
           compact: compact,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
-          prefix: '\$ ',
+          prefix: '${AppCurrency.symbol} ',
         ),
         SizedBox(height: gap),
         _FormField(
@@ -335,7 +336,10 @@ class _SellScreenState extends State<SellScreen> {
                 ],
               ),
               SizedBox(height: gap + 4),
-              Text('\$$price', style: AppTypography.price.copyWith(fontSize: compact ? 22 : 26)),
+              Text(
+                AppCurrency.format(double.tryParse(price) ?? 0),
+                style: AppTypography.price.copyWith(fontSize: compact ? 22 : 26),
+              ),
               SizedBox(height: gap),
               if (_category != null)
                 Padding(
@@ -394,7 +398,7 @@ class _SellScreenState extends State<SellScreen> {
       model: _model ?? 'Corolla',
       year: _year ?? 2020,
       condition: _condition,
-      price: double.tryParse(_priceController.text) ?? 99.99,
+      price: double.tryParse(_priceController.text) ?? 999,
       location: 'Your Location',
       sellerId: 'admin',
       sellerName: user?.name ?? 'You',

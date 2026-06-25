@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:spare_kart/bloc/orders/orders_bloc.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
+import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/data/models/models.dart';
 
@@ -31,7 +32,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final r = Responsive(context);
-    final currency = NumberFormat.currency(symbol: '\$');
     final dateFormat = DateFormat('MMM d, yyyy');
 
     return Scaffold(
@@ -54,11 +54,11 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
           return TabBarView(
             controller: _tabController,
             children: [
-              _buildList(state.orders, currency, dateFormat, r),
-              _buildList(state.orders.where((o) => o.status == OrderStatus.paid).toList(), currency, dateFormat, r),
-              _buildList(state.orders.where((o) => o.status == OrderStatus.shipped).toList(), currency, dateFormat, r),
-              _buildList(state.orders.where((o) => o.status == OrderStatus.delivered).toList(), currency, dateFormat, r),
-              _buildList(state.orders.where((o) => o.status == OrderStatus.cancelled).toList(), currency, dateFormat, r),
+              _buildList(state.orders, dateFormat, r),
+              _buildList(state.orders.where((o) => o.status == OrderStatus.paid).toList(), dateFormat, r),
+              _buildList(state.orders.where((o) => o.status == OrderStatus.shipped).toList(), dateFormat, r),
+              _buildList(state.orders.where((o) => o.status == OrderStatus.delivered).toList(), dateFormat, r),
+              _buildList(state.orders.where((o) => o.status == OrderStatus.cancelled).toList(), dateFormat, r),
             ],
           );
         },
@@ -66,7 +66,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildList(List<Order> orders, NumberFormat currency, DateFormat dateFormat, Responsive r) {
+  Widget _buildList(List<Order> orders, DateFormat dateFormat, Responsive r) {
     if (orders.isEmpty) {
       return const Center(child: Text('No orders found'));
     }
@@ -92,7 +92,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> with SingleTickerProvid
                 const SizedBox(height: 8),
                 Text(dateFormat.format(order.date), style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                 const SizedBox(height: 8),
-                Text('${order.items.length} item(s) • ${currency.format(order.total)}'),
+                Text('${order.items.length} item(s) • ${AppCurrency.format(order.total)}'),
                 if (order.trackingNumber != 'N/A' && order.trackingNumber != 'Pending')
                   Padding(
                     padding: const EdgeInsets.only(top: 8),

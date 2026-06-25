@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:spare_kart/bloc/cart/cart_bloc.dart';
+import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
@@ -27,7 +27,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget build(BuildContext context) {
     final part = widget.part;
     final r = Responsive(context);
-    final currency = NumberFormat.currency(symbol: '\$');
     final inCart = context.watch<CartBloc>().state.contains(part.id);
 
     return Scaffold(
@@ -129,7 +128,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     const SizedBox(height: 14),
                     Text(part.fullTitle, style: AppTypography.textTheme.displaySmall),
                     const SizedBox(height: 12),
-                    Text(currency.format(part.price), style: AppTypography.priceLarge),
+                    Text(AppCurrency.format(part.price), style: AppTypography.priceLarge),
                     const SizedBox(height: 20),
                     GestureDetector(
                       onTap: () => Navigator.pushNamed(context, AppRoutes.sellerProfile, arguments: part),

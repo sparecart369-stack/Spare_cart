@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:spare_kart/bloc/cart/cart_bloc.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
+import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 
@@ -13,7 +13,6 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = Responsive(context);
-    final currency = NumberFormat.currency(symbol: '\$');
 
     return Scaffold(
       appBar: AppBar(title: const Text('My Cart')),
@@ -51,7 +50,7 @@ class CartScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(item.part.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                                  Text(currency.format(item.part.price),
+                                  Text(AppCurrency.format(item.part.price),
                                       style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
                                   const SizedBox(height: 8),
                                   Row(
@@ -97,10 +96,10 @@ class CartScreen extends StatelessWidget {
                 child: SafeArea(
                   child: Column(
                     children: [
-                      _PriceRow('Subtotal', currency.format(state.subtotal)),
-                      _PriceRow('Shipping', currency.format(state.shipping)),
+                      _PriceRow('Subtotal', AppCurrency.format(state.subtotal)),
+                      _PriceRow('Shipping', AppCurrency.format(state.shipping)),
                       const Divider(),
-                      _PriceRow('Total', currency.format(state.total), bold: true),
+                      _PriceRow('Total', AppCurrency.format(state.total), bold: true),
                       const SizedBox(height: 12),
                       PrimaryButton(
                         label: 'Proceed to Checkout',

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:spare_kart/bloc/cart/cart_bloc.dart';
 import 'package:spare_kart/bloc/orders/orders_bloc.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
+import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/data/models/models.dart';
@@ -25,7 +25,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget build(BuildContext context) {
     final r = Responsive(context);
     final cart = context.watch<CartBloc>().state;
-    final currency = NumberFormat.currency(symbol: '\$');
 
     return Scaffold(
       appBar: AppBar(title: const Text('Checkout')),
@@ -56,7 +55,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 0 => _buildAddress(),
                 1 => _buildShipping(),
                 2 => _buildPayment(),
-                _ => _buildSummary(cart, currency),
+                _ => _buildSummary(cart),
               },
             ),
           ),
@@ -109,10 +108,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       children: [
         const Text('Shipping Method', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
-        ...['Standard (3-5 days) - \$12.99', 'Express (1-2 days) - \$24.99', 'Free Pickup - \$0.00'].map(
-          (m) => RadioListTile<String>(
-            title: Text(m),
-            value: m.split(' - ').first,
+        ...[
+          ('Standard (3-5 days)', AppCurrency.standardShipping),
+          ('Express (1-2 days)', AppCurrency.expressShipping),
+          ('Free Pickup', 0.0),
+        ].map(
+          (option) => RadioListTile<String>(
+            title: Text('${option.$1} - ${AppCurrency.format(option.$2)}'),
+            value: option.$1,
             groupValue: _shippingMethod,
             onChanged: (v) => setState(() => _shippingMethod = v!),
           ),
@@ -156,7 +159,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildSummary(CartState cart, NumberFormat currency) {
+  Widget _buildSummary(CartState cart) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -166,12 +169,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               leading: Image.network(item.part.imageUrl, width: 48, height: 48, fit: BoxFit.cover),
               title: Text(item.part.name),
               subtitle: Text('Qty: ${item.quantity}'),
-              trailing: Text(currency.format(item.total)),
+              trailing: Text(AppCurrency.format(item.total)),
             )),
         const Divider(),
-        _summaryRow('Subtotal', currency.format(cart.subtotal)),
-        _summaryRow('Shipping', currency.format(cart.shipping)),
-        _summaryRow('Total', currency.format(cart.total), bold: true),
+        _summaryRow('Subtotal', AppCurrency.format(cart.subtotal)),
+        _summaryRow('Shipping', AppCurrency.format(cart.shipping)),
+        _summaryRow('Total', AppCurrency.format(cart.total), bold: true),
       ],
     );
   }

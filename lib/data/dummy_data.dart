@@ -1,3 +1,4 @@
+import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/data/models/models.dart';
 
 const categories = [
@@ -92,7 +93,7 @@ List<Order> generateDummyOrders(List<Part> parts) {
       items: [CartItem(part: parts[0], quantity: 1)],
       status: OrderStatus.delivered,
       date: DateTime.now().subtract(const Duration(days: 14)),
-      total: parts[0].price + 12.99,
+      total: parts[0].price + AppCurrency.standardShipping,
       trackingNumber: 'TRK789456123',
     ),
     Order(
@@ -100,7 +101,7 @@ List<Order> generateDummyOrders(List<Part> parts) {
       items: [CartItem(part: parts[3], quantity: 1), CartItem(part: parts[5], quantity: 2)],
       status: OrderStatus.shipped,
       date: DateTime.now().subtract(const Duration(days: 5)),
-      total: parts[3].price + parts[5].price * 2 + 15.99,
+      total: parts[3].price + parts[5].price * 2 + AppCurrency.expressShipping,
       trackingNumber: 'TRK456123789',
     ),
     Order(
@@ -108,7 +109,7 @@ List<Order> generateDummyOrders(List<Part> parts) {
       items: [CartItem(part: parts[8], quantity: 1)],
       status: OrderStatus.paid,
       date: DateTime.now().subtract(const Duration(days: 2)),
-      total: parts[8].price + 9.99,
+      total: parts[8].price + 79,
       trackingNumber: 'Pending',
     ),
     Order(

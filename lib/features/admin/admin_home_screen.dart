@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:spare_kart/bloc/app_mode/app_mode_bloc.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
+import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/features/admin/admin_dashboard_screen.dart';
 
@@ -82,7 +82,6 @@ class _AdminListingsTab extends StatelessWidget {
           separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, i) {
             final part = listings[i];
-            final currency = NumberFormat.currency(symbol: '\$');
             return Card(
               child: ListTile(
                 leading: ClipRRect(
@@ -95,7 +94,7 @@ class _AdminListingsTab extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(currency.format(part.price),
+                    Text(AppCurrency.format(part.price),
                         style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
                     const Text('Active', style: TextStyle(fontSize: 11, color: AppColors.success)),
                   ],

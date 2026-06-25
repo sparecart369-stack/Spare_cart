@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
+import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
@@ -11,7 +11,6 @@ class AdminDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = Responsive(context);
-    final currency = NumberFormat.currency(symbol: '\$');
 
     return BlocBuilder<ListingsBloc, ListingsState>(
       builder: (context, state) {
@@ -36,7 +35,7 @@ class AdminDashboardScreen extends StatelessWidget {
                       _StatCard(
                         icon: Icons.attach_money,
                         label: 'Total Sales',
-                        value: currency.format(state.adminTotalSales),
+                        value: AppCurrency.format(state.adminTotalSales),
                         color: AppColors.success,
                       ),
                       _StatCard(
@@ -54,7 +53,7 @@ class AdminDashboardScreen extends StatelessWidget {
                       _StatCard(
                         icon: Icons.trending_up,
                         label: 'This Month',
-                        value: currency.format(state.adminTotalSales * 0.35),
+                        value: AppCurrency.format(state.adminTotalSales * 0.35),
                         color: AppColors.primaryDark,
                       ),
                     ],

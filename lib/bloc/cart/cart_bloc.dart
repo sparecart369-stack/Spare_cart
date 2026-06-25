@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/data/models/models.dart';
 
 sealed class CartEvent extends Equatable {
@@ -34,7 +35,7 @@ class CartState extends Equatable {
 
   double get subtotal => items.fold(0.0, (sum, item) => sum + item.total);
 
-  double get shipping => items.isEmpty ? 0 : 12.99;
+  double get shipping => items.isEmpty ? 0 : AppCurrency.standardShipping;
 
   double get total => subtotal + shipping;
 

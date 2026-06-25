@@ -5,6 +5,7 @@ import 'package:spare_kart/core/constants/app_assets.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
+import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/data/dummy_data.dart';
@@ -704,7 +705,7 @@ class _PriceRangeCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              _PriceBadge(label: '\$${minPrice.toInt()}', compact: compact),
+              _PriceBadge(label: AppCurrency.format(minPrice), compact: compact),
               Expanded(
                 child: Text(
                   'to',
@@ -715,7 +716,7 @@ class _PriceRangeCard extends StatelessWidget {
                   ),
                 ),
               ),
-              _PriceBadge(label: '\$${maxPrice.toInt()}', compact: compact, accent: true),
+              _PriceBadge(label: AppCurrency.format(maxPrice), compact: compact, accent: true),
             ],
           ),
           Expanded(
