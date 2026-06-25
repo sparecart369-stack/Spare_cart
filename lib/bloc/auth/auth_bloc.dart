@@ -23,6 +23,11 @@ class AuthSignupRequested extends AuthEvent {
 
 class AuthLogoutRequested extends AuthEvent {}
 
+class AuthBankAccountUpdated extends AuthEvent {
+  AuthBankAccountUpdated(this.bankAccount);
+  final SellerBankAccount bankAccount;
+}
+
 // States
 enum AuthStatus { unknown, authenticated, unauthenticated }
 
@@ -47,6 +52,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLoginRequested>(_onLogin);
     on<AuthSignupRequested>(_onSignup);
     on<AuthLogoutRequested>(_onLogout);
+    on<AuthBankAccountUpdated>(_onBankAccountUpdated);
   }
 
   void _onLogin(AuthLoginRequested event, Emitter<AuthState> emit) {
@@ -71,5 +77,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   void _onLogout(AuthLogoutRequested event, Emitter<AuthState> emit) {
     emit(const AuthState(status: AuthStatus.unauthenticated));
+  }
+
+  void _onBankAccountUpdated(AuthBankAccountUpdated event, Emitter<AuthState> emit) {
+    final user = state.user;
+    if (user == null) return;
+    emit(state.copyWith(user: user.copyWith(bankAccount: event.bankAccount)));
   }
 }

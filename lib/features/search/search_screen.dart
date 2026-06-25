@@ -61,20 +61,9 @@ class _SearchScreenState extends State<SearchScreen> {
                       controller: _controller,
                       onChanged: (q) => context.read<ListingsBloc>().add(ListingSearchChanged(q)),
                       style: AppTypography.textTheme.bodyLarge,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'Search by name, brand, location...',
-                        prefixIcon: const Icon(Icons.search_rounded),
-                        suffixIcon: IconButton(
-                          icon: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: AppColors.accentSoft,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.camera_alt_rounded, color: AppColors.accent, size: 18),
-                          ),
-                          onPressed: () => Navigator.pushNamed(context, AppRoutes.aiFinder),
-                        ),
+                        prefixIcon: Icon(Icons.search_rounded),
                       ),
                     ),
                   ),

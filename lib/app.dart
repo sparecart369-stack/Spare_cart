@@ -95,8 +95,11 @@ class SpareKartApp extends StatelessWidget {
       case AppRoutes.messages:
         return _page(const MessagesScreen(), settings);
       case AppRoutes.chatDetail:
-        final thread = settings.arguments as MessageThread?;
-        return _page(ChatDetailScreen(thread: thread), settings);
+        final args = settings.arguments;
+        final chatArgs = args is ChatArgs
+            ? args
+            : ChatArgs(thread: args is MessageThread ? args : null);
+        return _page(ChatDetailScreen(args: chatArgs), settings);
       case AppRoutes.notifications:
         return _page(const NotificationsScreen(), settings);
       default:

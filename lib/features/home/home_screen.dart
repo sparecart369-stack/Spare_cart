@@ -58,6 +58,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _applyFiltersAndGoToSearch(current.copyWith(category: category));
   }
 
+  void _showAllListingsAndGoToSearch() {
+    final bloc = context.read<ListingsBloc>();
+    bloc.add(ListingSearchChanged(''));
+    bloc.add(ListingFiltersApplied(const PartFilters()));
+    MainShellTabController.maybeOf(context)?.selectTab(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     final r = Responsive(context);
@@ -195,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           title: 'Featured Parts',
                           subtitle: 'Hand-picked quality listings',
                           action: 'See All',
-                          onActionTap: () {},
+                          onActionTap: _showAllListingsAndGoToSearch,
                         ),
                       ],
                     ),

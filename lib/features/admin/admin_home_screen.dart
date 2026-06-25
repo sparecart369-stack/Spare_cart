@@ -37,6 +37,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             firstName: firstName,
             horizontalPadding: r.horizontalPadding(),
             onBuyerMode: () => context.read<AppModeBloc>().add(AppModeSet(AppMode.buyer)),
+            onMessages: () => Navigator.pushNamed(context, AppRoutes.messages),
           ),
           Expanded(
             child: IndexedStack(
@@ -90,11 +91,13 @@ class _AdminHeader extends StatelessWidget {
     required this.firstName,
     required this.horizontalPadding,
     required this.onBuyerMode,
+    required this.onMessages,
   });
 
   final String firstName;
   final double horizontalPadding;
   final VoidCallback onBuyerMode;
+  final VoidCallback onMessages;
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +170,24 @@ class _AdminHeader extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onMessages,
+                      borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                      child: Ink(
+                        decoration: AppDecorations.glassSurface(),
+                        padding: const EdgeInsets.all(10),
+                        child: Icon(
+                          Icons.chat_bubble_outline_rounded,
+                          size: 18,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Material(
                     color: Colors.transparent,
                     child: InkWell(

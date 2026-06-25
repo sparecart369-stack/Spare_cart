@@ -7,6 +7,8 @@ import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
+import 'package:spare_kart/core/utils/sensitive_text.dart';
+import 'package:spare_kart/data/models/models.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -46,11 +48,9 @@ class AccountScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                _MenuSection(
-                  title: 'Account',
+                _AccountSection(
                   items: [
                     _MenuData(Icons.location_on_rounded, 'My Addresses', AppColors.success, () => Navigator.pushNamed(context, AppRoutes.addresses)),
-                    _MenuData(Icons.credit_card_rounded, 'Payment Methods', AppColors.accent, () => Navigator.pushNamed(context, AppRoutes.paymentMethods)),
                     _MenuData(Icons.admin_panel_settings_rounded, 'Admin Dashboard', AppColors.warning, () {
                       context.read<AppModeBloc>().add(AppModeSet(AppMode.admin));
                     }),
@@ -197,6 +197,185 @@ class _MenuSection extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AccountSection extends StatelessWidget {
+  const _AccountSection({required this.items});
+
+  final List<_MenuData> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 10),
+          child: Text('ACCOUNT', style: AppTypography.overline),
+        ),
+        Container(
+          decoration: AppDecorations.card(radius: AppDecorations.radiusLg),
+          child: Column(
+            children: [
+              if (items.isNotEmpty) ...[
+                _MenuTile(item: items.first),
+                Divider(height: 1, indent: 56, color: AppColors.divider.withValues(alpha: 0.6)),
+              ],
+              const _PaymentMethodsTile(),
+              for (var i = 1; i < items.length; i++) ...[
+                Divider(height: 1, indent: 56, color: AppColors.divider.withValues(alpha: 0.6)),
+                _MenuTile(item: items[i]),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PaymentMethodsTile extends StatefulWidget {
+  const _PaymentMethodsTile();
+
+  @override
+  State<_PaymentMethodsTile> createState() => _PaymentMethodsTileState();
+}
+
+class _PaymentMethodsTileState extends State<_PaymentMethodsTile> {
+  bool _showDetails = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final bank = context.watch<AuthBloc>().state.user?.bankAccount;
+    final hasBank = bank?.isComplete ?? false;
+
+    return Material(
+      color: Colors.transparent,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.paymentMethods),
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.credit_card_rounded, color: AppColors.accent, size: 20),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text('Payment Methods', style: AppTypography.textTheme.titleSmall),
+                        ),
+                        Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary, size: 22),
+                      ],
+                    ),
+                  ),
+                ),
+                if (hasBank)
+                  IconButton(
+                    onPressed: () => setState(() => _showDetails = !_showDetails),
+                    icon: Icon(
+                      _showDetails ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                      color: AppColors.textTertiary,
+                      size: 20,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  ),
+              ],
+            ),
+            if (hasBank) ...[
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.only(left: 54),
+                child: _InlineBankDetails(bank: bank!, showDetails: _showDetails),
+              ),
+            ] else
+              Padding(
+                padding: const EdgeInsets.only(left: 54, top: 4),
+                child: InkWell(
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.paymentMethods),
+                  child: Text(
+                    'Add bank details for payouts',
+                    style: AppTypography.textTheme.bodySmall?.copyWith(color: AppColors.textTertiary),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InlineBankDetails extends StatelessWidget {
+  const _InlineBankDetails({required this.bank, required this.showDetails});
+
+  final SellerBankAccount bank;
+  final bool showDetails;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _InlineDetailRow(label: 'UPI', value: SensitiveText.maskUpi(bank.upiId, showDetails)),
+        _InlineDetailRow(label: 'Bank', value: bank.bankName),
+        _InlineDetailRow(label: 'Account', value: SensitiveText.mask(bank.accountNumber, visible: showDetails)),
+        _InlineDetailRow(label: 'Name', value: bank.accountName),
+        _InlineDetailRow(label: 'IFSC', value: SensitiveText.maskIfsc(bank.ifscCode, showDetails)),
+      ],
+    );
+  }
+}
+
+class _InlineDetailRow extends StatelessWidget {
+  const _InlineDetailRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 58,
+            child: Text(
+              label,
+              style: AppTypography.textTheme.labelSmall?.copyWith(
+                color: AppColors.textTertiary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: AppTypography.textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -10,6 +10,7 @@ import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/data/models/models.dart';
+import 'package:spare_kart/features/messages/chat_detail_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   const ProductDetailScreen({super.key, required this.part});
@@ -267,7 +268,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               value: AppCurrency.format(part.price),
                             ),
                             _DetailRow(
-                              label: 'Commission (${AppCommission.percent.toStringAsFixed(0)}%)',
+                              label: 'Convenience fee (${AppCommission.percent.toStringAsFixed(0)}%)',
                               value: AppCurrency.format(AppCommission.fee(part.price)),
                             ),
                             const Divider(height: 20),
@@ -318,7 +319,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => Navigator.pushNamed(context, AppRoutes.chatDetail),
+                    onPressed: () => Navigator.pushNamed(
+                      context,
+                      AppRoutes.chatDetail,
+                      arguments: ChatArgs(part: part),
+                    ),
                     icon: const Icon(Icons.chat_bubble_outline_rounded),
                     label: const Text('Chat'),
                   ),

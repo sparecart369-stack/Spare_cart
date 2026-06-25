@@ -10,6 +10,14 @@ sealed class MessagesEvent extends Equatable {
 
 class MessagesLoaded extends MessagesEvent {}
 
+class MessagesThreadUpserted extends MessagesEvent {
+  MessagesThreadUpserted(this.thread);
+  final MessageThread thread;
+
+  @override
+  List<Object?> get props => [thread];
+}
+
 class MessagesState extends Equatable {
   const MessagesState({this.threads = const [], this.isLoaded = false});
 
@@ -24,6 +32,17 @@ class MessagesBloc extends Bloc<MessagesEvent, MessagesState> {
   MessagesBloc() : super(const MessagesState()) {
     on<MessagesLoaded>((event, emit) {
       emit(MessagesState(threads: generateDummyMessages(), isLoaded: true));
+    });
+    on<MessagesThreadUpserted>((event, emit) {
+      final threads = List<MessageThread>.from(state.threads);
+      final index = threads.indexWhere((t) => t.id == event.thread.id);
+      if (index >= 0) {
+        threads[index] = event.thread;
+      } else {
+        threads.insert(0, event.thread);
+      }
+      threads.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      emit(MessagesState(threads: threads, isLoaded: true));
     });
   }
 }

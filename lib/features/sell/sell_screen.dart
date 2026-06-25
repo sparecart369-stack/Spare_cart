@@ -22,6 +22,7 @@ class SellScreen extends StatefulWidget {
 
 class _SellScreenState extends State<SellScreen> {
   int _step = 0;
+  bool? _needsBankAccountStep;
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
   String? _category;
@@ -30,28 +31,98 @@ class _SellScreenState extends State<SellScreen> {
   int? _year;
   PartCondition _condition = PartCondition.used;
   final _priceController = TextEditingController();
+  final _upiController = TextEditingController();
+  final _bankNameController = TextEditingController();
+  final _accountNumberController = TextEditingController();
+  final _accountNameController = TextEditingController();
+  final _ifscController = TextEditingController();
   final List<String> _photoUrls = [
     'https://picsum.photos/seed/sell-photo-0/400/300',
     'https://picsum.photos/seed/sell-photo-1/400/300',
     'https://picsum.photos/seed/sell-photo-2/400/300',
   ];
 
-  static const _steps = ['Details', 'Photos', 'Review'];
+  List<String> get _steps {
+    _needsBankAccountStep ??=
+        !(context.read<AuthBloc>().state.user?.bankAccount?.isComplete ?? false);
+    return _needsBankAccountStep!
+        ? ['Details', 'Photos', 'Bank Account', 'Review']
+        : ['Details', 'Photos', 'Review'];
+  }
+
+  int get _lastStep => _steps.length - 1;
 
   @override
   void dispose() {
     _nameController.dispose();
     _descController.dispose();
     _priceController.dispose();
+    _upiController.dispose();
+    _bankNameController.dispose();
+    _accountNumberController.dispose();
+    _accountNameController.dispose();
+    _ifscController.dispose();
     super.dispose();
   }
 
   void _next() {
-    if (_step < 2) {
+    final stepName = _steps[_step];
+    if (stepName == 'Bank Account' && !_validateBankAccount()) return;
+    if (stepName == 'Bank Account') _saveBankAccount();
+
+    if (_step < _lastStep) {
       setState(() => _step++);
     } else {
       _publishListing();
     }
+  }
+
+  bool _validateBankAccount() {
+    final fields = [
+      (_upiController, 'UPI ID'),
+      (_bankNameController, 'bank name'),
+      (_accountNumberController, 'account number'),
+      (_accountNameController, 'account holder name'),
+      (_ifscController, 'IFSC code'),
+    ];
+    for (final (controller, label) in fields) {
+      if (controller.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please enter your $label')),
+        );
+        return false;
+      }
+    }
+    return true;
+  }
+
+  void _saveBankAccount() {
+    context.read<AuthBloc>().add(
+          AuthBankAccountUpdated(
+            SellerBankAccount(
+              upiId: _upiController.text.trim(),
+              bankName: _bankNameController.text.trim(),
+              accountNumber: _accountNumberController.text.trim(),
+              accountName: _accountNameController.text.trim(),
+              ifscCode: _ifscController.text.trim().toUpperCase(),
+            ),
+          ),
+        );
+  }
+
+  SellerBankAccount? get _bankAccountForReview {
+    final saved = context.read<AuthBloc>().state.user?.bankAccount;
+    if (saved != null && saved.isComplete) return saved;
+    if (_upiController.text.trim().isNotEmpty) {
+      return SellerBankAccount(
+        upiId: _upiController.text.trim(),
+        bankName: _bankNameController.text.trim(),
+        accountNumber: _accountNumberController.text.trim(),
+        accountName: _accountNameController.text.trim(),
+        ifscCode: _ifscController.text.trim().toUpperCase(),
+      );
+    }
+    return null;
   }
 
   double _shellNavBottomInset(BuildContext context) {
@@ -72,14 +143,15 @@ class _SellScreenState extends State<SellScreen> {
         bottom: false,
         child: Column(
           children: [
-            _SellHeader(step: _step, compact: compact),
+            _SellHeader(step: _step, stepCount: _steps.length, steps: _steps, compact: compact),
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(pad, compact ? 6 : 10, pad, compact ? 12 : 16),
-                child: switch (_step) {
-                  0 => _buildDetails(compact),
-                  1 => _buildPhotos(compact),
+                child: switch (_steps[_step]) {
+                  'Details' => _buildDetails(compact),
+                  'Photos' => _buildPhotos(compact),
+                  'Bank Account' => _buildBankAccount(compact),
                   _ => _buildReview(compact),
                 },
               ),
@@ -110,9 +182,9 @@ class _SellScreenState extends State<SellScreen> {
                   Expanded(
                     flex: _step > 0 ? 2 : 1,
                     child: PrimaryButton(
-                      label: _step < 2 ? 'Next' : 'Publish Listing',
+                      label: _step < _lastStep ? 'Next' : 'Publish Listing',
                       height: compact ? 50 : 54,
-                      icon: _step < 2 ? Icons.arrow_forward_rounded : Icons.publish_rounded,
+                      icon: _step < _lastStep ? Icons.arrow_forward_rounded : Icons.publish_rounded,
                       onPressed: _next,
                     ),
                   ),
@@ -290,6 +362,67 @@ class _SellScreenState extends State<SellScreen> {
     );
   }
 
+  Widget _buildBankAccount(bool compact) {
+    final gap = compact ? 6.0 : 8.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionLabel('Payout Account', compact: compact),
+        SizedBox(height: gap),
+        Text(
+          'Add your bank details to receive payouts every Friday',
+          style: AppTypography.textTheme.bodySmall?.copyWith(
+            fontSize: compact ? 11 : 12,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        SizedBox(height: gap + 2),
+        _FormField(
+          controller: _upiController,
+          hint: 'UPI ID',
+          icon: Icons.account_balance_wallet_outlined,
+          compact: compact,
+          keyboardType: TextInputType.emailAddress,
+        ),
+        SizedBox(height: gap),
+        _FormField(
+          controller: _bankNameController,
+          hint: 'Bank Name',
+          icon: Icons.account_balance_outlined,
+          compact: compact,
+        ),
+        SizedBox(height: gap),
+        _FormField(
+          controller: _accountNumberController,
+          hint: 'Account Number',
+          icon: Icons.numbers_rounded,
+          compact: compact,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        ),
+        SizedBox(height: gap),
+        _FormField(
+          controller: _accountNameController,
+          hint: 'Account Holder Name',
+          icon: Icons.person_outline_rounded,
+          compact: compact,
+        ),
+        SizedBox(height: gap),
+        _FormField(
+          controller: _ifscController,
+          hint: 'IFSC Code',
+          icon: Icons.qr_code_2_rounded,
+          compact: compact,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+            TextInputFormatter.withFunction((old, next) => next.copyWith(text: next.text.toUpperCase())),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildReview(bool compact) {
     final gap = compact ? 8.0 : 10.0;
     final price = _priceController.text.isEmpty ? '0' : _priceController.text;
@@ -379,7 +512,7 @@ class _SellScreenState extends State<SellScreen> {
                 child: Column(
                   children: [
                     _ReviewPriceRow(
-                      label: 'Commission (${AppCommission.percent.toStringAsFixed(0)}%)',
+                      label: 'Convenience fee (${AppCommission.percent.toStringAsFixed(0)}%)',
                       value: AppCurrency.format(AppCommission.fee(double.tryParse(price) ?? 0)),
                       compact: compact,
                     ),
@@ -423,6 +556,42 @@ class _SellScreenState extends State<SellScreen> {
                 ),
               ),
               SizedBox(height: gap),
+              if (_bankAccountForReview != null) ...[
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(compact ? 10 : 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceElevated,
+                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.account_balance_rounded, size: compact ? 14 : 16, color: AppColors.primary),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Payout Account',
+                            style: AppTypography.textTheme.labelMedium?.copyWith(
+                              fontSize: compact ? 11 : 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: compact ? 8 : 10),
+                      _ReviewDetailRow(label: 'UPI ID', value: _bankAccountForReview!.upiId, compact: compact),
+                      _ReviewDetailRow(label: 'Bank', value: _bankAccountForReview!.bankName, compact: compact),
+                      _ReviewDetailRow(label: 'Account No.', value: _bankAccountForReview!.accountNumber, compact: compact),
+                      _ReviewDetailRow(label: 'Account Name', value: _bankAccountForReview!.accountName, compact: compact),
+                      _ReviewDetailRow(label: 'IFSC', value: _bankAccountForReview!.ifscCode, compact: compact),
+                    ],
+                  ),
+                ),
+                SizedBox(height: gap),
+              ],
               Row(
                 children: [
                   Icon(Icons.photo_library_outlined, size: compact ? 14 : 16, color: AppColors.textTertiary),
@@ -540,7 +709,7 @@ class _SellScreenState extends State<SellScreen> {
             _ReviewPriceRow(label: 'Listing price', value: AppCurrency.format(price)),
             const SizedBox(height: 8),
             _ReviewPriceRow(
-              label: 'Commission (${AppCommission.percent.toStringAsFixed(0)}%)',
+              label: 'Convenience fee (${AppCommission.percent.toStringAsFixed(0)}%)',
               value: AppCurrency.format(AppCommission.fee(price)),
             ),
             const SizedBox(height: 8),
@@ -590,9 +759,16 @@ class _SellScreenState extends State<SellScreen> {
 }
 
 class _SellHeader extends StatelessWidget {
-  const _SellHeader({required this.step, required this.compact});
+  const _SellHeader({
+    required this.step,
+    required this.stepCount,
+    required this.steps,
+    required this.compact,
+  });
 
   final int step;
+  final int stepCount;
+  final List<String> steps;
   final bool compact;
 
   @override
@@ -626,7 +802,7 @@ class _SellHeader extends StatelessWidget {
                   boxShadow: AppDecorations.shadowSm,
                 ),
                 child: Text(
-                  'Step ${step + 1}/3',
+                  'Step ${step + 1}/$stepCount',
                   style: AppTypography.textTheme.labelSmall?.copyWith(
                     fontSize: compact ? 10 : 11,
                     color: AppColors.primary,
@@ -638,7 +814,7 @@ class _SellHeader extends StatelessWidget {
           ),
           SizedBox(height: compact ? 10 : 14),
           Row(
-            children: List.generate(_SellScreenState._steps.length, (i) {
+            children: List.generate(steps.length, (i) {
               final active = i == step;
               final done = i < step;
               return Expanded(
@@ -658,8 +834,10 @@ class _SellHeader extends StatelessWidget {
                           ),
                           SizedBox(height: compact ? 6 : 8),
                           Text(
-                            _SellScreenState._steps[i],
+                            steps[i],
                             textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: AppTypography.textTheme.labelSmall?.copyWith(
                               fontSize: compact ? 9 : 10,
                               fontWeight: active ? FontWeight.w700 : FontWeight.w600,
@@ -673,7 +851,7 @@ class _SellHeader extends StatelessWidget {
                         ],
                       ),
                     ),
-                    if (i < _SellScreenState._steps.length - 1) SizedBox(width: compact ? 6 : 8),
+                    if (i < steps.length - 1) SizedBox(width: compact ? 6 : 8),
                   ],
                 ),
               );
@@ -1004,6 +1182,50 @@ class _PhotoAddTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ReviewDetailRow extends StatelessWidget {
+  const _ReviewDetailRow({
+    required this.label,
+    required this.value,
+    required this.compact,
+  });
+
+  final String label;
+  final String value;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: compact ? 4 : 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: compact ? 88 : 96,
+            child: Text(
+              label,
+              style: AppTypography.textTheme.bodySmall?.copyWith(
+                fontSize: compact ? 10 : 11,
+                color: AppColors.textTertiary,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: AppTypography.textTheme.bodySmall?.copyWith(
+                fontSize: compact ? 11 : 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

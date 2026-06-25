@@ -208,6 +208,47 @@ class ChatMessage extends Equatable {
   List<Object?> get props => [id];
 }
 
+class SellerBankAccount extends Equatable {
+  const SellerBankAccount({
+    required this.upiId,
+    required this.bankName,
+    required this.accountNumber,
+    required this.accountName,
+    required this.ifscCode,
+  });
+
+  final String upiId;
+  final String bankName;
+  final String accountNumber;
+  final String accountName;
+  final String ifscCode;
+
+  bool get isComplete =>
+      upiId.trim().isNotEmpty &&
+      bankName.trim().isNotEmpty &&
+      accountNumber.trim().isNotEmpty &&
+      accountName.trim().isNotEmpty &&
+      ifscCode.trim().isNotEmpty;
+
+  SellerBankAccount copyWith({
+    String? upiId,
+    String? bankName,
+    String? accountNumber,
+    String? accountName,
+    String? ifscCode,
+  }) =>
+      SellerBankAccount(
+        upiId: upiId ?? this.upiId,
+        bankName: bankName ?? this.bankName,
+        accountNumber: accountNumber ?? this.accountNumber,
+        accountName: accountName ?? this.accountName,
+        ifscCode: ifscCode ?? this.ifscCode,
+      );
+
+  @override
+  List<Object?> get props => [upiId, bankName, accountNumber, accountName, ifscCode];
+}
+
 class UserProfile extends Equatable {
   const UserProfile({
     required this.name,
@@ -215,6 +256,7 @@ class UserProfile extends Equatable {
     this.listings = 0,
     this.positiveFeedback = 98,
     this.orders = 0,
+    this.bankAccount,
   });
 
   final String name;
@@ -222,7 +264,25 @@ class UserProfile extends Equatable {
   final int listings;
   final int positiveFeedback;
   final int orders;
+  final SellerBankAccount? bankAccount;
+
+  UserProfile copyWith({
+    String? name,
+    String? phone,
+    int? listings,
+    int? positiveFeedback,
+    int? orders,
+    SellerBankAccount? bankAccount,
+  }) =>
+      UserProfile(
+        name: name ?? this.name,
+        phone: phone ?? this.phone,
+        listings: listings ?? this.listings,
+        positiveFeedback: positiveFeedback ?? this.positiveFeedback,
+        orders: orders ?? this.orders,
+        bankAccount: bankAccount ?? this.bankAccount,
+      );
 
   @override
-  List<Object?> get props => [phone];
+  List<Object?> get props => [phone, bankAccount];
 }
