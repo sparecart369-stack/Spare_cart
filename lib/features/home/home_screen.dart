@@ -4,6 +4,7 @@ import 'package:spare_kart/bloc/app_mode/app_mode_bloc.dart';
 import 'package:spare_kart/bloc/auth/auth_bloc.dart';
 import 'package:spare_kart/bloc/cart/cart_bloc.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
+import 'package:spare_kart/core/constants/app_assets.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
@@ -133,6 +134,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               return _CategoryChip(
                                 name: name,
                                 icon: _iconFromName(iconName),
+                                imageAsset: switch (name) {
+                                  'Engine' => AppAssets.categoryEngine,
+                                  'Transmission' => AppAssets.categoryTransmission,
+                                  'Body Parts' => AppAssets.categoryBodyParts,
+                                  'Lighting' => AppAssets.categoryLighting,
+                                  _ => null,
+                                },
                                 index: i,
                                 onTap: () {
                                   context.read<ListingsBloc>().add(ListingFiltersApplied(
@@ -239,12 +247,14 @@ class _CategoryChip extends StatelessWidget {
   const _CategoryChip({
     required this.name,
     required this.icon,
+    this.imageAsset,
     required this.index,
     required this.onTap,
   });
 
   final String name;
   final IconData icon;
+  final String? imageAsset;
   final int index;
   final VoidCallback onTap;
 
@@ -274,6 +284,7 @@ class _CategoryChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final g = _gradients[index % _gradients.length];
     final c = _iconColors[index % _iconColors.length];
+    final hasImage = imageAsset != null;
 
     return GestureDetector(
       onTap: onTap,
@@ -290,7 +301,20 @@ class _CategoryChip extends StatelessWidget {
                 boxShadow: AppDecorations.shadowSm,
                 border: Border.all(color: Colors.white, width: 1.5),
               ),
-              child: Icon(icon, color: c, size: 28),
+              clipBehavior: Clip.antiAlias,
+              child: hasImage
+                  ? Padding(
+                      padding: const EdgeInsets.all(2),
+                      child: ColorFiltered(
+                        colorFilter: ColorFilter.mode(c, BlendMode.modulate),
+                        child: Image.asset(
+                          imageAsset!,
+                          fit: BoxFit.contain,
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                    )
+                  : Icon(icon, color: c, size: 28),
             ),
             const SizedBox(height: 8),
             Text(

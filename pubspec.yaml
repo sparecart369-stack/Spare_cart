@@ -62,6 +62,10 @@ flutter:
     - assets/images/app_logo.png
     - assets/images/hero_marketplace_banner.png
     - assets/images/hero_brake_rotor.png
+    - assets/images/category_engine.png
+    - assets/images/category_transmission.png
+    - assets/images/category_body_parts.png
+    - assets/images/category_lighting.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
