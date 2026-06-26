@@ -2,6 +2,17 @@ import 'package:equatable/equatable.dart';
 
 enum PartCondition { used, refurbished, newPart }
 
+enum ListingFulfillment { doorstepDelivery, inStorePickup }
+
+enum PickupLocationSource { current, other }
+
+extension ListingFulfillmentX on ListingFulfillment {
+  String get label => switch (this) {
+        ListingFulfillment.doorstepDelivery => 'Doorstep Delivery',
+        ListingFulfillment.inStorePickup => 'In-Store Pickup',
+      };
+}
+
 enum OrderStatus { paid, shipped, delivered, cancelled }
 
 class Part extends Equatable {
@@ -23,6 +34,7 @@ class Part extends Equatable {
     this.imageUrls = const [],
     this.isAdminListing = false,
     this.compatibility = const [],
+    this.fulfillment = ListingFulfillment.doorstepDelivery,
   });
 
   final String id;
@@ -42,8 +54,11 @@ class Part extends Equatable {
   final List<String> imageUrls;
   final bool isAdminListing;
   final List<String> compatibility;
+  final ListingFulfillment fulfillment;
 
   List<String> get displayImages => imageUrls.isNotEmpty ? imageUrls : [imageUrl];
+
+  String get fulfillmentLabel => fulfillment.label;
 
   String get fullTitle => '$name $make $model $year';
 
@@ -76,6 +91,7 @@ class Part extends Equatable {
     List<String>? imageUrls,
     bool? isAdminListing,
     List<String>? compatibility,
+    ListingFulfillment? fulfillment,
   }) {
     return Part(
       id: id ?? this.id,
@@ -95,6 +111,7 @@ class Part extends Equatable {
       imageUrls: imageUrls ?? this.imageUrls,
       isAdminListing: isAdminListing ?? this.isAdminListing,
       compatibility: compatibility ?? this.compatibility,
+      fulfillment: fulfillment ?? this.fulfillment,
     );
   }
 

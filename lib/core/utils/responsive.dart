@@ -29,9 +29,17 @@ class Responsive {
     return mobile;
   }
 
-  /// Bottom inset for tab screens inside [MainShell] (nav bar + safe area).
+  /// Scroll/list bottom inset for tab screens inside [MainShell].
   double bottomNavPadding({double extra = 16}) {
     const navBarHeight = 76.0; // SafeArea + 8 + NavigationBar(64) + 4
     return MediaQuery.paddingOf(context).bottom + navBarHeight + extra;
+  }
+
+  /// Bottom padding for a sticky footer above [MainShell]'s bottom nav.
+  /// Uses [MediaQuery.viewPadding] because [MainShell] uses `extendBody: true`,
+  /// which clears bottom [MediaQuery.padding] on tab screens.
+  double stickyFooterBottomPadding({double extra = 4}) {
+    const navBarHeight = 76.0; // 8 + NavigationBar(64) + 4
+    return MediaQuery.viewPaddingOf(context).bottom + navBarHeight + extra;
   }
 }

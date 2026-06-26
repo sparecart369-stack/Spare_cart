@@ -21,6 +21,8 @@ class SellScreen extends StatefulWidget {
 }
 
 class _SellScreenState extends State<SellScreen> {
+  static const _maxPhotos = 3;
+
   int _step = 0;
   bool? _needsBankAccountStep;
   final _nameController = TextEditingController();
@@ -30,17 +32,16 @@ class _SellScreenState extends State<SellScreen> {
   String? _model;
   int? _year;
   PartCondition _condition = PartCondition.used;
+  ListingFulfillment _fulfillment = ListingFulfillment.doorstepDelivery;
+  PickupLocationSource _pickupLocationSource = PickupLocationSource.current;
+  final _customPickupLocationController = TextEditingController();
   final _priceController = TextEditingController();
   final _upiController = TextEditingController();
   final _bankNameController = TextEditingController();
   final _accountNumberController = TextEditingController();
   final _accountNameController = TextEditingController();
   final _ifscController = TextEditingController();
-  final List<String> _photoUrls = [
-    'https://picsum.photos/seed/sell-photo-0/400/300',
-    'https://picsum.photos/seed/sell-photo-1/400/300',
-    'https://picsum.photos/seed/sell-photo-2/400/300',
-  ];
+  final List<String> _photoUrls = [];
 
   List<String> get _steps {
     _needsBankAccountStep ??=
@@ -56,6 +57,7 @@ class _SellScreenState extends State<SellScreen> {
   void dispose() {
     _nameController.dispose();
     _descController.dispose();
+    _customPickupLocationController.dispose();
     _priceController.dispose();
     _upiController.dispose();
     _bankNameController.dispose();
@@ -67,6 +69,7 @@ class _SellScreenState extends State<SellScreen> {
 
   void _next() {
     final stepName = _steps[_step];
+    if (stepName == 'Photos' && !_validatePhotos()) return;
     if (stepName == 'Bank Account' && !_validateBankAccount()) return;
     if (stepName == 'Bank Account') _saveBankAccount();
 
@@ -75,6 +78,18 @@ class _SellScreenState extends State<SellScreen> {
     } else {
       _publishListing();
     }
+  }
+
+  bool _validatePhotos() {
+    if (_fulfillment == ListingFulfillment.inStorePickup &&
+        _pickupLocationSource == PickupLocationSource.other &&
+        _customPickupLocationController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your pickup location')),
+      );
+      return false;
+    }
+    return true;
   }
 
   bool _validateBankAccount() {
@@ -125,17 +140,29 @@ class _SellScreenState extends State<SellScreen> {
     return null;
   }
 
-  double _shellNavBottomInset(BuildContext context) {
-    // MainShell nav: 8 top + 64 bar + 4 bottom + device safe area
-    return MediaQuery.paddingOf(context).bottom + 76;
+  String _resolveListingLocation() {
+    if (_fulfillment == ListingFulfillment.doorstepDelivery) {
+      return kDefaultSellerAddress.split(',').skip(1).join(',').trim();
+    }
+    if (_pickupLocationSource == PickupLocationSource.current) {
+      return kDefaultSellerAddress;
+    }
+    return _customPickupLocationController.text.trim();
   }
+
+  String _fulfillmentDescription(ListingFulfillment fulfillment) => switch (fulfillment) {
+        ListingFulfillment.doorstepDelivery =>
+          'Ship the part to the buyer\'s address after payment. Great for buyers who prefer home delivery.',
+        ListingFulfillment.inStorePickup =>
+          'Let buyers collect the part from your store or location. No shipping required.',
+      };
 
   @override
   Widget build(BuildContext context) {
     final r = Responsive(context);
     final pad = r.horizontalPadding();
     final compact = r.height < 740;
-    final navInset = _shellNavBottomInset(context);
+    final navInset = r.stickyFooterBottomPadding();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -166,7 +193,7 @@ class _SellScreenState extends State<SellScreen> {
                 pad,
                 compact ? 10 : 12,
                 pad,
-                navInset + (compact ? 8 : 10),
+                navInset,
               ),
               child: Row(
                 children: [
@@ -317,6 +344,148 @@ class _SellScreenState extends State<SellScreen> {
     );
   }
 
+  Widget _buildFulfillmentSection(bool compact) {
+    final gap = compact ? 6.0 : 8.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionLabel('Fulfillment', compact: compact),
+        SizedBox(height: gap),
+        SizedBox(
+          height: compact ? 34 : 38,
+          child: Row(
+            children: ListingFulfillment.values.map((f) {
+              final selected = _fulfillment == f;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: f != ListingFulfillment.inStorePickup ? 6 : 0,
+                  ),
+                  child: _ConditionChip(
+                    label: f == ListingFulfillment.doorstepDelivery
+                        ? 'Doorstep Delivery'
+                        : 'In-Store Pickup',
+                    selected: selected,
+                    compact: compact,
+                    onTap: () => setState(() => _fulfillment = f),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        SizedBox(height: gap),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(compact ? 10 : 12),
+          decoration: BoxDecoration(
+            color: AppColors.primaryLight.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                _fulfillment == ListingFulfillment.doorstepDelivery
+                    ? Icons.local_shipping_outlined
+                    : Icons.storefront_outlined,
+                size: compact ? 16 : 18,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _fulfillmentDescription(_fulfillment),
+                  style: AppTypography.textTheme.bodySmall?.copyWith(
+                    fontSize: compact ? 11 : 12,
+                    color: AppColors.textSecondary,
+                    height: 1.45,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_fulfillment == ListingFulfillment.inStorePickup) ...[
+          SizedBox(height: gap),
+          _SectionLabel('Pickup Location', compact: compact),
+          SizedBox(height: gap),
+          SizedBox(
+            height: compact ? 34 : 38,
+            child: Row(
+              children: PickupLocationSource.values.map((source) {
+                final selected = _pickupLocationSource == source;
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      right: source != PickupLocationSource.other ? 6 : 0,
+                    ),
+                    child: _ConditionChip(
+                      label: source == PickupLocationSource.current
+                          ? 'Current Location'
+                          : 'Other Location',
+                      selected: selected,
+                      compact: compact,
+                      onTap: () => setState(() => _pickupLocationSource = source),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          SizedBox(height: gap),
+          if (_pickupLocationSource == PickupLocationSource.current)
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(compact ? 10 : 12),
+              decoration: AppDecorations.elevatedCard(radius: AppDecorations.radiusSm),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.location_on_rounded, size: compact ? 18 : 20, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Default address',
+                          style: AppTypography.textTheme.labelSmall?.copyWith(
+                            fontSize: compact ? 10 : 11,
+                            color: AppColors.textTertiary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        SizedBox(height: compact ? 2 : 4),
+                        Text(
+                          kDefaultSellerAddress,
+                          style: AppTypography.textTheme.bodySmall?.copyWith(
+                            fontSize: compact ? 11 : 12,
+                            color: AppColors.textSecondary,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            _FormField(
+              controller: _customPickupLocationController,
+              hint: 'Enter store or pickup address',
+              icon: Icons.edit_location_alt_outlined,
+              compact: compact,
+              maxLines: 2,
+            ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildPhotos(bool compact) {
     final r = Responsive(context);
     final gap = compact ? 6.0 : 8.0;
@@ -328,7 +497,7 @@ class _SellScreenState extends State<SellScreen> {
         _SectionLabel('Upload Photos', compact: compact),
         SizedBox(height: gap),
         Text(
-          'Add up to 6 photos of your part',
+          'Add up to $_maxPhotos photos of your part',
           style: AppTypography.textTheme.bodySmall?.copyWith(
             fontSize: compact ? 11 : 12,
             color: AppColors.textSecondary,
@@ -344,9 +513,9 @@ class _SellScreenState extends State<SellScreen> {
             mainAxisSpacing: gap,
             childAspectRatio: 1,
           ),
-          itemCount: _photoUrls.length < 6 ? _photoUrls.length + 1 : _photoUrls.length,
+          itemCount: _photoUrls.length < _maxPhotos ? _photoUrls.length + 1 : _photoUrls.length,
           itemBuilder: (context, i) {
-            if (i == _photoUrls.length && _photoUrls.length < 6) {
+            if (i == _photoUrls.length && _photoUrls.length < _maxPhotos) {
               return _PhotoAddTile(
                 compact: compact,
                 onTap: () => setState(() {
@@ -358,6 +527,8 @@ class _SellScreenState extends State<SellScreen> {
             return _PhotoTile(url: _photoUrls[i], index: i, compact: compact);
           },
         ),
+        SizedBox(height: compact ? 4 : 6),
+        _buildFulfillmentSection(compact),
       ],
     );
   }
@@ -556,6 +727,57 @@ class _SellScreenState extends State<SellScreen> {
                 ),
               ),
               SizedBox(height: gap),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(compact ? 10 : 12),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceElevated,
+                  borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          _fulfillment == ListingFulfillment.doorstepDelivery
+                              ? Icons.local_shipping_outlined
+                              : Icons.storefront_outlined,
+                          size: compact ? 14 : 16,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _fulfillment.label,
+                          style: AppTypography.textTheme.labelMedium?.copyWith(
+                            fontSize: compact ? 11 : 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: compact ? 6 : 8),
+                    Text(
+                      _fulfillmentDescription(_fulfillment),
+                      style: AppTypography.textTheme.bodySmall?.copyWith(
+                        fontSize: compact ? 11 : 12,
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                    if (_fulfillment == ListingFulfillment.inStorePickup) ...[
+                      SizedBox(height: compact ? 8 : 10),
+                      _ReviewDetailRow(
+                        label: 'Pickup at',
+                        value: _resolveListingLocation(),
+                        compact: compact,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              SizedBox(height: gap),
               if (_bankAccountForReview != null) ...[
                 Container(
                   width: double.infinity,
@@ -646,7 +868,7 @@ class _SellScreenState extends State<SellScreen> {
       year: year,
       condition: _condition,
       price: price,
-      location: 'Your Location',
+      location: _resolveListingLocation(),
       sellerId: 'admin',
       sellerName: user?.name ?? 'You',
       sellerRating: 5.0,
@@ -654,6 +876,7 @@ class _SellScreenState extends State<SellScreen> {
       imageUrls: imageUrls,
       description: _descController.text.isEmpty ? 'Listed part' : _descController.text,
       isAdminListing: true,
+      fulfillment: _fulfillment,
       compatibility: ['$make $model $year', '$make $model ${year - 1}', '$make $model ${year + 1}'],
     );
     context.read<ListingsBloc>().add(ListingAdded(part));
@@ -667,13 +890,10 @@ class _SellScreenState extends State<SellScreen> {
       _model = null;
       _year = null;
       _condition = PartCondition.used;
-      _photoUrls
-        ..clear()
-        ..addAll([
-          'https://picsum.photos/seed/sell-photo-0/400/300',
-          'https://picsum.photos/seed/sell-photo-1/400/300',
-          'https://picsum.photos/seed/sell-photo-2/400/300',
-        ]);
+      _fulfillment = ListingFulfillment.doorstepDelivery;
+      _pickupLocationSource = PickupLocationSource.current;
+      _customPickupLocationController.clear();
+      _photoUrls.clear();
     });
     _showPublishedDialog(price);
   }
