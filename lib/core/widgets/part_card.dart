@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
-import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/data/models/models.dart';
 
@@ -41,7 +40,7 @@ class PartCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       ConditionChip(label: part.conditionLabel),
                       const SizedBox(height: 8),
-                      Text(AppCurrency.format(part.price), style: AppTypography.price),
+                      const BlurredPrice(),
                       const SizedBox(height: 4),
                       Row(
                         children: [
@@ -131,7 +130,7 @@ class PartCard extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(AppCurrency.format(part.price), style: AppTypography.price),
+                        const BlurredPrice(),
                         const Spacer(),
                         Icon(Icons.location_on_rounded, size: 13, color: AppColors.textTertiary),
                         const SizedBox(width: 2),

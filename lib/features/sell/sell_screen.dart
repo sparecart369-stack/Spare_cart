@@ -7,7 +7,6 @@ import 'package:spare_kart/core/constants/app_commission.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
-import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/data/dummy_data.dart';
@@ -35,7 +34,6 @@ class _SellScreenState extends State<SellScreen> {
   ListingFulfillment _fulfillment = ListingFulfillment.doorstepDelivery;
   PickupLocationSource _pickupLocationSource = PickupLocationSource.current;
   final _customPickupLocationController = TextEditingController();
-  final _priceController = TextEditingController();
   final _upiController = TextEditingController();
   final _bankNameController = TextEditingController();
   final _accountNumberController = TextEditingController();
@@ -58,7 +56,6 @@ class _SellScreenState extends State<SellScreen> {
     _nameController.dispose();
     _descController.dispose();
     _customPickupLocationController.dispose();
-    _priceController.dispose();
     _upiController.dispose();
     _bankNameController.dispose();
     _accountNumberController.dispose();
@@ -324,16 +321,6 @@ class _SellScreenState extends State<SellScreen> {
         ),
         SizedBox(height: gap),
         _FormField(
-          controller: _priceController,
-          hint: 'Price',
-          icon: Icons.attach_money_rounded,
-          compact: compact,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
-          prefix: '${AppCurrency.symbol} ',
-        ),
-        SizedBox(height: gap),
-        _FormField(
           controller: _descController,
           hint: 'Description',
           icon: Icons.notes_rounded,
@@ -596,7 +583,6 @@ class _SellScreenState extends State<SellScreen> {
 
   Widget _buildReview(bool compact) {
     final gap = compact ? 8.0 : 10.0;
-    final price = _priceController.text.isEmpty ? '0' : _priceController.text;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -665,37 +651,6 @@ class _SellScreenState extends State<SellScreen> {
                     ),
                   ),
                 ],
-              ),
-              SizedBox(height: gap + 4),
-              Text(
-                AppCurrency.format(double.tryParse(price) ?? 0),
-                style: AppTypography.price.copyWith(fontSize: compact ? 22 : 26),
-              ),
-              SizedBox(height: gap),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(compact ? 10 : 12),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
-                ),
-                child: Column(
-                  children: [
-                    _ReviewPriceRow(
-                      label: 'Convenience fee (${AppCommission.percent.toStringAsFixed(0)}%)',
-                      value: AppCurrency.format(AppCommission.fee(double.tryParse(price) ?? 0)),
-                      compact: compact,
-                    ),
-                    SizedBox(height: compact ? 4 : 6),
-                    _ReviewPriceRow(
-                      label: 'You receive',
-                      value: AppCurrency.format(AppCommission.sellerEarnings(double.tryParse(price) ?? 0)),
-                      compact: compact,
-                      emphasized: true,
-                    ),
-                  ],
-                ),
               ),
               SizedBox(height: gap),
               if (_category != null)
@@ -852,7 +807,6 @@ class _SellScreenState extends State<SellScreen> {
   void _publishListing() {
     final user = context.read<AuthBloc>().state.user;
     final id = 'admin-${DateTime.now().millisecondsSinceEpoch}';
-    final price = double.tryParse(_priceController.text) ?? 999;
     final make = _make ?? 'Toyota';
     final model = _model ?? 'Corolla';
     final year = _year ?? 2020;
@@ -867,7 +821,7 @@ class _SellScreenState extends State<SellScreen> {
       model: model,
       year: year,
       condition: _condition,
-      price: price,
+      price: 0,
       location: _resolveListingLocation(),
       sellerId: 'admin',
       sellerName: user?.name ?? 'You',
@@ -884,7 +838,6 @@ class _SellScreenState extends State<SellScreen> {
       _step = 0;
       _nameController.clear();
       _descController.clear();
-      _priceController.clear();
       _category = null;
       _make = null;
       _model = null;
@@ -895,10 +848,10 @@ class _SellScreenState extends State<SellScreen> {
       _customPickupLocationController.clear();
       _photoUrls.clear();
     });
-    _showPublishedDialog(price);
+    _showPublishedDialog();
   }
 
-  void _showPublishedDialog(double price) {
+  void _showPublishedDialog() {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -922,21 +875,8 @@ class _SellScreenState extends State<SellScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Your part is now live on SpareKart.',
+              'Your part is now live on SpareKart. Pricing will be set after review.',
               style: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            _ReviewPriceRow(label: 'Listing price', value: AppCurrency.format(price)),
-            const SizedBox(height: 8),
-            _ReviewPriceRow(
-              label: 'Convenience fee (${AppCommission.percent.toStringAsFixed(0)}%)',
-              value: AppCurrency.format(AppCommission.fee(price)),
-            ),
-            const SizedBox(height: 8),
-            _ReviewPriceRow(
-              label: 'You receive',
-              value: AppCurrency.format(AppCommission.sellerEarnings(price)),
-              emphasized: true,
             ),
             const SizedBox(height: 16),
             Container(
@@ -1109,7 +1049,6 @@ class _FormField extends StatelessWidget {
     required this.compact,
     this.keyboardType,
     this.inputFormatters,
-    this.prefix,
     this.maxLines = 1,
   });
 
@@ -1119,7 +1058,6 @@ class _FormField extends StatelessWidget {
   final bool compact;
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
-  final String? prefix;
   final int? maxLines;
 
   @override
@@ -1139,11 +1077,6 @@ class _FormField extends StatelessWidget {
         hintStyle: AppTypography.textTheme.bodySmall?.copyWith(
           color: AppColors.textTertiary,
           fontWeight: FontWeight.w500,
-        ),
-        prefixText: prefix,
-        prefixStyle: AppTypography.textTheme.bodySmall?.copyWith(
-          color: AppColors.primary,
-          fontWeight: FontWeight.w700,
         ),
         filled: true,
         fillColor: AppColors.surface,
@@ -1447,49 +1380,6 @@ class _ReviewDetailRow extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ReviewPriceRow extends StatelessWidget {
-  const _ReviewPriceRow({
-    required this.label,
-    required this.value,
-    this.compact = false,
-    this.emphasized = false,
-  });
-
-  final String label;
-  final String value;
-  final bool compact;
-  final bool emphasized;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: AppTypography.textTheme.bodySmall?.copyWith(
-              fontSize: compact ? 11 : 13,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
-        Text(
-          value,
-          style: emphasized
-              ? AppTypography.textTheme.titleSmall?.copyWith(
-                  fontSize: compact ? 13 : 15,
-                  color: AppColors.primary,
-                )
-              : AppTypography.textTheme.bodyMedium?.copyWith(
-                  fontSize: compact ? 12 : 14,
-                  fontWeight: FontWeight.w600,
-                ),
-        ),
-      ],
     );
   }
 }

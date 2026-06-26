@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spare_kart/bloc/cart/cart_bloc.dart';
 import 'package:spare_kart/core/constants/app_commission.dart';
-import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
@@ -166,7 +165,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     const SizedBox(height: 14),
                     Text(part.fullTitle, style: AppTypography.textTheme.displaySmall),
                     const SizedBox(height: 12),
-                    Text(AppCurrency.format(part.price), style: AppTypography.priceLarge),
+                    BlurredPrice(style: AppTypography.priceLarge),
                     const SizedBox(height: 20),
                     _DetailSection(
                       title: 'Part Info',
@@ -265,16 +264,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             const SizedBox(height: 10),
                             _DetailRow(
                               label: 'Listing price',
-                              value: AppCurrency.format(part.price),
+                              valueChild: const BlurredPrice(),
                             ),
                             _DetailRow(
                               label: 'Convenience fee (${AppCommission.percent.toStringAsFixed(0)}%)',
-                              value: AppCurrency.format(AppCommission.fee(part.price)),
+                              valueChild: const BlurredPrice(placeholder: '₹650'),
                             ),
                             const Divider(height: 20),
                             _DetailRow(
                               label: 'You receive',
-                              value: AppCurrency.format(AppCommission.sellerEarnings(part.price)),
+                              valueChild: const BlurredPrice(placeholder: '₹12,349'),
                               emphasized: true,
                             ),
                             const SizedBox(height: 12),
@@ -405,10 +404,16 @@ class _DetailSection extends StatelessWidget {
 }
 
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value, this.emphasized = false});
+  const _DetailRow({
+    required this.label,
+    this.value,
+    this.valueChild,
+    this.emphasized = false,
+  }) : assert(value != null || valueChild != null);
 
   final String label;
-  final String value;
+  final String? value;
+  final Widget? valueChild;
   final bool emphasized;
 
   @override
@@ -423,12 +428,13 @@ class _DetailRow extends StatelessWidget {
               style: AppTypography.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
             ),
           ),
-          Text(
-            value,
-            style: emphasized
-                ? AppTypography.textTheme.titleSmall?.copyWith(color: AppColors.primary)
-                : AppTypography.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
+          valueChild ??
+              Text(
+                value!,
+                style: emphasized
+                    ? AppTypography.textTheme.titleSmall?.copyWith(color: AppColors.primary)
+                    : AppTypography.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
         ],
       ),
     );

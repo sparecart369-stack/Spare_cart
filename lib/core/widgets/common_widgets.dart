@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
 import 'package:spare_kart/core/constants/app_assets.dart';
@@ -473,6 +475,27 @@ class PremiumSearchBar extends StatelessWidget {
               Icon(Icons.search_rounded, color: AppColors.textSecondary.withValues(alpha: 0.85), size: 22),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class BlurredPrice extends StatelessWidget {
+  const BlurredPrice({super.key, this.style, this.placeholder = '₹12,999'});
+
+  final TextStyle? style;
+  final String placeholder;
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyle = style ?? AppTypography.price;
+    return ImageFiltered(
+      imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+      child: Text(
+        placeholder,
+        style: textStyle.copyWith(
+          color: textStyle.color?.withValues(alpha: 0.55) ?? AppColors.textPrimary.withValues(alpha: 0.55),
         ),
       ),
     );

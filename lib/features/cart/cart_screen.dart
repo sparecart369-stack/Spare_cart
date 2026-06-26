@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spare_kart/bloc/cart/cart_bloc.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
-import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 
@@ -50,8 +49,9 @@ class CartScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(item.part.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                                  Text(AppCurrency.format(item.part.price),
-                                      style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
+                                  const BlurredPrice(
+                                    style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
+                                  ),
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
@@ -96,10 +96,10 @@ class CartScreen extends StatelessWidget {
                 child: SafeArea(
                   child: Column(
                     children: [
-                      _PriceRow('Subtotal', AppCurrency.format(state.subtotal)),
-                      _PriceRow('Shipping', AppCurrency.format(state.shipping)),
+                      _PriceRow('Subtotal', const BlurredPrice()),
+                      _PriceRow('Shipping', const BlurredPrice(placeholder: '₹99')),
                       const Divider(),
-                      _PriceRow('Total', AppCurrency.format(state.total), bold: true),
+                      _PriceRow('Total', const BlurredPrice(placeholder: '₹13,098'), bold: true),
                       const SizedBox(height: 12),
                       PrimaryButton(
                         label: 'Proceed to Checkout',
@@ -139,7 +139,7 @@ class _QtyButton extends StatelessWidget {
 class _PriceRow extends StatelessWidget {
   const _PriceRow(this.label, this.value, {this.bold = false});
   final String label;
-  final String value;
+  final Widget value;
   final bool bold;
 
   @override
@@ -150,7 +150,7 @@ class _PriceRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: TextStyle(fontWeight: bold ? FontWeight.bold : FontWeight.normal, fontSize: bold ? 18 : 14)),
-          Text(value, style: TextStyle(fontWeight: bold ? FontWeight.bold : FontWeight.normal, fontSize: bold ? 18 : 14)),
+          value,
         ],
       ),
     );

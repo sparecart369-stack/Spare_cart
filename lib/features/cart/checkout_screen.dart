@@ -4,7 +4,6 @@ import 'package:spare_kart/bloc/cart/cart_bloc.dart';
 import 'package:spare_kart/bloc/orders/orders_bloc.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
-import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/data/models/models.dart';
@@ -109,12 +108,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         const Text('Shipping Method', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
         ...[
-          ('Standard (3-5 days)', AppCurrency.standardShipping),
-          ('Express (1-2 days)', AppCurrency.expressShipping),
-          ('Free Pickup', 0.0),
+          ('Standard (3-5 days)', '₹99'),
+          ('Express (1-2 days)', '₹199'),
+          ('Free Pickup', '₹0'),
         ].map(
           (option) => RadioListTile<String>(
-            title: Text('${option.$1} - ${AppCurrency.format(option.$2)}'),
+            title: Row(
+              children: [
+                Text('${option.$1} - '),
+                BlurredPrice(placeholder: option.$2),
+              ],
+            ),
             value: option.$1,
             groupValue: _shippingMethod,
             onChanged: (v) => setState(() => _shippingMethod = v!),
@@ -169,24 +173,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               leading: Image.network(item.part.imageUrl, width: 48, height: 48, fit: BoxFit.cover),
               title: Text(item.part.name),
               subtitle: Text('Qty: ${item.quantity}'),
-              trailing: Text(AppCurrency.format(item.total)),
+              trailing: const BlurredPrice(),
             )),
         const Divider(),
-        _summaryRow('Subtotal', AppCurrency.format(cart.subtotal)),
-        _summaryRow('Shipping', AppCurrency.format(cart.shipping)),
-        _summaryRow('Total', AppCurrency.format(cart.total), bold: true),
+        _summaryRow('Subtotal', const BlurredPrice()),
+        _summaryRow('Shipping', const BlurredPrice(placeholder: '₹99')),
+        _summaryRow('Total', const BlurredPrice(placeholder: '₹13,098'), bold: true),
       ],
     );
   }
 
-  Widget _summaryRow(String label, String value, {bool bold = false}) {
+  Widget _summaryRow(String label, Widget value, {bool bold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: TextStyle(fontWeight: bold ? FontWeight.bold : null)),
-          Text(value, style: TextStyle(fontWeight: bold ? FontWeight.bold : null)),
+          value,
         ],
       ),
     );
