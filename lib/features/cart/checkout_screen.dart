@@ -5,6 +5,7 @@ import 'package:spare_kart/bloc/orders/orders_bloc.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
+import 'package:spare_kart/core/validation/form_validators.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/data/models/models.dart';
 
@@ -16,9 +17,44 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
+  final _addressFormKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _stateController = TextEditingController();
+  final _zipController = TextEditingController();
+
   int _step = 0;
   String _shippingMethod = 'Standard (3-5 days)';
   String _paymentMethod = 'Visa ending in 4242';
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _streetController.dispose();
+    _cityController.dispose();
+    _stateController.dispose();
+    _zipController.dispose();
+    super.dispose();
+  }
+
+  bool _validateCurrentStep() {
+    return switch (_step) {
+      0 => _addressFormKey.currentState?.validate() ?? false,
+      1 => _shippingMethod.isNotEmpty,
+      2 => _paymentMethod.isNotEmpty,
+      _ => true,
+    };
+  }
+
+  void _continue() {
+    if (!_validateCurrentStep()) return;
+    if (_step < 3) {
+      setState(() => _step++);
+    } else {
+      _placeOrder(context.read<CartBloc>().state);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,13 +99,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: SafeArea(
               child: PrimaryButton(
                 label: _step < 3 ? 'Continue' : 'Place Order',
-                onPressed: () {
-                  if (_step < 3) {
-                    setState(() => _step++);
-                  } else {
-                    _placeOrder(cart);
-                  }
-                },
+                onPressed: _continue,
               ),
             ),
           ),
@@ -79,25 +109,54 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildAddress() {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Shipping Address', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        SizedBox(height: 16),
-        TextField(decoration: InputDecoration(labelText: 'Full Name', hintText: 'John Driver')),
-        SizedBox(height: 12),
-        TextField(decoration: InputDecoration(labelText: 'Street Address', hintText: '123 Main St')),
-        SizedBox(height: 12),
-        TextField(decoration: InputDecoration(labelText: 'City', hintText: 'Los Angeles')),
-        SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(child: TextField(decoration: InputDecoration(labelText: 'State', hintText: 'CA'))),
-            SizedBox(width: 12),
-            Expanded(child: TextField(decoration: InputDecoration(labelText: 'ZIP', hintText: '90001'))),
-          ],
-        ),
-      ],
+    return Form(
+      key: _addressFormKey,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Shipping Address', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _nameController,
+            validator: FormValidators.name,
+            decoration: const InputDecoration(labelText: 'Full Name', hintText: 'John Driver'),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _streetController,
+            validator: FormValidators.streetAddress,
+            decoration: const InputDecoration(labelText: 'Street Address', hintText: '123 Main St'),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _cityController,
+            validator: FormValidators.city,
+            decoration: const InputDecoration(labelText: 'City', hintText: 'Mumbai'),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _stateController,
+                  validator: FormValidators.state,
+                  decoration: const InputDecoration(labelText: 'State', hintText: 'MH'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: _zipController,
+                  keyboardType: TextInputType.number,
+                  validator: FormValidators.zipCode,
+                  decoration: const InputDecoration(labelText: 'PIN Code', hintText: '400001'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

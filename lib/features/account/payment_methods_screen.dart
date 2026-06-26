@@ -7,6 +7,7 @@ import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/utils/sensitive_text.dart';
+import 'package:spare_kart/core/validation/form_validators.dart';
 import 'package:spare_kart/data/models/models.dart';
 
 class PaymentMethodsScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class PaymentMethodsScreen extends StatefulWidget {
 }
 
 class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _upiController = TextEditingController();
   final _bankNameController = TextEditingController();
   final _accountNumberController = TextEditingController();
@@ -59,21 +61,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
   }
 
   void _save() {
-    final fields = [
-      (_upiController, 'UPI ID'),
-      (_bankNameController, 'bank name'),
-      (_accountNumberController, 'account number'),
-      (_accountNameController, 'account holder name'),
-      (_ifscController, 'IFSC code'),
-    ];
-    for (final (controller, label) in fields) {
-      if (controller.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please enter your $label')),
-        );
-        return;
-      }
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     context.read<AuthBloc>().add(
           AuthBankAccountUpdated(
@@ -187,53 +175,74 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
 
   Widget _buildForm() {
     const gap = 8.0;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _FormField(controller: _upiController, hint: 'UPI ID', icon: Icons.account_balance_wallet_outlined),
-        const SizedBox(height: gap),
-        _FormField(controller: _bankNameController, hint: 'Bank Name', icon: Icons.account_balance_outlined),
-        const SizedBox(height: gap),
-        _FormField(
-          controller: _accountNumberController,
-          hint: 'Account Number',
-          icon: Icons.numbers_rounded,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        ),
-        const SizedBox(height: gap),
-        _FormField(controller: _accountNameController, hint: 'Account Holder Name', icon: Icons.person_outline_rounded),
-        const SizedBox(height: gap),
-        _FormField(
-          controller: _ifscController,
-          hint: 'IFSC Code',
-          icon: Icons.qr_code_2_rounded,
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
-            TextInputFormatter.withFunction((old, next) => next.copyWith(text: next.text.toUpperCase())),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            if (context.read<AuthBloc>().state.user?.bankAccount?.isComplete ?? false)
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => setState(() {
-                    _editing = false;
-                    _loadFromProfile();
-                  }),
-                  child: const Text('Cancel'),
+    return Form(
+      key: _formKey,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _FormField(
+            controller: _upiController,
+            hint: 'UPI ID',
+            icon: Icons.account_balance_wallet_outlined,
+            validator: FormValidators.upiId,
+          ),
+          const SizedBox(height: gap),
+          _FormField(
+            controller: _bankNameController,
+            hint: 'Bank Name',
+            icon: Icons.account_balance_outlined,
+            validator: FormValidators.bankName,
+          ),
+          const SizedBox(height: gap),
+          _FormField(
+            controller: _accountNumberController,
+            hint: 'Account Number',
+            icon: Icons.numbers_rounded,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            validator: FormValidators.accountNumber,
+          ),
+          const SizedBox(height: gap),
+          _FormField(
+            controller: _accountNameController,
+            hint: 'Account Holder Name',
+            icon: Icons.person_outline_rounded,
+            validator: FormValidators.accountHolderName,
+          ),
+          const SizedBox(height: gap),
+          _FormField(
+            controller: _ifscController,
+            hint: 'IFSC Code',
+            icon: Icons.qr_code_2_rounded,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+              TextInputFormatter.withFunction((old, next) => next.copyWith(text: next.text.toUpperCase())),
+            ],
+            validator: FormValidators.ifscCode,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              if (context.read<AuthBloc>().state.user?.bankAccount?.isComplete ?? false)
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => setState(() {
+                      _editing = false;
+                      _loadFromProfile();
+                    }),
+                    child: const Text('Cancel'),
+                  ),
                 ),
+              if (context.read<AuthBloc>().state.user?.bankAccount?.isComplete ?? false) const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: FilledButton(onPressed: _save, child: const Text('Save')),
               ),
-            if (context.read<AuthBloc>().state.user?.bankAccount?.isComplete ?? false) const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: FilledButton(onPressed: _save, child: const Text('Save')),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -277,6 +286,7 @@ class _FormField extends StatelessWidget {
     required this.icon,
     this.keyboardType,
     this.inputFormatters,
+    this.validator,
   });
 
   final TextEditingController controller;
@@ -284,13 +294,15 @@ class _FormField extends StatelessWidget {
   final IconData icon;
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
+  final String? Function(String?)? validator;
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
+      validator: validator,
       style: AppTypography.textTheme.bodySmall?.copyWith(
         color: AppColors.textPrimary,
         fontWeight: FontWeight.w600,

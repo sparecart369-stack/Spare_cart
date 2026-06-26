@@ -37,7 +37,7 @@ class SpareKartApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => AuthBloc()),
+        BlocProvider(create: (_) => AuthBloc()..add(AuthSessionChecked())),
         BlocProvider(create: (_) => AppModeBloc()),
         BlocProvider(create: (_) => CartBloc()),
         BlocProvider(create: (_) => ListingsBloc()),

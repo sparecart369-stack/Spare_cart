@@ -8,6 +8,7 @@ import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
+import 'package:spare_kart/core/validation/form_validators.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/data/models/models.dart';
@@ -66,6 +67,7 @@ class _SellScreenState extends State<SellScreen> {
 
   void _next() {
     final stepName = _steps[_step];
+    if (stepName == 'Details' && !_validateDetails()) return;
     if (stepName == 'Photos' && !_validatePhotos()) return;
     if (stepName == 'Bank Account' && !_validateBankAccount()) return;
     if (stepName == 'Bank Account') _saveBankAccount();
@@ -75,6 +77,44 @@ class _SellScreenState extends State<SellScreen> {
     } else {
       _publishListing();
     }
+  }
+
+  bool _validateDetails() {
+    final nameError = FormValidators.listingName(_nameController.text);
+    if (nameError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(nameError)));
+      return false;
+    }
+    if (_category == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a category')),
+      );
+      return false;
+    }
+    if (_make == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a make')),
+      );
+      return false;
+    }
+    if (_model == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a model')),
+      );
+      return false;
+    }
+    if (_year == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a year')),
+      );
+      return false;
+    }
+    final descError = FormValidators.listingDescription(_descController.text);
+    if (descError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(descError)));
+      return false;
+    }
+    return true;
   }
 
   bool _validatePhotos() {
@@ -90,18 +130,16 @@ class _SellScreenState extends State<SellScreen> {
   }
 
   bool _validateBankAccount() {
-    final fields = [
-      (_upiController, 'UPI ID'),
-      (_bankNameController, 'bank name'),
-      (_accountNumberController, 'account number'),
-      (_accountNameController, 'account holder name'),
-      (_ifscController, 'IFSC code'),
+    final validators = [
+      FormValidators.upiId(_upiController.text),
+      FormValidators.bankName(_bankNameController.text),
+      FormValidators.accountNumber(_accountNumberController.text),
+      FormValidators.accountHolderName(_accountNameController.text),
+      FormValidators.ifscCode(_ifscController.text),
     ];
-    for (final (controller, label) in fields) {
-      if (controller.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please enter your $label')),
-        );
+    for (final error in validators) {
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
         return false;
       }
     }
