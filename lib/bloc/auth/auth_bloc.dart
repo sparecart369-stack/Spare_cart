@@ -23,11 +23,20 @@ class AuthSignupRequested extends AuthEvent {
     required this.phone,
     required this.password,
     required this.name,
+    required this.operatingCountries,
   });
   final String phone;
   final String password;
   final String name;
+  final OperatingCountriesSelection operatingCountries;
 }
+
+class AuthOperatingCountriesUpdated extends AuthEvent {
+  AuthOperatingCountriesUpdated(this.operatingCountries);
+  final OperatingCountriesSelection operatingCountries;
+}
+
+class AuthProfileRefreshRequested extends AuthEvent {}
 
 class AuthLogoutRequested extends AuthEvent {}
 
@@ -79,6 +88,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSignupRequested>(_onSignup);
     on<AuthLogoutRequested>(_onLogout);
     on<AuthBankAccountUpdated>(_onBankAccountUpdated);
+    on<AuthOperatingCountriesUpdated>(_onOperatingCountriesUpdated);
+    on<AuthProfileRefreshRequested>(_onProfileRefresh);
   }
 
   final AuthRepository _repository;
@@ -128,6 +139,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         name: event.name,
         phone: event.phone,
         password: event.password,
+        operatingCountries: event.operatingCountries,
       );
       emit(AuthState(status: AuthStatus.authenticated, user: user));
     } catch (e) {
@@ -159,5 +171,46 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } catch (e) {
       emit(state.copyWith(errorMessage: FormValidators.authErrorMessage(e)));
     }
+  }
+
+  Future<void> _onOperatingCountriesUpdated(
+    AuthOperatingCountriesUpdated event,
+    Emitter<AuthState> emit,
+  ) async {
+    final user = state.user;
+    if (user == null) return;
+
+    emit(state.copyWith(isLoading: true, clearError: true));
+    try {
+      final saved = await _repository.updateOperatingCountries(
+        event.operatingCountries,
+      );
+      emit(state.copyWith(
+        isLoading: false,
+        user: user.copyWith(
+          operatingCountries: saved.countryCodes,
+          operatesGlobally: saved.operatesGlobally,
+        ),
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        errorMessage: FormValidators.authErrorMessage(e),
+      ));
+    }
+  }
+
+  Future<void> _onProfileRefresh(
+    AuthProfileRefreshRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    if (state.status != AuthStatus.authenticated) return;
+
+    try {
+      final profile = await _repository.fetchProfile();
+      if (profile != null) {
+        emit(state.copyWith(user: profile, clearError: true));
+      }
+    } catch (_) {}
   }
 }

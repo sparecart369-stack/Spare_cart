@@ -62,7 +62,6 @@ flutter:
 
   assets:
     - assets/images/app_logo.png
-    - assets/images/hero_marketplace_banner.png
     - assets/images/hero_brake_rotor.png
     - assets/images/category_engine.png
     - assets/images/category_transmission.png

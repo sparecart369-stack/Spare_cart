@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:spare_kart/bloc/auth/auth_bloc.dart';
+import 'package:spare_kart/bloc/listings/listings_bloc.dart';
+import 'package:spare_kart/bloc/messages/messages_bloc.dart';
+import 'package:spare_kart/bloc/orders/orders_bloc.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
@@ -15,6 +20,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   late final AnimationController _controller;
   late final Animation<double> _fade;
   late final Animation<double> _scale;
+  bool _minDelayComplete = false;
+  bool _navigated = false;
 
   @override
   void initState() {
@@ -26,8 +33,27 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     );
     _controller.forward();
     Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) Navigator.pushReplacementNamed(context, AppRoutes.welcome);
+      if (!mounted) return;
+      _minDelayComplete = true;
+      _tryNavigate();
     });
+  }
+
+  void _tryNavigate() {
+    if (_navigated || !mounted || !_minDelayComplete) return;
+
+    final authState = context.read<AuthBloc>().state;
+    if (authState.status == AuthStatus.unknown) return;
+
+    _navigated = true;
+    if (authState.status == AuthStatus.authenticated && authState.user != null) {
+      context.read<ListingsBloc>().add(ListingsLoaded());
+      context.read<OrdersBloc>().add(OrdersLoaded());
+      context.read<MessagesBloc>().add(MessagesLoaded());
+      Navigator.pushReplacementNamed(context, AppRoutes.main);
+    } else {
+      Navigator.pushReplacementNamed(context, AppRoutes.welcome);
+    }
   }
 
   @override
@@ -38,18 +64,25 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        body: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(gradient: AppColors.splashGradient),
-          child: FadeTransition(
-            opacity: _fade,
-            child: ScaleTransition(
-              scale: _scale,
-              child: const Center(child: AppLogo(size: 130)),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state.status != AuthStatus.unknown) {
+          _tryNavigate();
+        }
+      },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: Scaffold(
+          body: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(gradient: AppColors.splashGradient),
+            child: FadeTransition(
+              opacity: _fade,
+              child: ScaleTransition(
+                scale: _scale,
+                child: const Center(child: AppLogo(size: 130)),
+              ),
             ),
           ),
         ),

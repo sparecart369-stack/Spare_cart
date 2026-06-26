@@ -12,6 +12,7 @@ class PhoneNumberField extends StatefulWidget {
     this.enabled = true,
     this.hintText = '98765 43210',
     this.onDialCodeChanged,
+    this.onCountryChanged,
     this.initialCountryCode = 'IN',
   });
 
@@ -20,6 +21,7 @@ class PhoneNumberField extends StatefulWidget {
   final bool enabled;
   final String hintText;
   final ValueChanged<String>? onDialCodeChanged;
+  final ValueChanged<CountryCode>? onCountryChanged;
   final String initialCountryCode;
 
   @override
@@ -35,10 +37,13 @@ class PhoneNumberFieldState extends State<PhoneNumberField> {
     _selectedCountry = CountryCode.fromCountryCode(widget.initialCountryCode);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.onDialCodeChanged?.call(_selectedCountry.dialCode ?? '+91');
+      widget.onCountryChanged?.call(_selectedCountry);
     });
   }
 
   String get dialCode => _selectedCountry.dialCode ?? '+91';
+
+  String get countryCode => _selectedCountry.code ?? widget.initialCountryCode;
 
   String get fullPhoneNumber {
     final localDigits = widget.controller.text.replaceAll(RegExp(r'\D'), '');
@@ -48,6 +53,7 @@ class PhoneNumberFieldState extends State<PhoneNumberField> {
   void _onCountryChanged(CountryCode country) {
     setState(() => _selectedCountry = country);
     widget.onDialCodeChanged?.call(country.dialCode ?? '+91');
+    widget.onCountryChanged?.call(country);
   }
 
   @override

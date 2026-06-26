@@ -62,9 +62,9 @@ class MarketplaceHeroBanner extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Global Marketplace\nfor Used Auto Parts',
+                            'Global Marketplace for \nNew & Used Auto Parts',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: (width * 0.048).clamp(17.0, 22.0),
+                              fontSize: (width * 0.028).clamp(17.0, 22.0),
                               fontWeight: FontWeight.w800,
                               height: 1.2,
                               letterSpacing: -0.4,
@@ -73,11 +73,11 @@ class MarketplaceHeroBanner extends StatelessWidget {
                           ),
                           SizedBox(height: height * 0.06),
                           Text(
-                            'Save money. Save the planet.',
+                            'Find genuine new and quality used spare parts at the best prices.',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: (width * 0.032).clamp(12.0, 14.0),
+                              fontSize: (width * 0.022).clamp(12.0, 14.0),
                               fontWeight: FontWeight.w500,
-                              height: 1.3,
+                              height: 1.0,
                               color: Colors.white.withValues(alpha: 0.78),
                             ),
                           ),
@@ -101,8 +101,8 @@ class MarketplaceHeroBanner extends StatelessWidget {
                               ],
                             ),
                             padding: EdgeInsets.symmetric(
-                              horizontal: width * 0.05,
-                              vertical: height * 0.09,
+                              horizontal: width * 0.04,
+                              vertical: height * 0.07,
                             ),
                             child: Text(
                               'Explore Parts',
@@ -150,12 +150,7 @@ class MarketplaceHeroBannerImage extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Image.asset(
-                  AppAssets.heroMarketplaceBanner,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: height,
-                ),
+               
                 Positioned.fill(
                   child: Material(
                     color: Colors.transparent,

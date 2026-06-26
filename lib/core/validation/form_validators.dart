@@ -164,11 +164,22 @@ class FormValidators {
       return 'Invalid phone number or password';
     }
     if (msg.contains('user already registered') || msg.contains('already been registered')) {
-      return 'An account with this phone number already exists';
+      return 'An account with this phone number already exists. Try logging in.';
+    }
+    if (msg.contains('already linked to an account')) {
+      return 'This phone number is already linked to an account. Try logging in.';
     }
     if (msg.contains('password')) return 'Password does not meet requirements';
     if (msg.contains('network') || msg.contains('socket')) {
       return 'Network error. Check your connection and try again';
+    }
+    if (msg.contains('operating_countries') ||
+        msg.contains('operates_globally') ||
+        msg.contains('database migration')) {
+      return 'Server setup incomplete. Apply the latest Supabase migration and try again.';
+    }
+    if (msg.contains('permission denied') || msg.contains('row-level security')) {
+      return 'Account created but profile sync failed. Try logging in.';
     }
     return 'Something went wrong. Please try again';
   }

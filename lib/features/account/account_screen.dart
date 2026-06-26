@@ -6,6 +6,7 @@ import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
+import 'package:spare_kart/core/utils/operating_countries_helper.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/utils/sensitive_text.dart';
 import 'package:spare_kart/data/models/models.dart';
@@ -18,6 +19,12 @@ class AccountScreen extends StatelessWidget {
     final user = context.watch<AuthBloc>().state.user;
     final r = Responsive(context);
     final initial = (user?.name ?? 'U')[0].toUpperCase();
+    final countriesSummary = user == null
+        ? ''
+        : OperatingCountriesHelper.formatSummary(
+            operatesGlobally: user.operatesGlobally,
+            countryCodes: user.operatingCountries,
+          );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -27,7 +34,9 @@ class AccountScreen extends StatelessWidget {
             initial: initial,
             name: user?.name ?? 'Guest',
             phone: user?.phone ?? '',
+            countriesSummary: countriesSummary,
             horizontalPadding: r.horizontalPadding(),
+            onEdit: () => Navigator.pushNamed(context, AppRoutes.editProfile),
           ),
           Expanded(
             child: ListView(
@@ -50,6 +59,7 @@ class AccountScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 _AccountSection(
                   items: [
+                    _MenuData(Icons.public_rounded, 'Operating Countries', AppColors.primaryMid, () => Navigator.pushNamed(context, AppRoutes.editProfile)),
                     _MenuData(Icons.location_on_rounded, 'My Addresses', AppColors.success, () => Navigator.pushNamed(context, AppRoutes.addresses)),
                     _MenuData(Icons.admin_panel_settings_rounded, 'Admin Dashboard', AppColors.warning, () {
                       context.read<AppModeBloc>().add(AppModeSet(AppMode.admin));
@@ -76,13 +86,17 @@ class _ProfileHeader extends StatelessWidget {
     required this.initial,
     required this.name,
     required this.phone,
+    required this.countriesSummary,
     required this.horizontalPadding,
+    required this.onEdit,
   });
 
   final String initial;
   final String name;
   final String phone;
+  final String countriesSummary;
   final double horizontalPadding;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -124,6 +138,25 @@ class _ProfileHeader extends StatelessWidget {
                     Text(name, style: AppTypography.textTheme.titleLarge),
                     const SizedBox(height: 4),
                     Text(phone, style: AppTypography.textTheme.bodyMedium),
+                    if (countriesSummary.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.public_rounded, size: 14, color: AppColors.textTertiary),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              countriesSummary,
+                              style: AppTypography.textTheme.bodySmall?.copyWith(
+                                color: AppColors.textTertiary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -143,7 +176,7 @@ class _ProfileHeader extends StatelessWidget {
                 ),
               ),
               IconButton(
-                onPressed: () {},
+                onPressed: onEdit,
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: AppDecorations.iconButtonBg(),

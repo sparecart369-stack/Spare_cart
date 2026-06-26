@@ -266,6 +266,30 @@ class SellerBankAccount extends Equatable {
   List<Object?> get props => [upiId, bankName, accountNumber, accountName, ifscCode];
 }
 
+class OperatingCountriesSelection extends Equatable {
+  const OperatingCountriesSelection({
+    this.countryCodes = const [],
+    this.operatesGlobally = false,
+  });
+
+  final List<String> countryCodes;
+  final bool operatesGlobally;
+
+  bool get isValid => operatesGlobally || countryCodes.isNotEmpty;
+
+  OperatingCountriesSelection copyWith({
+    List<String>? countryCodes,
+    bool? operatesGlobally,
+  }) =>
+      OperatingCountriesSelection(
+        countryCodes: countryCodes ?? this.countryCodes,
+        operatesGlobally: operatesGlobally ?? this.operatesGlobally,
+      );
+
+  @override
+  List<Object?> get props => [countryCodes, operatesGlobally];
+}
+
 class UserProfile extends Equatable {
   const UserProfile({
     required this.name,
@@ -274,6 +298,8 @@ class UserProfile extends Equatable {
     this.positiveFeedback = 98,
     this.orders = 0,
     this.bankAccount,
+    this.operatingCountries = const [],
+    this.operatesGlobally = false,
   });
 
   final String name;
@@ -282,6 +308,14 @@ class UserProfile extends Equatable {
   final int positiveFeedback;
   final int orders;
   final SellerBankAccount? bankAccount;
+  final List<String> operatingCountries;
+  final bool operatesGlobally;
+
+  OperatingCountriesSelection get operatingCountriesSelection =>
+      OperatingCountriesSelection(
+        countryCodes: operatingCountries,
+        operatesGlobally: operatesGlobally,
+      );
 
   UserProfile copyWith({
     String? name,
@@ -290,6 +324,8 @@ class UserProfile extends Equatable {
     int? positiveFeedback,
     int? orders,
     SellerBankAccount? bankAccount,
+    List<String>? operatingCountries,
+    bool? operatesGlobally,
   }) =>
       UserProfile(
         name: name ?? this.name,
@@ -298,8 +334,19 @@ class UserProfile extends Equatable {
         positiveFeedback: positiveFeedback ?? this.positiveFeedback,
         orders: orders ?? this.orders,
         bankAccount: bankAccount ?? this.bankAccount,
+        operatingCountries: operatingCountries ?? this.operatingCountries,
+        operatesGlobally: operatesGlobally ?? this.operatesGlobally,
       );
 
   @override
-  List<Object?> get props => [phone, bankAccount];
+  List<Object?> get props => [
+        name,
+        phone,
+        listings,
+        positiveFeedback,
+        orders,
+        bankAccount,
+        operatingCountries,
+        operatesGlobally,
+      ];
 }

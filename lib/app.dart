@@ -10,6 +10,7 @@ import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_theme.dart';
 import 'package:spare_kart/data/models/models.dart';
 import 'package:spare_kart/features/account/addresses_screen.dart';
+import 'package:spare_kart/features/account/edit_profile_screen.dart';
 import 'package:spare_kart/features/account/my_listings_screen.dart';
 import 'package:spare_kart/features/account/my_orders_screen.dart';
 import 'package:spare_kart/features/account/payment_methods_screen.dart';
@@ -92,6 +93,8 @@ class SpareKartApp extends StatelessWidget {
         return _page(const PaymentMethodsScreen(), settings);
       case AppRoutes.settings:
         return _page(const SettingsScreen(), settings);
+      case AppRoutes.editProfile:
+        return _page(const EditProfileScreen(), settings);
       case AppRoutes.messages:
         return _page(const MessagesScreen(), settings);
       case AppRoutes.chatDetail:
