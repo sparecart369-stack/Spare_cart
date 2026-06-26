@@ -5,6 +5,7 @@ import 'package:spare_kart/bloc/messages/messages_bloc.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
+import 'package:spare_kart/core/widgets/common_widgets.dart';
 
 class MessagesScreen extends StatelessWidget {
   const MessagesScreen({super.key});
@@ -18,6 +19,13 @@ class MessagesScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Messages')),
       body: BlocBuilder<MessagesBloc, MessagesState>(
         builder: (context, state) {
+          if (state.threads.isEmpty) {
+            return const EmptyState(
+              icon: Icons.chat_bubble_outline_rounded,
+              title: 'No messages yet',
+              subtitle: 'Start a conversation from a listing',
+            );
+          }
           return ListView.separated(
             padding: EdgeInsets.symmetric(vertical: 8, horizontal: r.horizontalPadding()),
             itemCount: state.threads.length,

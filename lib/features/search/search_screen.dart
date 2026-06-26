@@ -92,10 +92,13 @@ class _SearchScreenState extends State<SearchScreen> {
               builder: (context, state) {
                 final parts = state.filteredParts;
                 if (parts.isEmpty) {
-                  return const EmptyState(
+                  final isDemoEmpty = state.allParts.isEmpty && state.searchQuery.isEmpty;
+                  return EmptyState(
                     icon: Icons.search_off_rounded,
-                    title: 'No parts found',
-                    subtitle: 'Try adjusting your search or filters',
+                    title: isDemoEmpty ? 'No listings yet' : 'No parts found',
+                    subtitle: isDemoEmpty
+                        ? 'Use the Sell tab to add your first part'
+                        : 'Try adjusting your search or filters',
                   );
                 }
                 return ListView.separated(

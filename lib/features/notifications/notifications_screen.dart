@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
-import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/data/models/models.dart';
 
 class NotificationsScreen extends StatelessWidget {
@@ -12,7 +11,7 @@ class NotificationsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = Responsive(context);
-    final notifications = generateDummyNotifications();
+    const notifications = <AppNotification>[];
     final timeFormat = DateFormat('h:mm a');
 
     return Scaffold(

@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spare_kart/core/utils/app_currency.dart';
-import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/data/models/models.dart';
 
 sealed class ListingsEvent extends Equatable {
@@ -65,7 +64,7 @@ class ListingsState extends Equatable {
 
   int get adminActiveListings => adminParts.length;
 
-  int get adminPendingOrders => 3;
+  int get adminPendingOrders => 0;
 
   ListingsState copyWith({
     List<Part>? allParts,
@@ -201,12 +200,7 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
   }
 
   void _onLoaded(ListingsLoaded event, Emitter<ListingsState> emit) {
-    final parts = generateDummyParts();
-    emit(state.copyWith(
-      allParts: parts,
-      filteredParts: parts,
-      isLoaded: true,
-    ));
+    emit(state.copyWith(isLoaded: true));
   }
 
   void _onAdded(ListingAdded event, Emitter<ListingsState> emit) {

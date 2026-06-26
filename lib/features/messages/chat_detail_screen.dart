@@ -4,7 +4,6 @@ import 'package:spare_kart/bloc/app_mode/app_mode_bloc.dart';
 import 'package:spare_kart/bloc/messages/messages_bloc.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
-import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/data/models/models.dart';
 import 'package:spare_kart/features/messages/chat_flow.dart';
 import 'package:spare_kart/features/messages/chat_session_store.dart';
@@ -88,7 +87,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       }
     }
 
-    _messages = generateChatMessages();
+    _messages = [];
     _flowStep = ChatFlowStep.completed;
   }
 

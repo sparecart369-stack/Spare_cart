@@ -212,21 +212,36 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 0, r.horizontalPadding(), 32),
-                sliver: SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: r.gridColumns(mobile: 2, tablet: 3),
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 0.68,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) => PartCard(
-                      part: featured[i],
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.productDetail, arguments: featured[i]),
-                    ),
-                    childCount: featured.length,
-                  ),
-                ),
+                sliver: featured.isEmpty
+                    ? SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: EmptyState(
+                            icon: Icons.inventory_2_outlined,
+                            title: 'No listings yet',
+                            subtitle: 'Use the Sell tab to add your first part',
+                          ),
+                        ),
+                      )
+                    : SliverGrid(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: r.gridColumns(mobile: 2, tablet: 3),
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.68,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) => PartCard(
+                            part: featured[i],
+                            onTap: () => Navigator.pushNamed(
+                              context,
+                              AppRoutes.productDetail,
+                              arguments: featured[i],
+                            ),
+                          ),
+                          childCount: featured.length,
+                        ),
+                      ),
               ),
             ],
           );

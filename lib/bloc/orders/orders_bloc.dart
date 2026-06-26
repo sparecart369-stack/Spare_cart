@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/data/models/models.dart';
 
 sealed class OrdersEvent extends Equatable {
@@ -35,8 +34,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   }
 
   void _onLoaded(OrdersLoaded event, Emitter<OrdersState> emit) {
-    final parts = generateDummyParts();
-    emit(OrdersState(orders: generateDummyOrders(parts), isLoaded: true));
+    emit(const OrdersState(isLoaded: true));
   }
 
   void _onPlaced(OrderPlaced event, Emitter<OrdersState> emit) {

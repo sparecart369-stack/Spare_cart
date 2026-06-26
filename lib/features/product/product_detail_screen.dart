@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spare_kart/bloc/cart/cart_bloc.dart';
-import 'package:spare_kart/core/constants/app_commission.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
@@ -224,79 +223,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    Text('Compatibility', style: AppTypography.textTheme.titleMedium),
-                    const SizedBox(height: 12),
-                    ...part.compatibility.map((c) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.successSoft,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.check_rounded, size: 14, color: AppColors.success),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(c, style: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary)),
-                            ],
-                          ),
-                        )),
-                    const SizedBox(height: 24),
                     Text('Description', style: AppTypography.textTheme.titleMedium),
                     const SizedBox(height: 10),
                     Text(part.description, style: AppTypography.textTheme.bodyMedium?.copyWith(height: 1.6)),
-                    if (part.isAdminListing) ...[
-                      const SizedBox(height: 24),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryLight,
-                          borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Seller Earnings', style: AppTypography.textTheme.titleSmall),
-                            const SizedBox(height: 10),
-                            _DetailRow(
-                              label: 'Listing price',
-                              valueChild: const BlurredPrice(),
-                            ),
-                            _DetailRow(
-                              label: 'Convenience fee (${AppCommission.percent.toStringAsFixed(0)}%)',
-                              valueChild: const BlurredPrice(placeholder: '₹650'),
-                            ),
-                            const Divider(height: 20),
-                            _DetailRow(
-                              label: 'You receive',
-                              valueChild: const BlurredPrice(placeholder: '₹12,349'),
-                              emphasized: true,
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(Icons.schedule_rounded, size: 16, color: AppColors.primary.withValues(alpha: 0.8)),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    AppCommission.payoutScheduleMessage,
-                                    style: AppTypography.textTheme.bodySmall?.copyWith(
-                                      color: AppColors.textSecondary,
-                                      height: 1.45,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: 120),
                   ],
                 ),
@@ -404,17 +333,10 @@ class _DetailSection extends StatelessWidget {
 }
 
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({
-    required this.label,
-    this.value,
-    this.valueChild,
-    this.emphasized = false,
-  }) : assert(value != null || valueChild != null);
+  const _DetailRow({required this.label, required this.value});
 
   final String label;
-  final String? value;
-  final Widget? valueChild;
-  final bool emphasized;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
@@ -428,13 +350,10 @@ class _DetailRow extends StatelessWidget {
               style: AppTypography.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
             ),
           ),
-          valueChild ??
-              Text(
-                value!,
-                style: emphasized
-                    ? AppTypography.textTheme.titleSmall?.copyWith(color: AppColors.primary)
-                    : AppTypography.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
+          Text(
+            value,
+            style: AppTypography.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );
