@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:spare_kart/bloc/cart/cart_bloc.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
@@ -7,6 +8,7 @@ import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
+import 'package:spare_kart/core/widgets/listing_image.dart';
 import 'package:spare_kart/data/models/models.dart';
 import 'package:spare_kart/features/messages/chat_detail_screen.dart';
 
@@ -41,6 +43,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final images = part.displayImages;
     final r = Responsive(context);
     final inCart = context.watch<CartBloc>().state.contains(part.id);
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final isOwnListing = currentUserId != null && currentUserId == part.sellerId;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -56,7 +60,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: CircleAvatar(
                 backgroundColor: Colors.white.withValues(alpha: 0.9),
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.black),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -69,19 +73,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     controller: _pageController,
                     itemCount: images.length,
                     onPageChanged: (i) => setState(() => _imageIndex = i),
-                    itemBuilder: (_, i) => Image.network(
-                      images[i],
+                    itemBuilder: (_, i) => ListingImage(
+                      url: images[i],
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Container(
-                        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-                        child: Center(
-                          child: Icon(
-                            Icons.image_not_supported_rounded,
-                            color: Colors.white.withValues(alpha: 0.5),
-                            size: 48,
-                          ),
-                        ),
-                      ),
+                      errorIconSize: 48,
+                      errorIconColor: Colors.white.withValues(alpha: 0.5),
+                      errorBackground: const BoxDecoration(gradient: AppColors.primaryGradient),
                     ),
                   ),
                   Container(
@@ -210,7 +207,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       Icon(Icons.location_on_rounded, size: 14, color: AppColors.textTertiary),
                                       const SizedBox(width: 4),
                                       Expanded(
-                                        child: Text(part.location, style: AppTypography.textTheme.bodySmall),
+                                        child: Text(part.displayLocation, style: AppTypography.textTheme.bodySmall),
                                       ),
                                     ],
                                   ),
@@ -247,13 +244,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => Navigator.pushNamed(
-                      context,
-                      AppRoutes.chatDetail,
-                      arguments: ChatArgs(part: part),
-                    ),
+                    onPressed: isOwnListing
+                        ? null
+                        : () => Navigator.pushNamed(
+                              context,
+                              AppRoutes.chatDetail,
+                              arguments: ChatArgs(part: part),
+                            ),
                     icon: const Icon(Icons.chat_bubble_outline_rounded),
-                    label: const Text('Chat'),
+                    label: Text(isOwnListing ? 'Your listing' : 'Chat'),
                   ),
                 ),
                 const SizedBox(width: 12),

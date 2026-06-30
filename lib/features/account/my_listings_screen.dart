@@ -17,21 +17,34 @@ class MyListingsScreen extends StatelessWidget {
       body: BlocBuilder<ListingsBloc, ListingsState>(
         builder: (context, state) {
           final listings = state.adminParts;
+          final bloc = context.read<ListingsBloc>();
           if (listings.isEmpty) {
-            return EmptyState(
-              icon: Icons.inventory_2_outlined,
-              title: 'No listings yet',
-              subtitle: 'Use the Sell tab to add your first part',
+            return RefreshIndicator(
+              onRefresh: () => refreshListings(bloc),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  EmptyState(
+                    icon: Icons.inventory_2_outlined,
+                    title: 'No listings yet',
+                    subtitle: 'Use the Sell tab to add your first part',
+                  ),
+                ],
+              ),
             );
           }
-          return ListView.separated(
-            padding: EdgeInsets.all(r.horizontalPadding()),
-            itemCount: listings.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, i) => PartCard(
-              part: listings[i],
-              compact: true,
-              onTap: () => Navigator.pushNamed(context, AppRoutes.productDetail, arguments: listings[i]),
+          return RefreshIndicator(
+            onRefresh: () => refreshListings(bloc),
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.all(r.horizontalPadding()),
+              itemCount: listings.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, i) => PartCard(
+                part: listings[i],
+                compact: true,
+                onTap: () => Navigator.pushNamed(context, AppRoutes.productDetail, arguments: listings[i]),
+              ),
             ),
           );
         },

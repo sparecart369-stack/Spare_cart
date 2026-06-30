@@ -22,6 +22,7 @@ import 'package:spare_kart/features/cart/cart_screen.dart';
 import 'package:spare_kart/features/cart/checkout_screen.dart';
 import 'package:spare_kart/features/main/main_shell.dart';
 import 'package:spare_kart/features/messages/chat_detail_screen.dart';
+import 'package:spare_kart/features/messages/message_sync_host.dart';
 import 'package:spare_kart/features/messages/messages_screen.dart';
 import 'package:spare_kart/features/notifications/notifications_screen.dart';
 import 'package:spare_kart/features/onboarding/welcome_screen.dart';
@@ -45,12 +46,14 @@ class SpareKartApp extends StatelessWidget {
         BlocProvider(create: (_) => OrdersBloc()),
         BlocProvider(create: (_) => MessagesBloc()),
       ],
-      child: MaterialApp(
-        title: 'SpareKart',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        initialRoute: AppRoutes.splash,
-        onGenerateRoute: _onGenerateRoute,
+      child: MessageSyncHost(
+        child: MaterialApp(
+          title: 'SpareKart',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          initialRoute: AppRoutes.splash,
+          onGenerateRoute: _onGenerateRoute,
+        ),
       ),
     );
   }

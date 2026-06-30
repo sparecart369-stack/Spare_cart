@@ -7,6 +7,7 @@ import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/validation/form_validators.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
+import 'package:spare_kart/core/widgets/listing_image.dart';
 import 'package:spare_kart/data/models/models.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -229,7 +230,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         const Text('Order Summary', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
         ...cart.items.map((item) => ListTile(
-              leading: Image.network(item.part.imageUrl, width: 48, height: 48, fit: BoxFit.cover),
+              leading: ListingImage(url: item.part.imageUrl, width: 48, height: 48),
               title: Text(item.part.name),
               subtitle: Text('Qty: ${item.quantity}'),
               trailing: const BlurredPrice(),

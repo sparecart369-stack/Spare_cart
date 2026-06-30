@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/data/models/models.dart';
+import 'package:spare_kart/data/repositories/listings_repository.dart';
 
 sealed class ListingsEvent extends Equatable {
   @override
@@ -10,9 +11,19 @@ sealed class ListingsEvent extends Equatable {
 
 class ListingsLoaded extends ListingsEvent {}
 
-class ListingAdded extends ListingsEvent {
-  ListingAdded(this.part);
-  final Part part;
+Future<void> refreshListings(ListingsBloc bloc) async {
+  bloc.add(ListingsLoaded());
+  await bloc.stream.firstWhere((state) => !state.isLoading);
+}
+
+class ListingPublishRequested extends ListingsEvent {
+  ListingPublishRequested({
+    required this.input,
+    required this.sellerName,
+  });
+
+  final CreateListingInput input;
+  final String sellerName;
 }
 
 class ListingSearchChanged extends ListingsEvent {
@@ -50,6 +61,9 @@ class ListingsState extends Equatable {
     this.searchQuery = '',
     this.filters = const PartFilters(),
     this.isLoaded = false,
+    this.isLoading = false,
+    this.isPublishing = false,
+    this.errorMessage,
   });
 
   final List<Part> allParts;
@@ -58,6 +72,9 @@ class ListingsState extends Equatable {
   final String searchQuery;
   final PartFilters filters;
   final bool isLoaded;
+  final bool isLoading;
+  final bool isPublishing;
+  final String? errorMessage;
 
   double get adminTotalSales =>
       adminParts.fold(0.0, (sum, p) => sum + p.price * 1.2);
@@ -73,6 +90,10 @@ class ListingsState extends Equatable {
     String? searchQuery,
     PartFilters? filters,
     bool? isLoaded,
+    bool? isLoading,
+    bool? isPublishing,
+    String? errorMessage,
+    bool clearError = false,
   }) {
     return ListingsState(
       allParts: allParts ?? this.allParts,
@@ -81,11 +102,24 @@ class ListingsState extends Equatable {
       searchQuery: searchQuery ?? this.searchQuery,
       filters: filters ?? this.filters,
       isLoaded: isLoaded ?? this.isLoaded,
+      isLoading: isLoading ?? this.isLoading,
+      isPublishing: isPublishing ?? this.isPublishing,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
 
   @override
-  List<Object?> get props => [allParts, filteredParts, adminParts, searchQuery, filters, isLoaded];
+  List<Object?> get props => [
+        allParts,
+        filteredParts,
+        adminParts,
+        searchQuery,
+        filters,
+        isLoaded,
+        isLoading,
+        isPublishing,
+        errorMessage,
+      ];
 }
 
 class PartFilters extends Equatable {
@@ -191,27 +225,79 @@ String _filterSortLabel(SortOption sort) => switch (sort) {
 enum SortOption { relevance, priceLow, priceHigh, newest }
 
 class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
-  ListingsBloc() : super(const ListingsState()) {
+  ListingsBloc({ListingsRepository? repository})
+      : _repository = repository ?? ListingsRepository(),
+        super(const ListingsState()) {
     on<ListingsLoaded>(_onLoaded);
-    on<ListingAdded>(_onAdded);
+    on<ListingPublishRequested>(_onPublish);
     on<ListingSearchChanged>(_onSearch);
     on<ListingFiltersApplied>(_onFilters);
     on<ListingFilterCleared>(_onFilterCleared);
   }
 
-  void _onLoaded(ListingsLoaded event, Emitter<ListingsState> emit) {
-    emit(state.copyWith(isLoaded: true));
+  final ListingsRepository _repository;
+
+  Future<void> _onLoaded(ListingsLoaded event, Emitter<ListingsState> emit) async {
+    emit(state.copyWith(isLoading: true, clearError: true));
+    try {
+      final sellerId = _repository.currentUserId;
+      final results = await Future.wait([
+        _repository.fetchActiveListings(),
+        if (sellerId != null) _repository.fetchSellerListings(sellerId) else Future.value(const <Part>[]),
+      ]);
+
+      final allParts = results[0];
+      final adminParts = results.length > 1 ? results[1] : const <Part>[];
+
+      emit(state.copyWith(
+        allParts: allParts,
+        adminParts: adminParts,
+        filteredParts: _applyFilters(allParts, state.searchQuery, state.filters),
+        isLoaded: true,
+        isLoading: false,
+      ));
+    } catch (error) {
+      emit(state.copyWith(
+        isLoading: false,
+        isLoaded: true,
+        errorMessage: 'Could not load listings. Pull to refresh or try again.',
+      ));
+    }
   }
 
-  void _onAdded(ListingAdded event, Emitter<ListingsState> emit) {
-    final adminPart = event.part.copyWith(isAdminListing: true);
-    final allParts = [adminPart, ...state.allParts];
-    final adminParts = [adminPart, ...state.adminParts];
-    emit(state.copyWith(
-      allParts: allParts,
-      adminParts: adminParts,
-      filteredParts: _applyFilters(allParts, state.searchQuery, state.filters),
-    ));
+  Future<void> _onPublish(
+    ListingPublishRequested event,
+    Emitter<ListingsState> emit,
+  ) async {
+    final sellerId = _repository.currentUserId;
+    if (sellerId == null) {
+      emit(state.copyWith(errorMessage: 'Sign in to publish a listing.'));
+      return;
+    }
+
+    emit(state.copyWith(isPublishing: true, clearError: true));
+    try {
+      final part = await _repository.createListing(
+        sellerId: sellerId,
+        sellerName: event.sellerName,
+        input: event.input,
+      );
+
+      final allParts = [part, ...state.allParts];
+      final adminParts = [part, ...state.adminParts];
+
+      emit(state.copyWith(
+        allParts: allParts,
+        adminParts: adminParts,
+        filteredParts: _applyFilters(allParts, state.searchQuery, state.filters),
+        isPublishing: false,
+      ));
+    } catch (error) {
+      emit(state.copyWith(
+        isPublishing: false,
+        errorMessage: 'Could not publish listing. Please try again.',
+      ));
+    }
   }
 
   void _onSearch(ListingSearchChanged event, Emitter<ListingsState> emit) {

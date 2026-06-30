@@ -60,6 +60,11 @@ class Part extends Equatable {
 
   String get fulfillmentLabel => fulfillment.label;
 
+  String get displayLocation => switch (fulfillment) {
+        ListingFulfillment.doorstepDelivery => fulfillmentLabel,
+        ListingFulfillment.inStorePickup => location,
+      };
+
   String get fullTitle => '$name $make $model $year';
 
   String get conditionLabel {
@@ -205,7 +210,14 @@ class MessageThread extends Equatable {
   final String partTitle;
 
   @override
-  List<Object?> get props => [id];
+  List<Object?> get props => [
+        id,
+        participantName,
+        lastMessage,
+        timestamp,
+        unreadCount,
+        partTitle,
+      ];
 }
 
 class ChatMessage extends Equatable {
@@ -214,12 +226,18 @@ class ChatMessage extends Equatable {
     required this.text,
     required this.isMe,
     required this.timestamp,
+    this.imagePath,
+    this.senderId,
   });
 
   final String id;
   final String text;
   final bool isMe;
   final DateTime timestamp;
+  final String? imagePath;
+  final String? senderId;
+
+  bool get hasImage => imagePath != null && imagePath!.isNotEmpty;
 
   @override
   List<Object?> get props => [id];
@@ -268,7 +286,7 @@ class SellerBankAccount extends Equatable {
 
 class OperatingCountriesSelection extends Equatable {
   const OperatingCountriesSelection({
-    this.countryCodes = const [],
+    this.countryCodes = const ['IN'],
     this.operatesGlobally = false,
   });
 

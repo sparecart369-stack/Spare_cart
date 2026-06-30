@@ -8,7 +8,7 @@ Future<void> main() async {
 
   await Supabase.initialize(
     url: EnvConfig.supabaseUrl,
-    anonKey: EnvConfig.supabaseAnonKey,
+    publishableKey: EnvConfig.supabaseAnonKey,
   );
 
   runApp(const SpareKartApp());

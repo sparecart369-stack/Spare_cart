@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:spare_kart/bloc/auth/auth_bloc.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
-import 'package:spare_kart/core/constants/app_commission.dart';
+import 'package:spare_kart/core/services/location_service.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
@@ -12,6 +16,7 @@ import 'package:spare_kart/core/validation/form_validators.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/data/models/models.dart';
+import 'package:spare_kart/data/repositories/listings_repository.dart';
 
 class SellScreen extends StatefulWidget {
   const SellScreen({super.key});
@@ -34,13 +39,19 @@ class _SellScreenState extends State<SellScreen> {
   PartCondition _condition = PartCondition.used;
   ListingFulfillment _fulfillment = ListingFulfillment.doorstepDelivery;
   PickupLocationSource _pickupLocationSource = PickupLocationSource.current;
+  final _locationService = const LocationService();
+  DeviceLocation? _currentDeviceLocation;
+  bool _currentLocationLoading = false;
+  String? _currentLocationError;
   final _customPickupLocationController = TextEditingController();
   final _upiController = TextEditingController();
   final _bankNameController = TextEditingController();
   final _accountNumberController = TextEditingController();
   final _accountNameController = TextEditingController();
   final _ifscController = TextEditingController();
-  final List<String> _photoUrls = [];
+  final List<String> _photoPaths = [];
+  final _imagePicker = ImagePicker();
+  bool _awaitingPublishResult = false;
 
   List<String> get _steps {
     _needsBankAccountStep ??=
@@ -51,6 +62,10 @@ class _SellScreenState extends State<SellScreen> {
   }
 
   int get _lastStep => _steps.length - 1;
+
+  bool get _usesCurrentPickupLocation =>
+      _fulfillment == ListingFulfillment.inStorePickup &&
+      _pickupLocationSource == PickupLocationSource.current;
 
   @override
   void dispose() {
@@ -118,15 +133,157 @@ class _SellScreenState extends State<SellScreen> {
   }
 
   bool _validatePhotos() {
-    if (_fulfillment == ListingFulfillment.inStorePickup &&
-        _pickupLocationSource == PickupLocationSource.other &&
-        _customPickupLocationController.text.trim().isEmpty) {
+    if (_photoPaths.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your pickup location')),
+        const SnackBar(content: Text('Please add at least one photo')),
       );
       return false;
     }
+    if (_fulfillment == ListingFulfillment.inStorePickup) {
+      if (_pickupLocationSource == PickupLocationSource.other &&
+          _customPickupLocationController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter your pickup location')),
+        );
+        return false;
+      }
+      if (_pickupLocationSource == PickupLocationSource.current) {
+        if (_currentLocationLoading) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Still fetching your current location')),
+          );
+          return false;
+        }
+        if (_currentDeviceLocation == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _currentLocationError ?? 'Please allow location access to continue',
+              ),
+            ),
+          );
+          _fetchCurrentLocation();
+          return false;
+        }
+      }
+    }
     return true;
+  }
+
+  Future<void> _fetchCurrentLocation() async {
+    if (!_usesCurrentPickupLocation || _currentLocationLoading) return;
+
+    setState(() {
+      _currentLocationLoading = true;
+      _currentLocationError = null;
+    });
+
+    try {
+      final location = await _locationService.getCurrentLocation();
+      if (!mounted || !_usesCurrentPickupLocation) return;
+      setState(() {
+        _currentDeviceLocation = location;
+        _currentLocationLoading = false;
+        _currentLocationError = null;
+      });
+    } on LocationServiceException catch (error) {
+      if (!mounted || !_usesCurrentPickupLocation) return;
+      setState(() {
+        _currentDeviceLocation = null;
+        _currentLocationLoading = false;
+        _currentLocationError = error.message;
+      });
+    } catch (_) {
+      if (!mounted || !_usesCurrentPickupLocation) return;
+      setState(() {
+        _currentDeviceLocation = null;
+        _currentLocationLoading = false;
+        _currentLocationError = 'Unable to fetch your current location. Try again.';
+      });
+    }
+  }
+
+  Future<void> _openLocationSettings() async {
+    await Geolocator.openAppSettings();
+  }
+
+  void _onFulfillmentChanged(ListingFulfillment fulfillment) {
+    setState(() => _fulfillment = fulfillment);
+    if (fulfillment == ListingFulfillment.inStorePickup &&
+        _pickupLocationSource == PickupLocationSource.current) {
+      _fetchCurrentLocation();
+    }
+  }
+
+  void _onPickupLocationSourceChanged(PickupLocationSource source) {
+    setState(() => _pickupLocationSource = source);
+    if (source == PickupLocationSource.current) {
+      _fetchCurrentLocation();
+    }
+  }
+
+  Future<void> _pickPhoto() async {
+    if (_photoPaths.length >= _maxPhotos) return;
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.divider,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
+                title: const Text('Choose from gallery'),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined, color: AppColors.primary),
+                title: const Text('Take a photo'),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (source == null || !mounted) return;
+
+    try {
+      final image = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+      if (image != null && mounted) {
+        setState(() => _photoPaths.add(image.path));
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not pick photo. Please try again.')),
+      );
+    }
+  }
+
+  void _removePhoto(int index) {
+    setState(() => _photoPaths.removeAt(index));
   }
 
   bool _validateBankAccount() {
@@ -180,7 +337,7 @@ class _SellScreenState extends State<SellScreen> {
       return kDefaultSellerAddress.split(',').skip(1).join(',').trim();
     }
     if (_pickupLocationSource == PickupLocationSource.current) {
-      return kDefaultSellerAddress;
+      return _currentDeviceLocation?.address ?? '';
     }
     return _customPickupLocationController.text.trim();
   }
@@ -199,7 +356,25 @@ class _SellScreenState extends State<SellScreen> {
     final compact = r.height < 740;
     final navInset = r.stickyFooterBottomPadding();
 
-    return Scaffold(
+    return BlocListener<ListingsBloc, ListingsState>(
+      listenWhen: (previous, current) =>
+          previous.isPublishing != current.isPublishing ||
+          previous.errorMessage != current.errorMessage,
+      listener: (context, state) {
+        if (!_awaitingPublishResult || state.isPublishing) return;
+
+        if (state.errorMessage != null) {
+          _awaitingPublishResult = false;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errorMessage!)),
+          );
+          return;
+        }
+
+        _awaitingPublishResult = false;
+        _resetForm();
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
@@ -230,31 +405,46 @@ class _SellScreenState extends State<SellScreen> {
                 pad,
                 navInset,
               ),
-              child: Row(
-                children: [
-                  if (_step > 0) ...[
-                    Expanded(
-                      child: SecondaryButton(
-                        label: 'Back',
-                        onPressed: () => setState(() => _step--),
+              child: BlocBuilder<ListingsBloc, ListingsState>(
+                builder: (context, listingsState) {
+                  final isPublishing = listingsState.isPublishing;
+                  return Row(
+                    children: [
+                      if (_step > 0) ...[
+                        Expanded(
+                          child: SecondaryButton(
+                            label: 'Back',
+                            onPressed: () {
+                              if (isPublishing) return;
+                              setState(() => _step--);
+                            },
+                          ),
+                        ),
+                        SizedBox(width: compact ? 10 : 12),
+                      ],
+                      Expanded(
+                        flex: _step > 0 ? 2 : 1,
+                        child: PrimaryButton(
+                          label: _step < _lastStep ? 'Next' : 'Publish Listing',
+                          height: compact ? 50 : 54,
+                          icon: _step < _lastStep
+                              ? Icons.arrow_forward_rounded
+                              : Icons.publish_rounded,
+                          isLoading: _step == _lastStep && isPublishing,
+                          onPressed: () {
+                            if (isPublishing) return;
+                            _next();
+                          },
+                        ),
                       ),
-                    ),
-                    SizedBox(width: compact ? 10 : 12),
-                  ],
-                  Expanded(
-                    flex: _step > 0 ? 2 : 1,
-                    child: PrimaryButton(
-                      label: _step < _lastStep ? 'Next' : 'Publish Listing',
-                      height: compact ? 50 : 54,
-                      icon: _step < _lastStep ? Icons.arrow_forward_rounded : Icons.publish_rounded,
-                      onPressed: _next,
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                },
               ),
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -372,6 +562,13 @@ class _SellScreenState extends State<SellScreen> {
   Widget _buildFulfillmentSection(bool compact) {
     final gap = compact ? 6.0 : 8.0;
 
+    if (_usesCurrentPickupLocation &&
+        !_currentLocationLoading &&
+        _currentDeviceLocation == null &&
+        _currentLocationError == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _fetchCurrentLocation());
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -393,7 +590,7 @@ class _SellScreenState extends State<SellScreen> {
                         : 'In-Store Pickup',
                     selected: selected,
                     compact: compact,
-                    onTap: () => setState(() => _fulfillment = f),
+                    onTap: () => _onFulfillmentChanged(f),
                   ),
                 ),
               );
@@ -453,7 +650,7 @@ class _SellScreenState extends State<SellScreen> {
                           : 'Other Location',
                       selected: selected,
                       compact: compact,
-                      onTap: () => setState(() => _pickupLocationSource = source),
+                      onTap: () => _onPickupLocationSourceChanged(source),
                     ),
                   ),
                 );
@@ -462,41 +659,13 @@ class _SellScreenState extends State<SellScreen> {
           ),
           SizedBox(height: gap),
           if (_pickupLocationSource == PickupLocationSource.current)
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(compact ? 10 : 12),
-              decoration: AppDecorations.elevatedCard(radius: AppDecorations.radiusSm),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.location_on_rounded, size: compact ? 18 : 20, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Default address',
-                          style: AppTypography.textTheme.labelSmall?.copyWith(
-                            fontSize: compact ? 10 : 11,
-                            color: AppColors.textTertiary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: compact ? 2 : 4),
-                        Text(
-                          kDefaultSellerAddress,
-                          style: AppTypography.textTheme.bodySmall?.copyWith(
-                            fontSize: compact ? 11 : 12,
-                            color: AppColors.textSecondary,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            _CurrentLocationCard(
+              compact: compact,
+              loading: _currentLocationLoading,
+              address: _currentDeviceLocation?.address,
+              error: _currentLocationError,
+              onRetry: _fetchCurrentLocation,
+              onOpenSettings: _openLocationSettings,
             )
           else
             _FormField(
@@ -522,7 +691,7 @@ class _SellScreenState extends State<SellScreen> {
         _SectionLabel('Upload Photos', compact: compact),
         SizedBox(height: gap),
         Text(
-          'Add up to $_maxPhotos photos of your part',
+          'Add at least 1 photo (up to $_maxPhotos) of your part',
           style: AppTypography.textTheme.bodySmall?.copyWith(
             fontSize: compact ? 11 : 12,
             color: AppColors.textSecondary,
@@ -538,18 +707,17 @@ class _SellScreenState extends State<SellScreen> {
             mainAxisSpacing: gap,
             childAspectRatio: 1,
           ),
-          itemCount: _photoUrls.length < _maxPhotos ? _photoUrls.length + 1 : _photoUrls.length,
+          itemCount: _photoPaths.length < _maxPhotos ? _photoPaths.length + 1 : _photoPaths.length,
           itemBuilder: (context, i) {
-            if (i == _photoUrls.length && _photoUrls.length < _maxPhotos) {
-              return _PhotoAddTile(
-                compact: compact,
-                onTap: () => setState(() {
-                  final seed = 'sell-${DateTime.now().millisecondsSinceEpoch}-${_photoUrls.length}';
-                  _photoUrls.add('https://picsum.photos/seed/$seed/400/300');
-                }),
-              );
+            if (i == _photoPaths.length && _photoPaths.length < _maxPhotos) {
+              return _PhotoAddTile(compact: compact, onTap: _pickPhoto);
             }
-            return _PhotoTile(url: _photoUrls[i], index: i, compact: compact);
+            return _PhotoTile(
+              path: _photoPaths[i],
+              index: i,
+              compact: compact,
+              onRemove: () => _removePhoto(i),
+            );
           },
         ),
         SizedBox(height: compact ? 4 : 6),
@@ -639,18 +807,11 @@ class _SellScreenState extends State<SellScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-                    child: _photoUrls.isNotEmpty
-                        ? Image.network(
-                            _photoUrls.first,
+                    child: _photoPaths.isNotEmpty
+                        ? _ListingPhoto(
+                            path: _photoPaths.first,
                             width: compact ? 64 : 72,
                             height: compact ? 64 : 72,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Container(
-                              width: compact ? 64 : 72,
-                              height: compact ? 64 : 72,
-                              color: AppColors.primaryLight,
-                              child: const Icon(Icons.image_rounded, color: AppColors.primary, size: 32),
-                            ),
                           )
                         : Container(
                             width: compact ? 64 : 72,
@@ -812,26 +973,8 @@ class _SellScreenState extends State<SellScreen> {
                   Icon(Icons.photo_library_outlined, size: compact ? 14 : 16, color: AppColors.textTertiary),
                   const SizedBox(width: 6),
                   Text(
-                    '${_photoUrls.length} photo${_photoUrls.length == 1 ? '' : 's'} attached',
+                    '${_photoPaths.length} photo${_photoPaths.length == 1 ? '' : 's'} attached',
                     style: AppTypography.textTheme.labelSmall?.copyWith(fontSize: compact ? 10 : 11),
-                  ),
-                ],
-              ),
-              SizedBox(height: gap),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.schedule_rounded, size: compact ? 14 : 16, color: AppColors.primary),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      AppCommission.payoutScheduleMessage,
-                      style: AppTypography.textTheme.bodySmall?.copyWith(
-                        fontSize: compact ? 11 : 12,
-                        color: AppColors.textSecondary,
-                        height: 1.4,
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -844,34 +987,39 @@ class _SellScreenState extends State<SellScreen> {
 
   void _publishListing() {
     final user = context.read<AuthBloc>().state.user;
-    final id = 'admin-${DateTime.now().millisecondsSinceEpoch}';
     final make = _make ?? 'Toyota';
     final model = _model ?? 'Corolla';
     final year = _year ?? 2020;
-    final imageUrls = _photoUrls.isEmpty
-        ? ['https://picsum.photos/seed/$id/400/300']
-        : List<String>.from(_photoUrls);
-    final part = Part(
-      id: id,
-      name: _nameController.text.isEmpty ? 'My Part' : _nameController.text,
-      category: _category ?? 'Engine',
-      make: make,
-      model: model,
-      year: year,
-      condition: _condition,
-      price: 0,
-      location: _resolveListingLocation(),
-      sellerId: 'admin',
-      sellerName: user?.name ?? 'You',
-      sellerRating: 5.0,
-      imageUrl: imageUrls.first,
-      imageUrls: imageUrls,
-      description: _descController.text.isEmpty ? 'Listed part' : _descController.text,
-      isAdminListing: true,
-      fulfillment: _fulfillment,
-      compatibility: ['$make $model $year', '$make $model ${year - 1}', '$make $model ${year + 1}'],
-    );
-    context.read<ListingsBloc>().add(ListingAdded(part));
+    final location = _resolveListingLocation();
+
+    _awaitingPublishResult = true;
+    context.read<ListingsBloc>().add(
+          ListingPublishRequested(
+            sellerName: user?.name ?? 'You',
+            input: CreateListingInput(
+              name: _nameController.text.isEmpty ? 'My Part' : _nameController.text.trim(),
+              category: _category ?? 'Engine',
+              make: make,
+              model: model,
+              year: year,
+              condition: _condition,
+              description:
+                  _descController.text.isEmpty ? 'Listed part' : _descController.text.trim(),
+              fulfillment: _fulfillment,
+              location: location,
+              pickupAddress: _fulfillment == ListingFulfillment.inStorePickup ? location : null,
+              localPhotoPaths: List<String>.from(_photoPaths),
+              compatibility: [
+                '$make $model $year',
+                '$make $model ${year - 1}',
+                '$make $model ${year + 1}',
+              ],
+            ),
+          ),
+        );
+  }
+
+  void _resetForm() {
     setState(() {
       _step = 0;
       _nameController.clear();
@@ -883,8 +1031,11 @@ class _SellScreenState extends State<SellScreen> {
       _condition = PartCondition.used;
       _fulfillment = ListingFulfillment.doorstepDelivery;
       _pickupLocationSource = PickupLocationSource.current;
+      _currentDeviceLocation = null;
+      _currentLocationLoading = false;
+      _currentLocationError = null;
       _customPickupLocationController.clear();
-      _photoUrls.clear();
+      _photoPaths.clear();
     });
     _showPublishedDialog();
   }
@@ -915,27 +1066,6 @@ class _SellScreenState extends State<SellScreen> {
             Text(
               'Your part is now live on SpareKart. Pricing will be set after review.',
               style: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.schedule_rounded, size: 18, color: AppColors.primary.withValues(alpha: 0.85)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      AppCommission.payoutScheduleMessage,
-                      style: AppTypography.textTheme.bodySmall?.copyWith(height: 1.45),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
@@ -1284,12 +1414,61 @@ class _ConditionChip extends StatelessWidget {
   }
 }
 
-class _PhotoTile extends StatelessWidget {
-  const _PhotoTile({required this.url, required this.index, required this.compact});
+class _ListingPhoto extends StatelessWidget {
+  const _ListingPhoto({
+    required this.path,
+    this.width,
+    this.height,
+  });
 
-  final String url;
+  final String path;
+  final double? width;
+  final double? height;
+
+  static bool _isNetworkPath(String path) =>
+      path.startsWith('http://') || path.startsWith('https://');
+
+  @override
+  Widget build(BuildContext context) {
+    final error = Container(
+      width: width,
+      height: height,
+      color: AppColors.primaryLight,
+      child: const Icon(Icons.image_rounded, color: AppColors.primary, size: 32),
+    );
+
+    if (_isNetworkPath(path)) {
+      return Image.network(
+        path,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => error,
+      );
+    }
+
+    return Image.file(
+      File(path),
+      width: width,
+      height: height,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => error,
+    );
+  }
+}
+
+class _PhotoTile extends StatelessWidget {
+  const _PhotoTile({
+    required this.path,
+    required this.index,
+    required this.compact,
+    required this.onRemove,
+  });
+
+  final String path;
   final int index;
   final bool compact;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -1304,14 +1483,10 @@ class _PhotoTile extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.network(
-            url,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => const Icon(Icons.image_rounded, color: AppColors.primary, size: 36),
-          ),
+          _ListingPhoto(path: path),
           Positioned(
             top: 6,
-            right: 6,
+            left: 6,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
@@ -1321,6 +1496,26 @@ class _PhotoTile extends StatelessWidget {
               child: Text(
                 '${index + 1}',
                 style: AppTypography.textTheme.labelSmall?.copyWith(fontSize: 9, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 4,
+            right: 4,
+            child: Material(
+              color: AppColors.surface.withValues(alpha: 0.92),
+              shape: const CircleBorder(),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: onRemove,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: compact ? 14 : 16,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ),
             ),
           ),
@@ -1373,6 +1568,136 @@ class _PhotoAddTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _CurrentLocationCard extends StatelessWidget {
+  const _CurrentLocationCard({
+    required this.compact,
+    required this.loading,
+    required this.address,
+    required this.error,
+    required this.onRetry,
+    required this.onOpenSettings,
+  });
+
+  final bool compact;
+  final bool loading;
+  final String? address;
+  final String? error;
+  final VoidCallback onRetry;
+  final VoidCallback onOpenSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    final showSettings = error != null &&
+        (error!.toLowerCase().contains('permanently denied') ||
+            error!.toLowerCase().contains('settings'));
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(compact ? 10 : 12),
+      decoration: AppDecorations.elevatedCard(radius: AppDecorations.radiusSm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.location_on_rounded, size: compact ? 18 : 20, color: AppColors.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Current location',
+                  style: AppTypography.textTheme.labelSmall?.copyWith(
+                    fontSize: compact ? 10 : 11,
+                    color: AppColors.textTertiary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(height: compact ? 4 : 6),
+                if (loading)
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: compact ? 14 : 16,
+                        height: compact ? 14 : 16,
+                        child: const CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Fetching your location...',
+                          style: AppTypography.textTheme.bodySmall?.copyWith(
+                            fontSize: compact ? 11 : 12,
+                            color: AppColors.textSecondary,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                else if (address != null)
+                  Text(
+                    address!,
+                    style: AppTypography.textTheme.bodySmall?.copyWith(
+                      fontSize: compact ? 11 : 12,
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
+                  )
+                else
+                  Text(
+                    error ?? 'Location unavailable',
+                    style: AppTypography.textTheme.bodySmall?.copyWith(
+                      fontSize: compact ? 11 : 12,
+                      color: AppColors.error,
+                      height: 1.4,
+                    ),
+                  ),
+                if (!loading && error != null) ...[
+                  SizedBox(height: compact ? 8 : 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      TextButton(
+                        onPressed: onRetry,
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text('Retry'),
+                      ),
+                      if (showSettings)
+                        TextButton(
+                          onPressed: onOpenSettings,
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text('Open Settings'),
+                        ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (!loading && address != null)
+            IconButton(
+              onPressed: onRetry,
+              icon: Icon(Icons.refresh_rounded, size: compact ? 18 : 20, color: AppColors.primary),
+              tooltip: 'Refresh location',
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+        ],
       ),
     );
   }

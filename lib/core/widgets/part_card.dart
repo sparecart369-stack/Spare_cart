@@ -3,6 +3,7 @@ import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
+import 'package:spare_kart/core/widgets/listing_image.dart';
 import 'package:spare_kart/data/models/models.dart';
 
 class PartCard extends StatelessWidget {
@@ -48,7 +49,7 @@ class PartCard extends StatelessWidget {
                           const SizedBox(width: 3),
                           Expanded(
                             child: Text(
-                              part.location,
+                              part.displayLocation,
                               style: AppTypography.textTheme.bodySmall,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -136,7 +137,7 @@ class PartCard extends StatelessWidget {
                         const SizedBox(width: 2),
                         Flexible(
                           child: Text(
-                            part.location.split(',').first,
+                            part.displayLocation.split(',').first,
                             style: AppTypography.textTheme.labelSmall,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -164,34 +165,11 @@ class _PartImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ListingImage(
+      url: url,
       width: size == double.infinity ? double.infinity : size,
       height: height ?? size,
-      decoration: BoxDecoration(
-        color: AppColors.primaryLight,
-        borderRadius: radius > 0 ? BorderRadius.circular(radius) : null,
-      ),
-      clipBehavior: radius > 0 ? Clip.antiAlias : Clip.none,
-      child: Image.network(
-        url,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => Center(
-          child: Icon(Icons.image_not_supported_rounded, color: AppColors.primary.withValues(alpha: 0.4), size: 32),
-        ),
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) return child;
-          return Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.primary.withValues(alpha: 0.5),
-              ),
-            ),
-          );
-        },
-      ),
+      borderRadius: radius > 0 ? BorderRadius.circular(radius) : null,
     );
   }
 }

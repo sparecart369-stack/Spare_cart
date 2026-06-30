@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spare_kart/bloc/app_mode/app_mode_bloc.dart';
 import 'package:spare_kart/bloc/auth/auth_bloc.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
+import 'package:spare_kart/bloc/messages/messages_bloc.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
@@ -10,6 +11,7 @@ import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
+import 'package:spare_kart/core/widgets/listing_image.dart';
 import 'package:spare_kart/data/models/models.dart';
 import 'package:spare_kart/features/admin/admin_dashboard_screen.dart';
 
@@ -27,6 +29,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   Widget build(BuildContext context) {
     final r = Responsive(context);
     final user = context.watch<AuthBloc>().state.user;
+    final unreadCount = context.watch<MessagesBloc>().state.threads
+        .fold(0, (sum, thread) => sum + thread.unreadCount);
     final firstName = (user?.name ?? 'Admin').split(' ').first;
 
     return Scaffold(
@@ -36,6 +40,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           _AdminHeader(
             firstName: firstName,
             horizontalPadding: r.horizontalPadding(),
+            unreadCount: unreadCount,
             onBuyerMode: () => context.read<AppModeBloc>().add(AppModeSet(AppMode.buyer)),
             onMessages: () => Navigator.pushNamed(context, AppRoutes.messages),
           ),
@@ -90,12 +95,14 @@ class _AdminHeader extends StatelessWidget {
   const _AdminHeader({
     required this.firstName,
     required this.horizontalPadding,
+    required this.unreadCount,
     required this.onBuyerMode,
     required this.onMessages,
   });
 
   final String firstName;
   final double horizontalPadding;
+  final int unreadCount;
   final VoidCallback onBuyerMode;
   final VoidCallback onMessages;
 
@@ -179,10 +186,14 @@ class _AdminHeader extends StatelessWidget {
                       child: Ink(
                         decoration: AppDecorations.glassSurface(),
                         padding: const EdgeInsets.all(10),
-                        child: Icon(
-                          Icons.chat_bubble_outline_rounded,
-                          size: 18,
-                          color: Colors.white.withValues(alpha: 0.9),
+                        child: Badge(
+                          isLabelVisible: unreadCount > 0,
+                          label: Text('$unreadCount'),
+                          child: Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            size: 18,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
                         ),
                       ),
                     ),
@@ -318,14 +329,11 @@ class _AdminListingCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              ClipRRect(
+              ListingImage(
+                url: part.imageUrl,
+                width: 72,
+                height: 72,
                 borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-                child: Image.network(
-                  part.imageUrl,
-                  width: 72,
-                  height: 72,
-                  fit: BoxFit.cover,
-                ),
               ),
               const SizedBox(width: 14),
               Expanded(

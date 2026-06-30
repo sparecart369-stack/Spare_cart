@@ -91,25 +91,38 @@ class _SearchScreenState extends State<SearchScreen> {
             child: BlocBuilder<ListingsBloc, ListingsState>(
               builder: (context, state) {
                 final parts = state.filteredParts;
+                final bloc = context.read<ListingsBloc>();
                 if (parts.isEmpty) {
                   final isDemoEmpty = state.allParts.isEmpty && state.searchQuery.isEmpty;
-                  return EmptyState(
-                    icon: Icons.search_off_rounded,
-                    title: isDemoEmpty ? 'No listings yet' : 'No parts found',
-                    subtitle: isDemoEmpty
-                        ? 'Use the Sell tab to add your first part'
-                        : 'Try adjusting your search or filters',
+                  return RefreshIndicator(
+                    onRefresh: () => refreshListings(bloc),
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                      padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 0, r.horizontalPadding(), 100),
+                      children: [
+                        EmptyState(
+                          icon: Icons.search_off_rounded,
+                          title: isDemoEmpty ? 'No listings yet' : 'No parts found',
+                          subtitle: isDemoEmpty
+                              ? 'Use the Sell tab to add your first part'
+                              : 'Try adjusting your search or filters',
+                        ),
+                      ],
+                    ),
                   );
                 }
-                return ListView.separated(
-                  physics: const BouncingScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 0, r.horizontalPadding(), 100),
-                  itemCount: parts.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, i) => PartCard(
-                    part: parts[i],
-                    compact: true,
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.productDetail, arguments: parts[i]),
+                return RefreshIndicator(
+                  onRefresh: () => refreshListings(bloc),
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                    padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 0, r.horizontalPadding(), 100),
+                    itemCount: parts.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (context, i) => PartCard(
+                      part: parts[i],
+                      compact: true,
+                      onTap: () => Navigator.pushNamed(context, AppRoutes.productDetail, arguments: parts[i]),
+                    ),
                   ),
                 );
               },

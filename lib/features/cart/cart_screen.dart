@@ -5,6 +5,7 @@ import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
+import 'package:spare_kart/core/widgets/listing_image.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -41,7 +42,7 @@ class CartScreen extends StatelessWidget {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.network(item.part.imageUrl, width: 72, height: 72, fit: BoxFit.cover),
+                              child: ListingImage(url: item.part.imageUrl, width: 72, height: 72),
                             ),
                             const SizedBox(width: 12),
                             Expanded(

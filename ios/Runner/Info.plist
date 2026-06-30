@@ -26,6 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SpareKart uses your location to set the pickup address when you sell a part for in-store collection.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SpareKart needs access to your photo library so you can add photos of parts you are selling.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>SpareKart needs camera access so you can take photos of parts you are selling.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

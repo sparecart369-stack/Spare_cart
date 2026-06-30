@@ -1,0 +1,212 @@
+SPAREKART PRIVACY POLICY
+
+Last updated: June 26, 2026
+
+This Privacy Policy describes how SpareKart ("we," "us," or "our") collects, uses,
+discloses, and protects information when you use the SpareKart mobile application
+and related services (collectively, the "Service"). SpareKart is a global marketplace
+for buying and selling used auto parts.
+
+By creating an account or using the Service, you agree to the practices described in
+this Privacy Policy. If you do not agree, please do not use the Service.
+
+
+1. WHO WE ARE
+
+SpareKart operates a peer-to-peer marketplace that connects buyers and sellers of
+automotive spare parts. The Service is provided through the SpareKart app
+(Android package: com.spare.kart).
+
+
+2. INFORMATION WE COLLECT
+
+We collect information you provide directly, information generated through your use
+of the Service, and limited technical information needed to operate the app.
+
+2.1 Account and profile information
+When you register or sign in, we collect:
+- Full name
+- Phone number (used as your primary account identifier)
+- Password (stored in encrypted/hashed form through our authentication provider;
+  we do not store your plain-text password)
+- Countries where you buy or sell ("operating countries")
+- Profile details such as display name, feedback rating, and optional profile photo
+
+2.2 Seller and payout information
+If you sell on SpareKart, we may collect payment settlement details, including:
+- UPI ID
+- Bank name
+- Bank account number
+- Account holder name
+- IFSC code
+
+This information is used to facilitate seller payouts and is stored securely on our
+backend.
+
+2.3 Marketplace and transaction information
+When you browse, list, buy, or sell through the Service, we collect:
+- Listing details (part name, category, vehicle make/model/year, condition, price,
+  description, fulfillment method, and location)
+- Listing photos you upload or provide
+- Cart contents and order history
+- Shipping and billing addresses (name, street, city, state, postal code, country)
+- Order totals, shipping method, payment method label, and tracking information
+- Saved or favorited listings
+
+2.4 Communications
+If you use in-app messaging, we collect:
+- Message content
+- Message timestamps
+- The identity of conversation participants
+- Read status for messages
+
+2.5 Notifications
+We may store in-app notifications related to orders, messages, listings, and system
+updates. If you enable push or email notifications in the future, we may also process
+device tokens or email addresses for those purposes.
+
+2.6 Technical and usage information
+When you use the app, our infrastructure may automatically collect:
+- Device type, operating system, and app version
+- IP address and general connection information
+- Authentication session data
+- Error logs and diagnostic data needed to maintain security and reliability
+
+We do not currently use third-party advertising or analytics SDKs in the app.
+
+
+3. HOW WE USE YOUR INFORMATION
+
+We use the information we collect to:
+- Create and manage your account
+- Authenticate you and keep the Service secure
+- Enable you to list, search for, buy, and sell auto parts
+- Process orders, shipping, and seller payouts
+- Display public seller profiles and listings to other users
+- Facilitate buyer-seller messaging
+- Send transactional notifications about orders, messages, and account activity
+- Enforce our terms, prevent fraud, and protect users
+- Improve, maintain, and troubleshoot the Service
+- Comply with legal obligations
+
+
+4. HOW WE SHARE YOUR INFORMATION
+
+We do not sell your personal information.
+
+We may share information in the following circumstances:
+
+4.1 With other users
+Because SpareKart is a marketplace, certain information is visible to other users,
+including:
+- Your public profile (such as name and feedback rating)
+- Listings you publish (including photos, price, location, and description)
+- Messages you send to buyers or sellers in a conversation
+- Information needed to complete a transaction (such as shipping details shared
+  with a seller or buyer for order fulfillment)
+
+4.2 With service providers
+We use trusted third-party providers to operate the Service, including:
+- Supabase (authentication, database hosting, file storage, and backend APIs)
+- Google Fonts (delivery of typography assets used by the app)
+
+These providers process data on our behalf under contractual safeguards and only as
+needed to provide their services.
+
+4.3 For legal and safety reasons
+We may disclose information if we believe it is necessary to:
+- Comply with applicable law, regulation, legal process, or government request
+- Protect the rights, property, or safety of SpareKart, our users, or the public
+- Detect, prevent, or address fraud, security, or technical issues
+- Enforce our policies or investigate violations
+
+4.4 Business transfers
+If we are involved in a merger, acquisition, financing, reorganization, or sale of
+assets, your information may be transferred as part of that transaction, subject to
+this Privacy Policy.
+
+
+5. DATA STORAGE AND RETENTION
+
+Your data is stored on secure servers operated by our cloud infrastructure
+providers. We retain personal information for as long as your account is active or
+as needed to provide the Service, resolve disputes, enforce agreements, and comply
+with legal obligations.
+
+When you delete your account, we will delete or anonymize your personal information
+within a reasonable period, except where retention is required by law or for
+legitimate business purposes such as fraud prevention, dispute resolution, or
+financial record-keeping.
+
+
+6. SECURITY
+
+We use administrative, technical, and organizational measures designed to protect
+your information, including encrypted connections (HTTPS/TLS), access controls, and
+row-level security on our database. No method of transmission or storage is 100%
+secure, and we cannot guarantee absolute security.
+
+
+7. YOUR RIGHTS AND CHOICES
+
+Depending on your location, you may have rights to:
+- Access the personal information we hold about you
+- Correct inaccurate or incomplete information
+- Delete your account and associated personal data
+- Object to or restrict certain processing
+- Withdraw consent where processing is based on consent
+- Request a copy of your data in a portable format
+
+You can update much of your profile information directly in the app. To exercise
+other rights, contact us using the details in Section 12.
+
+You may also:
+- Log out of your account at any time
+- Manage notification preferences in app settings (where available)
+
+
+8. CHILDREN'S PRIVACY
+
+The Service is not intended for children under 13 years of age (or the minimum age
+required in your country). We do not knowingly collect personal information from
+children. If you believe a child has provided us with personal information, please
+contact us and we will take steps to delete it.
+
+
+9. INTERNATIONAL USERS
+
+SpareKart is designed as a global marketplace. If you use the Service from outside
+your home country, your information may be transferred to, stored in, and processed
+in countries where our service providers operate. These countries may have data
+protection laws that differ from those in your jurisdiction.
+
+By using the Service, you understand that your information may be processed in
+such locations.
+
+
+10. THIRD-PARTY LINKS AND SERVICES
+
+The Service may reference or link to third-party websites, payment processors, or
+services. We are not responsible for the privacy practices of those third parties.
+We encourage you to review their privacy policies before providing them with
+information.
+
+
+11. CHANGES TO THIS PRIVACY POLICY
+
+We may update this Privacy Policy from time to time. When we do, we will revise the
+"Last updated" date at the top of this document. If changes are material, we may
+provide additional notice within the app or by other reasonable means. Your continued
+use of the Service after an update means you accept the revised policy.
+
+
+12. CONTACT US
+
+If you have questions, concerns, or requests regarding this Privacy Policy or your
+personal information, please contact us at:
+
+SpareKart
+Email: privacy@sparekart.app
+
+Please replace the contact email above with your official support address before
+publishing this policy in app stores or on your website.

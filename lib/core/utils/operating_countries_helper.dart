@@ -4,6 +4,8 @@ import 'package:country_code_picker/country_code_picker.dart';
 class OperatingCountriesHelper {
   OperatingCountriesHelper._();
 
+  static const String defaultCountryCode = 'IN';
+
   static final List<CountryCode> _allCountries = codes
       .map(CountryCode.fromJson)
       .where((c) => c.code != null && c.code!.length == 2)

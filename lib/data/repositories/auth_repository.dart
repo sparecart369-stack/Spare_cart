@@ -424,7 +424,9 @@ class AuthRepository {
     if (!global && codes.isEmpty) {
       final phone = row['phone'] as String? ?? '';
       final inferred = OperatingCountriesHelper.countryCodeFromPhone(phone);
-      if (inferred != null) codes = [inferred];
+      codes = [
+        inferred ?? OperatingCountriesHelper.defaultCountryCode,
+      ];
     }
 
     return OperatingCountriesSelection(

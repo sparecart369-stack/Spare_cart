@@ -1,7 +1,6 @@
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
-import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/operating_countries_helper.dart';
 import 'package:spare_kart/data/models/models.dart';
@@ -29,27 +28,31 @@ class OperatingCountriesSelectorState extends State<OperatingCountriesSelector> 
   late bool _operatesGlobally;
   late Set<String> _selectedCodes;
   String? _linkedPhoneCountryCode;
-  Set<String> _cachedCountryCodes = {};
 
   @override
   void initState() {
     super.initState();
-    _operatesGlobally = widget.initial.operatesGlobally;
-    _selectedCodes = widget.initial.countryCodes.map((c) => c.toUpperCase()).toSet();
-    _cachedCountryCodes = Set<String>.from(_selectedCodes);
+    _operatesGlobally = false;
+    _selectedCodes = _resolveInitialCodes(widget.initial);
     if (_selectedCodes.length == 1) {
       _linkedPhoneCountryCode = _selectedCodes.first;
     }
+  }
+
+  Set<String> _resolveInitialCodes(OperatingCountriesSelection initial) {
+    final codes = initial.countryCodes.map((c) => c.toUpperCase()).toSet();
+    if (codes.isEmpty) {
+      return {OperatingCountriesHelper.defaultCountryCode};
+    }
+    return codes;
   }
 
   @override
   void didUpdateWidget(covariant OperatingCountriesSelector oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initial != widget.initial) {
-      _operatesGlobally = widget.initial.operatesGlobally;
-      _selectedCodes =
-          widget.initial.countryCodes.map((c) => c.toUpperCase()).toSet();
-      _cachedCountryCodes = Set<String>.from(_selectedCodes);
+      _operatesGlobally = false;
+      _selectedCodes = _resolveInitialCodes(widget.initial);
       if (_selectedCodes.length == 1) {
         _linkedPhoneCountryCode = _selectedCodes.first;
       }
@@ -70,7 +73,6 @@ class OperatingCountriesSelectorState extends State<OperatingCountriesSelector> 
       }
       _linkedPhoneCountryCode = upper;
       _selectedCodes.add(upper);
-      _cachedCountryCodes = Set<String>.from(_selectedCodes);
     });
     _notifySelectionChanged();
   }
@@ -86,153 +88,151 @@ class OperatingCountriesSelectorState extends State<OperatingCountriesSelector> 
 
   String? validate() {
     if (selection.isValid) return null;
-    return 'Select at least one country or choose All countries';
+    return 'Select at least one country';
   }
 
-  Future<void> _openCountryPicker() async {
-    if (!widget.enabled || _operatesGlobally) return;
-
-    final picked = await showModalBottomSheet<Set<String>>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _CountryMultiSelectSheet(
-        initialSelection: _selectedCodes,
-        countries: OperatingCountriesHelper.allCountries,
-      ),
-    );
-
-    if (picked != null) {
-      setState(() {
-        _selectedCodes = picked;
-        _cachedCountryCodes = Set<String>.from(picked);
-      });
-      _notifySelectionChanged();
-    }
-  }
-
-  void _removeCountry(String code) {
-    if (!widget.enabled || _operatesGlobally) return;
-    setState(() {
-      final upper = code.toUpperCase();
-      _selectedCodes.remove(upper);
-      if (_linkedPhoneCountryCode == upper) {
-        _linkedPhoneCountryCode = null;
-      }
-      _cachedCountryCodes = Set<String>.from(_selectedCodes);
-    });
-    _notifySelectionChanged();
-  }
+  // Future<void> _openCountryPicker() async {
+  //   if (!widget.enabled || _operatesGlobally) return;
+  //
+  //   final picked = await showModalBottomSheet<Set<String>>(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors.transparent,
+  //     builder: (context) => _CountryMultiSelectSheet(
+  //       initialSelection: _selectedCodes,
+  //       countries: OperatingCountriesHelper.allCountries,
+  //     ),
+  //   );
+  //
+  //   if (picked != null) {
+  //     setState(() {
+  //       _selectedCodes = picked;
+  //     });
+  //     _notifySelectionChanged();
+  //   }
+  // }
+  //
+  // void _removeCountry(String code) {
+  //   if (!widget.enabled || _operatesGlobally) return;
+  //   setState(() {
+  //     final upper = code.toUpperCase();
+  //     _selectedCodes.remove(upper);
+  //     if (_linkedPhoneCountryCode == upper) {
+  //       _linkedPhoneCountryCode = null;
+  //     }
+  //   });
+  //   _notifySelectionChanged();
+  // }
 
   @override
   Widget build(BuildContext context) {
-    final hasError = widget.showValidationError && validate() != null;
+    // Hidden while all users default to India.
+    return const SizedBox.shrink();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Material(
-          color: AppColors.surface,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-            side: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: SwitchListTile(
-            contentPadding: const EdgeInsets.fromLTRB(16, 4, 12, 4),
-            value: _operatesGlobally,
-            onChanged: widget.enabled
-                ? (value) {
-                    setState(() {
-                      if (value) {
-                        _cachedCountryCodes = Set<String>.from(_selectedCodes);
-                        _operatesGlobally = true;
-                      } else {
-                        _operatesGlobally = false;
-                        _selectedCodes = _cachedCountryCodes.isNotEmpty
-                            ? Set<String>.from(_cachedCountryCodes)
-                            : (_linkedPhoneCountryCode != null
-                                ? {_linkedPhoneCountryCode!}
-                                : <String>{});
-                      }
-                    });
-                    _notifySelectionChanged();
-                  }
-                : null,
-            title: Text('All countries', style: AppTypography.textTheme.titleSmall),
-            subtitle: Text(
-              'Buy, sell, and distribute spares worldwide',
-              style: AppTypography.textTheme.bodySmall?.copyWith(
-                color: AppColors.textTertiary,
-              ),
-            ),
-            activeThumbColor: AppColors.primary,
-            tileColor: Colors.transparent,
-          ),
-        ),
-        if (!_operatesGlobally) ...[
-          const SizedBox(height: 12),
-          Text(
-            'Selected countries',
-            style: AppTypography.textTheme.labelMedium,
-          ),
-          const SizedBox(height: 8),
-          if (_selectedCodes.isEmpty)
-            Text(
-              'Choose where you buy, sell, or distribute spares',
-              style: AppTypography.textTheme.bodySmall?.copyWith(
-                color: AppColors.textTertiary,
-              ),
-            )
-          else
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _selectedCodes.map((code) {
-                final country = OperatingCountriesHelper.countryForCode(code);
-                return InputChip(
-                  label: Text(country?.name ?? code),
-                  avatar: country?.flagUri != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
-                          child: Image.asset(
-                            country!.flagUri!,
-                            package: 'country_code_picker',
-                            width: 20,
-                            height: 14,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : null,
-                  onDeleted: widget.enabled ? () => _removeCountry(code) : null,
-                  deleteIconColor: AppColors.textTertiary,
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.08),
-                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
-                );
-              }).toList(),
-            ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: widget.enabled ? _openCountryPicker : null,
-            icon: const Icon(Icons.add_location_alt_outlined, size: 18),
-            label: Text(_selectedCodes.isEmpty ? 'Add countries' : 'Add more countries'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: BorderSide(color: AppColors.primary.withValues(alpha: 0.35)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-          ),
-        ],
-        if (hasError) ...[
-          const SizedBox(height: 8),
-          Text(
-            validate()!,
-            style: AppTypography.textTheme.bodySmall?.copyWith(color: AppColors.error),
-          ),
-        ],
-      ],
-    );
+    // final hasError = widget.showValidationError && validate() != null;
+    //
+    // return Column(
+    //   crossAxisAlignment: CrossAxisAlignment.start,
+    //   children: [
+        // Material(
+        //   color: AppColors.surface,
+        //   elevation: 0,
+        //   shape: RoundedRectangleBorder(
+        //     borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
+        //     side: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
+        //   ),
+        //   clipBehavior: Clip.antiAlias,
+        //   child: SwitchListTile(
+        //     contentPadding: const EdgeInsets.fromLTRB(16, 4, 12, 4),
+        //     value: _operatesGlobally,
+        //     onChanged: widget.enabled
+        //         ? (value) {
+        //             setState(() {
+        //               if (value) {
+        //                 _cachedCountryCodes = Set<String>.from(_selectedCodes);
+        //                 _operatesGlobally = true;
+        //               } else {
+        //                 _operatesGlobally = false;
+        //                 _selectedCodes = _cachedCountryCodes.isNotEmpty
+        //                     ? Set<String>.from(_cachedCountryCodes)
+        //                     : (_linkedPhoneCountryCode != null
+        //                         ? {_linkedPhoneCountryCode!}
+        //                         : <String>{});
+        //               }
+        //             });
+        //             _notifySelectionChanged();
+        //           }
+        //         : null,
+        //     title: Text('All countries', style: AppTypography.textTheme.titleSmall),
+        //     subtitle: Text(
+        //       'Buy, sell, and distribute spares worldwide',
+        //       style: AppTypography.textTheme.bodySmall?.copyWith(
+        //         color: AppColors.textTertiary,
+        //       ),
+        //     ),
+        //     activeThumbColor: AppColors.primary,
+        //     tileColor: Colors.transparent,
+        //   ),
+        // ),
+        // Text(
+        //   'Selected countries',
+        //   style: AppTypography.textTheme.labelMedium,
+        // ),
+        // const SizedBox(height: 8),
+        // if (_selectedCodes.isEmpty)
+        //   Text(
+        //     'Choose where you buy, sell, or distribute spares',
+        //     style: AppTypography.textTheme.bodySmall?.copyWith(
+        //       color: AppColors.textTertiary,
+        //     ),
+        //   )
+        // else
+        //   Wrap(
+        //     spacing: 8,
+        //     runSpacing: 8,
+        //     children: _selectedCodes.map((code) {
+        //       final country = OperatingCountriesHelper.countryForCode(code);
+        //       return InputChip(
+        //         label: Text(country?.name ?? code),
+        //         avatar: country?.flagUri != null
+        //             ? ClipRRect(
+        //                 borderRadius: BorderRadius.circular(2),
+        //                 child: Image.asset(
+        //                   country!.flagUri!,
+        //                   package: 'country_code_picker',
+        //                   width: 20,
+        //                   height: 14,
+        //                   fit: BoxFit.cover,
+        //                 ),
+        //               )
+        //             : null,
+        //         onDeleted: widget.enabled ? () => _removeCountry(code) : null,
+        //         deleteIconColor: AppColors.textTertiary,
+        //         backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+        //         side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
+        //       );
+        //     }).toList(),
+        //   ),
+        // const SizedBox(height: 12),
+        // OutlinedButton.icon(
+        //   onPressed: widget.enabled ? _openCountryPicker : null,
+        //   icon: const Icon(Icons.add_location_alt_outlined, size: 18),
+        //   label: Text(_selectedCodes.isEmpty ? 'Add countries' : 'Add more countries'),
+        //   style: OutlinedButton.styleFrom(
+        //     foregroundColor: AppColors.primary,
+        //     side: BorderSide(color: AppColors.primary.withValues(alpha: 0.35)),
+        //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        //   ),
+        // ),
+        // if (hasError) ...[
+        //   const SizedBox(height: 8),
+        //   Text(
+        //     validate()!,
+        //     style: AppTypography.textTheme.bodySmall?.copyWith(color: AppColors.error),
+        //   ),
+        // ],
+    //   ],
+    // );
   }
 }
 

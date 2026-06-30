@@ -6,7 +6,6 @@ import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
-import 'package:spare_kart/core/utils/operating_countries_helper.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/utils/sensitive_text.dart';
 import 'package:spare_kart/data/models/models.dart';
@@ -19,12 +18,12 @@ class AccountScreen extends StatelessWidget {
     final user = context.watch<AuthBloc>().state.user;
     final r = Responsive(context);
     final initial = (user?.name ?? 'U')[0].toUpperCase();
-    final countriesSummary = user == null
-        ? ''
-        : OperatingCountriesHelper.formatSummary(
-            operatesGlobally: user.operatesGlobally,
-            countryCodes: user.operatingCountries,
-          );
+    // final countriesSummary = user == null
+    //     ? ''
+    //     : OperatingCountriesHelper.formatSummary(
+    //         operatesGlobally: user.operatesGlobally,
+    //         countryCodes: user.operatingCountries,
+    //       );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -34,9 +33,9 @@ class AccountScreen extends StatelessWidget {
             initial: initial,
             name: user?.name ?? 'Guest',
             phone: user?.phone ?? '',
-            countriesSummary: countriesSummary,
+            countriesSummary: '',
             horizontalPadding: r.horizontalPadding(),
-            onEdit: () => Navigator.pushNamed(context, AppRoutes.editProfile),
+            onEdit: () {},
           ),
           Expanded(
             child: ListView(
@@ -59,7 +58,7 @@ class AccountScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 _AccountSection(
                   items: [
-                    _MenuData(Icons.public_rounded, 'Operating Countries', AppColors.primaryMid, () => Navigator.pushNamed(context, AppRoutes.editProfile)),
+                    // _MenuData(Icons.public_rounded, 'Operating Countries', AppColors.primaryMid, () => Navigator.pushNamed(context, AppRoutes.editProfile)),
                     _MenuData(Icons.location_on_rounded, 'My Addresses', AppColors.success, () => Navigator.pushNamed(context, AppRoutes.addresses)),
                     _MenuData(Icons.admin_panel_settings_rounded, 'Admin Dashboard', AppColors.warning, () {
                       context.read<AppModeBloc>().add(AppModeSet(AppMode.admin));
@@ -175,14 +174,14 @@ class _ProfileHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: onEdit,
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: AppDecorations.iconButtonBg(),
-                  child: const Icon(Icons.edit_rounded, size: 18),
-                ),
-              ),
+              // IconButton(
+              //   onPressed: onEdit,
+              //   icon: Container(
+              //     padding: const EdgeInsets.all(8),
+              //     decoration: AppDecorations.iconButtonBg(),
+              //     child: const Icon(Icons.edit_rounded, size: 18),
+              //   ),
+              // ),
             ],
           ),
         ),
@@ -252,12 +251,8 @@ class _AccountSection extends StatelessWidget {
           decoration: AppDecorations.card(radius: AppDecorations.radiusLg),
           child: Column(
             children: [
-              if (items.isNotEmpty) ...[
-                _MenuTile(item: items.first),
-                Divider(height: 1, indent: 56, color: AppColors.divider.withValues(alpha: 0.6)),
-              ],
               const _PaymentMethodsTile(),
-              for (var i = 1; i < items.length; i++) ...[
+              for (var i = 0; i < items.length; i++) ...[
                 Divider(height: 1, indent: 56, color: AppColors.divider.withValues(alpha: 0.6)),
                 _MenuTile(item: items[i]),
               ],

@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spare_kart/data/models/models.dart';
+import 'package:spare_kart/features/messages/chat_session_store.dart';
 
 sealed class MessagesEvent extends Equatable {
   @override
@@ -8,6 +9,15 @@ sealed class MessagesEvent extends Equatable {
 }
 
 class MessagesLoaded extends MessagesEvent {}
+
+class MessagesSyncedFromStore extends MessagesEvent {
+  MessagesSyncedFromStore({required this.isSeller, this.currentUserId});
+  final bool isSeller;
+  final String? currentUserId;
+
+  @override
+  List<Object?> get props => [isSeller, currentUserId];
+}
 
 class MessagesThreadUpserted extends MessagesEvent {
   MessagesThreadUpserted(this.thread);
@@ -23,6 +33,15 @@ class MessagesState extends Equatable {
   final List<MessageThread> threads;
   final bool isLoaded;
 
+  MessagesState copyWith({
+    List<MessageThread>? threads,
+    bool? isLoaded,
+  }) =>
+      MessagesState(
+        threads: threads ?? this.threads,
+        isLoaded: isLoaded ?? this.isLoaded,
+      );
+
   @override
   List<Object?> get props => [threads, isLoaded];
 }
@@ -30,7 +49,15 @@ class MessagesState extends Equatable {
 class MessagesBloc extends Bloc<MessagesEvent, MessagesState> {
   MessagesBloc() : super(const MessagesState()) {
     on<MessagesLoaded>((event, emit) {
-      emit(const MessagesState(isLoaded: true));
+      emit(state.copyWith(isLoaded: true));
+    });
+    on<MessagesSyncedFromStore>((event, emit) {
+      final threads = ChatSessionStore.instance
+          .sessionsFor(isSeller: event.isSeller, userId: event.currentUserId)
+          .map((session) => session.toThread(isSeller: event.isSeller))
+          .toList()
+        ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      emit(MessagesState(threads: threads, isLoaded: true));
     });
     on<MessagesThreadUpserted>((event, emit) {
       final threads = List<MessageThread>.from(state.threads);

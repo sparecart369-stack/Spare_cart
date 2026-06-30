@@ -11,7 +11,6 @@ import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/validation/form_validators.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
-import 'package:spare_kart/core/widgets/operating_countries_selector.dart';
 import 'package:spare_kart/core/widgets/phone_number_field.dart';
 import 'package:spare_kart/data/models/models.dart';
 
@@ -25,7 +24,6 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneFieldKey = GlobalKey<PhoneNumberFieldState>();
-  final _countriesKey = GlobalKey<OperatingCountriesSelectorState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -33,11 +31,9 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _obscure = true;
   bool _obscureConfirm = true;
   String _dialCode = '+91';
-  bool _showCountryValidationError = false;
 
   void _onPhoneCountryChanged(CountryCode country) {
     _dialCode = country.dialCode ?? '+91';
-    _countriesKey.currentState?.applyPhoneCountry(country.code ?? 'IN');
   }
 
   @override
@@ -52,12 +48,7 @@ class _SignupScreenState extends State<SignupScreen> {
   void _signup() {
     if (!_formKey.currentState!.validate()) return;
 
-    final countries = _countriesKey.currentState?.selection ??
-        const OperatingCountriesSelection();
-    if (!countries.isValid) {
-      setState(() => _showCountryValidationError = true);
-      return;
-    }
+    const countries = OperatingCountriesSelection();
 
     context.read<AuthBloc>().add(AuthSignupRequested(
           phone: _phoneFieldKey.currentState?.fullPhoneNumber ?? '$_dialCode${_phoneController.text}',
@@ -171,19 +162,19 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Where do you buy, sell, or distribute spares?',
-                  style: AppTypography.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                OperatingCountriesSelector(
-                  key: _countriesKey,
-                  enabled: !isLoading,
-                  showValidationError: _showCountryValidationError,
-                ),
+                // const SizedBox(height: 24),
+                // Text(
+                //   'Where do you buy, sell, or distribute spares?',
+                //   style: AppTypography.textTheme.bodySmall?.copyWith(
+                //     color: AppColors.textTertiary,
+                //   ),
+                // ),
+                // const SizedBox(height: 12),
+                // OperatingCountriesSelector(
+                //   key: _countriesKey,
+                //   enabled: !isLoading,
+                //   showValidationError: _showCountryValidationError,
+                // ),
                 const SizedBox(height: 32),
                 PrimaryButton(
                   label: 'Create Account',

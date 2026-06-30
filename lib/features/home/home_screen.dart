@@ -78,8 +78,11 @@ class _HomeScreenState extends State<HomeScreen> {
       body: BlocBuilder<ListingsBloc, ListingsState>(
         builder: (context, state) {
           final featured = state.allParts.take(6).toList();
-          return CustomScrollView(
-            physics: const BouncingScrollPhysics(),
+          final bloc = context.read<ListingsBloc>();
+          return RefreshIndicator(
+            onRefresh: () => refreshListings(bloc),
+            child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
             slivers: [
               SliverToBoxAdapter(
                 child: Container(
@@ -244,6 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
               ),
             ],
+          ),
           );
         },
       ),
