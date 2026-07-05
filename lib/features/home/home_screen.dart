@@ -195,6 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   'Lighting' => AppAssets.categoryLighting,
                                   _ => null,
                                 },
+                                colorizeImage: name != 'Engine',
                                 index: i,
                                 onTap: () => _applyCategoryAndGoToSearch(name),
                               );
@@ -214,7 +215,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               SliverPadding(
-                padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 0, r.horizontalPadding(), 32),
+                padding: EdgeInsets.fromLTRB(
+                  r.horizontalPadding(),
+                  0,
+                  r.horizontalPadding(),
+                  r.stickyFooterBottomPadding(extra: -20),
+                ),
                 sliver: featured.isEmpty
                     ? SliverToBoxAdapter(
                         child: Padding(
@@ -314,6 +320,7 @@ class _CategoryChip extends StatelessWidget {
     required this.name,
     required this.icon,
     this.imageAsset,
+    this.colorizeImage = true,
     required this.index,
     required this.onTap,
   });
@@ -321,6 +328,7 @@ class _CategoryChip extends StatelessWidget {
   final String name;
   final IconData icon;
   final String? imageAsset;
+  final bool colorizeImage;
   final int index;
   final VoidCallback onTap;
 
@@ -371,14 +379,20 @@ class _CategoryChip extends StatelessWidget {
               child: hasImage
                   ? Padding(
                       padding: const EdgeInsets.all(2),
-                      child: ColorFiltered(
-                        colorFilter: ColorFilter.mode(c, BlendMode.modulate),
-                        child: Image.asset(
-                          imageAsset!,
-                          fit: BoxFit.contain,
-                          alignment: Alignment.center,
-                        ),
-                      ),
+                      child: colorizeImage
+                          ? ColorFiltered(
+                              colorFilter: ColorFilter.mode(c, BlendMode.modulate),
+                              child: Image.asset(
+                                imageAsset!,
+                                fit: BoxFit.contain,
+                                alignment: Alignment.center,
+                              ),
+                            )
+                          : Image.asset(
+                              imageAsset!,
+                              fit: BoxFit.contain,
+                              alignment: Alignment.center,
+                            ),
                     )
                   : Icon(icon, color: c, size: 28),
             ),

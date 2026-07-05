@@ -5,7 +5,6 @@ import 'package:spare_kart/core/constants/app_assets.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
-import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/data/dummy_data.dart';
@@ -30,8 +29,6 @@ class _FiltersScreenState extends State<FiltersScreen> {
   String? _model;
   int? _year;
   PartCondition? _condition;
-  double _minPrice = 0;
-  double _maxPrice = AppCurrency.maxFilterPrice;
   SortOption _sort = SortOption.relevance;
   bool _loadedFromBloc = false;
 
@@ -46,8 +43,6 @@ class _FiltersScreenState extends State<FiltersScreen> {
     _model = filters.model;
     _year = filters.year;
     _condition = filters.condition;
-    _minPrice = filters.minPrice;
-    _maxPrice = filters.maxPrice;
     _sort = filters.sortBy;
   }
 
@@ -58,8 +53,6 @@ class _FiltersScreenState extends State<FiltersScreen> {
       _model = null;
       _year = null;
       _condition = null;
-      _minPrice = 0;
-      _maxPrice = AppCurrency.maxFilterPrice;
       _sort = SortOption.relevance;
     });
   }
@@ -76,8 +69,6 @@ class _FiltersScreenState extends State<FiltersScreen> {
           model: _model,
           year: _year,
           condition: _condition,
-          minPrice: _minPrice,
-          maxPrice: _maxPrice,
           sortBy: _sort,
         )));
     Navigator.pop(context, _goToSearchOnApply);
@@ -199,21 +190,6 @@ class _FiltersScreenState extends State<FiltersScreen> {
                             onTap: () => setState(() => _condition = PartCondition.newPart),
                           ),
                         ],
-                      ),
-                    ),
-                    SizedBox(height: sectionGap),
-                    _SectionLabel('Price Range', compact: compact),
-                    SizedBox(height: gap),
-                    SizedBox(
-                      height: compact ? 72 : 84,
-                      child: _PriceRangeCard(
-                        minPrice: _minPrice,
-                        maxPrice: _maxPrice,
-                        compact: compact,
-                        onChanged: (min, max) => setState(() {
-                          _minPrice = min;
-                          _maxPrice = max;
-                        }),
                       ),
                     ),
                     SizedBox(height: sectionGap),
@@ -705,100 +681,6 @@ class _ConditionChip extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PriceRangeCard extends StatelessWidget {
-  const _PriceRangeCard({
-    required this.minPrice,
-    required this.maxPrice,
-    required this.compact,
-    required this.onChanged,
-  });
-
-  final double minPrice;
-  final double maxPrice;
-  final bool compact;
-  final void Function(double min, double max) onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 12, vertical: compact ? 6 : 8),
-      decoration: AppDecorations.card(radius: AppDecorations.radiusMd),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              _PriceBadge(label: AppCurrency.format(minPrice), compact: compact),
-              Expanded(
-                child: Text(
-                  'to',
-                  textAlign: TextAlign.center,
-                  style: AppTypography.textTheme.labelSmall?.copyWith(
-                    fontSize: compact ? 10 : 11,
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-              ),
-              _PriceBadge(label: AppCurrency.format(maxPrice), compact: compact, accent: true),
-            ],
-          ),
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: compact ? 3 : 4,
-                activeTrackColor: AppColors.primary,
-                inactiveTrackColor: AppColors.primaryLight,
-                thumbColor: AppColors.surface,
-                overlayColor: AppColors.primary.withValues(alpha: 0.12),
-                rangeThumbShape: RoundRangeSliderThumbShape(
-                  enabledThumbRadius: compact ? 7 : 8,
-                  elevation: 2,
-                ),
-                rangeTrackShape: const RoundedRectRangeSliderTrackShape(),
-              ),
-              child: RangeSlider(
-                values: RangeValues(minPrice, maxPrice),
-                min: 0,
-                max: AppCurrency.maxFilterPrice,
-                divisions: 100,
-                onChanged: (v) => onChanged(v.start, v.end),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PriceBadge extends StatelessWidget {
-  const _PriceBadge({required this.label, required this.compact, this.accent = false});
-
-  final String label;
-  final bool compact;
-  final bool accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 12, vertical: compact ? 4 : 6),
-      decoration: BoxDecoration(
-        color: accent ? AppColors.primaryLight : AppColors.chipBg,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: accent ? AppColors.primary.withValues(alpha: 0.2) : AppColors.border,
-        ),
-      ),
-      child: Text(
-        label,
-        style: AppTypography.textTheme.labelMedium?.copyWith(
-          fontSize: compact ? 12 : 13,
-          color: accent ? AppColors.primary : AppColors.textPrimary,
         ),
       ),
     );
