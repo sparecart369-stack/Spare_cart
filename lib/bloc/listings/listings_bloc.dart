@@ -217,12 +217,10 @@ String _filterConditionLabel(PartCondition condition) => switch (condition) {
 
 String _filterSortLabel(SortOption sort) => switch (sort) {
       SortOption.relevance => 'Relevance',
-      SortOption.priceLow => 'Price ↑',
-      SortOption.priceHigh => 'Price ↓',
       SortOption.newest => 'Newest',
     };
 
-enum SortOption { relevance, priceLow, priceHigh, newest }
+enum SortOption { relevance, newest }
 
 class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
   ListingsBloc({ListingsRepository? repository})
@@ -357,10 +355,6 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
     }).toList();
 
     switch (filters.sortBy) {
-      case SortOption.priceLow:
-        result.sort((a, b) => a.price.compareTo(b.price));
-      case SortOption.priceHigh:
-        result.sort((a, b) => b.price.compareTo(a.price));
       case SortOption.newest:
         result.sort((a, b) => b.year.compareTo(a.year));
       case SortOption.relevance:

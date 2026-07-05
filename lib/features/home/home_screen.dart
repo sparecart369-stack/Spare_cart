@@ -29,11 +29,17 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _selectedModel;
   int? _selectedYear;
 
-  Future<void> _openFilters({bool goToSearchOnApply = false}) async {
+  Future<void> _openFilters({
+    bool goToSearchOnApply = false,
+    String? initialCategory,
+  }) async {
     final goToSearch = await Navigator.pushNamed(
       context,
       AppRoutes.filters,
-      arguments: FiltersRouteArgs(goToSearchOnApply: goToSearchOnApply),
+      arguments: FiltersRouteArgs(
+        goToSearchOnApply: goToSearchOnApply,
+        initialCategory: initialCategory,
+      ),
     );
     if (!mounted || goToSearch != true) return;
     MainShellTabController.maybeOf(context)?.selectTab(1);
@@ -175,32 +181,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         SectionHeader(
                           title: 'Popular Categories',
                           subtitle: 'Browse by part type',
+                          action: 'See All',
+                          onActionTap: _openFilters,
                         ),
-                        SizedBox(
-                          height: 108,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: categories.length,
-                            separatorBuilder: (_, _) => const SizedBox(width: 12),
-                            itemBuilder: (context, i) {
-                              final (name, iconName) = categories[i];
-                              return _CategoryChip(
-                                name: name,
-                                icon: _iconFromName(iconName),
-                                imageAsset: switch (name) {
-                                  'Engine' => AppAssets.categoryEngine,
-                                  'Transmission' => AppAssets.categoryTransmission,
-                                  'Body Parts' => AppAssets.categoryBodyParts,
-                                  'Lighting' => AppAssets.categoryLighting,
-                                  _ => null,
-                                },
-                                colorizeImage: name != 'Engine',
-                                index: i,
-                                onTap: () => _applyCategoryAndGoToSearch(name),
-                              );
-                            },
-                          ),
+                        _PopularCategoriesGrid(
+                          onCategoryTap: _applyCategoryAndGoToSearch,
+                          iconFromName: _iconFromName,
                         ),
                         SectionHeader(
                           title: 'Featured Parts',
@@ -219,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   r.horizontalPadding(),
                   0,
                   r.horizontalPadding(),
-                  r.stickyFooterBottomPadding(extra: -20),
+                  r.stickyFooterBottomPadding(),
                 ),
                 sliver: featured.isEmpty
                     ? SliverToBoxAdapter(
@@ -264,12 +250,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return switch (name) {
       'engineering' => Icons.engineering_rounded,
       'settings' => Icons.settings_rounded,
+      'ac_unit' => Icons.ac_unit_rounded,
       'directions_car' => Icons.directions_car_rounded,
-      'lightbulb' => Icons.lightbulb_rounded,
-      'tire_repair' => Icons.tire_repair_rounded,
-      'stop_circle' => Icons.stop_circle_rounded,
       'height' => Icons.height_rounded,
+      'stop_circle' => Icons.stop_circle_rounded,
       'bolt' => Icons.bolt_rounded,
+      'star' => Icons.star_rounded,
+      'memory' => Icons.memory_rounded,
+      'event_seat' => Icons.event_seat_rounded,
+      'tire_repair' => Icons.tire_repair_rounded,
+      'lightbulb' => Icons.lightbulb_rounded,
+      'album' => Icons.album_rounded,
+      'local_gas_station' => Icons.local_gas_station_rounded,
       _ => Icons.category_rounded,
     };
   }
@@ -315,12 +307,52 @@ class _AdminModeButton extends StatelessWidget {
   }
 }
 
+class _PopularCategoriesGrid extends StatelessWidget {
+  const _PopularCategoriesGrid({
+    required this.onCategoryTap,
+    required this.iconFromName,
+  });
+
+  final ValueChanged<String> onCategoryTap;
+  final IconData Function(String) iconFromName;
+
+  static const _visibleCount = 8;
+  static const _columns = 4;
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = categories.take(_visibleCount).toList();
+    return Column(
+      children: [
+        for (var row = 0; row < visible.length / _columns; row++) ...[
+          if (row > 0) const SizedBox(height: 12),
+          Row(
+            children: [
+              for (var col = 0; col < _columns; col++) ...[
+                if (col > 0) const SizedBox(width: 8),
+                Expanded(
+                  child: _CategoryChip(
+                    name: visible[row * _columns + col].$1,
+                    icon: iconFromName(visible[row * _columns + col].$2),
+                    imageAsset: AppAssets.categoryImageFor(visible[row * _columns + col].$1),
+                    index: row * _columns + col,
+                    onTap: () => onCategoryTap(visible[row * _columns + col].$1),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _CategoryChip extends StatelessWidget {
   const _CategoryChip({
     required this.name,
     required this.icon,
     this.imageAsset,
-    this.colorizeImage = true,
     required this.index,
     required this.onTap,
   });
@@ -328,7 +360,6 @@ class _CategoryChip extends StatelessWidget {
   final String name;
   final IconData icon;
   final String? imageAsset;
-  final bool colorizeImage;
   final int index;
   final VoidCallback onTap;
 
@@ -362,9 +393,7 @@ class _CategoryChip extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: SizedBox(
-        width: 84,
-        child: Column(
+      child: Column(
           children: [
             Container(
               width: 64,
@@ -379,20 +408,11 @@ class _CategoryChip extends StatelessWidget {
               child: hasImage
                   ? Padding(
                       padding: const EdgeInsets.all(2),
-                      child: colorizeImage
-                          ? ColorFiltered(
-                              colorFilter: ColorFilter.mode(c, BlendMode.modulate),
-                              child: Image.asset(
-                                imageAsset!,
-                                fit: BoxFit.contain,
-                                alignment: Alignment.center,
-                              ),
-                            )
-                          : Image.asset(
-                              imageAsset!,
-                              fit: BoxFit.contain,
-                              alignment: Alignment.center,
-                            ),
+                      child: Image.asset(
+                        imageAsset!,
+                        fit: BoxFit.contain,
+                        alignment: Alignment.center,
+                      ),
                     )
                   : Icon(icon, color: c, size: 28),
             ),
@@ -409,7 +429,6 @@ class _CategoryChip extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

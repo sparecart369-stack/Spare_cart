@@ -2,12 +2,18 @@
 const categories = [
   ('Engine', 'engineering'),
   ('Transmission', 'settings'),
+  ('AC System', 'ac_unit'),
   ('Body Parts', 'directions_car'),
-  ('Lighting', 'lightbulb'),
-  ('Wheels', 'tire_repair'),
-  ('Brakes', 'stop_circle'),
   ('Suspension', 'height'),
+  ('Brakes', 'stop_circle'),
   ('Electrical', 'bolt'),
+  ('Accessories', 'star'),
+  ('Sensors & Modules', 'memory'),
+  ('Interior', 'event_seat'),
+  ('Wheels', 'tire_repair'),
+  ('Lighting', 'lightbulb'),
+  ('Bearing', 'album'),
+  ('Fuel System', 'local_gas_station'),
 ];
 
 const makes = ['Toyota', 'Honda', 'Ford', 'BMW', 'Mercedes', 'Nissan', 'Hyundai', 'Chevrolet'];

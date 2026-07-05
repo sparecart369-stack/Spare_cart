@@ -11,9 +11,13 @@ import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/data/models/models.dart';
 
 class FiltersRouteArgs {
-  const FiltersRouteArgs({this.goToSearchOnApply = false});
+  const FiltersRouteArgs({
+    this.goToSearchOnApply = false,
+    this.initialCategory,
+  });
 
   final bool goToSearchOnApply;
+  final String? initialCategory;
 }
 
 class FiltersScreen extends StatefulWidget {
@@ -37,8 +41,11 @@ class _FiltersScreenState extends State<FiltersScreen> {
     super.didChangeDependencies();
     if (_loadedFromBloc) return;
     _loadedFromBloc = true;
+    final args = ModalRoute.of(context)?.settings.arguments;
+    final initialCategory =
+        args is FiltersRouteArgs ? args.initialCategory : null;
     final filters = context.read<ListingsBloc>().state.filters;
-    _category = filters.category;
+    _category = initialCategory ?? filters.category;
     _make = filters.make;
     _model = filters.model;
     _year = filters.year;
@@ -125,7 +132,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
                               return _CategoryTile(
                                 label: c.$1,
                                 icon: _categoryIcon(c.$2),
-                                imageAsset: _categoryImageAsset(c.$1),
+                                imageAsset: AppAssets.categoryImageFor(c.$1),
                                 index: i,
                                 selected: selected,
                                 compact: compact,
@@ -248,27 +255,23 @@ class _FiltersScreenState extends State<FiltersScreen> {
   IconData _categoryIcon(String name) => switch (name) {
         'engineering' => Icons.engineering_rounded,
         'settings' => Icons.settings_rounded,
+        'ac_unit' => Icons.ac_unit_rounded,
         'directions_car' => Icons.directions_car_rounded,
-        'lightbulb' => Icons.lightbulb_rounded,
-        'tire_repair' => Icons.tire_repair_rounded,
-        'stop_circle' => Icons.stop_circle_rounded,
         'height' => Icons.height_rounded,
+        'stop_circle' => Icons.stop_circle_rounded,
         'bolt' => Icons.bolt_rounded,
+        'star' => Icons.star_rounded,
+        'memory' => Icons.memory_rounded,
+        'event_seat' => Icons.event_seat_rounded,
+        'tire_repair' => Icons.tire_repair_rounded,
+        'lightbulb' => Icons.lightbulb_rounded,
+        'album' => Icons.album_rounded,
+        'local_gas_station' => Icons.local_gas_station_rounded,
         _ => Icons.category_rounded,
-      };
-
-  String? _categoryImageAsset(String name) => switch (name) {
-        'Engine' => AppAssets.categoryEngine,
-        'Transmission' => AppAssets.categoryTransmission,
-        'Body Parts' => AppAssets.categoryBodyParts,
-        'Lighting' => AppAssets.categoryLighting,
-        _ => null,
       };
 
   String _sortLabel(SortOption s) => switch (s) {
         SortOption.relevance => 'Relevance',
-        SortOption.priceLow => 'Price ↑',
-        SortOption.priceHigh => 'Price ↓',
         SortOption.newest => 'Newest',
       };
 }
