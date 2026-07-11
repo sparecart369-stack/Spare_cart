@@ -7,9 +7,11 @@ import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
+import 'package:spare_kart/core/widgets/location_multi_select_field.dart';
 import 'package:spare_kart/core/widgets/vehicle_identifier_fields.dart';
 import 'package:spare_kart/core/widgets/vehicle_picker_field.dart';
 import 'package:spare_kart/data/dummy_data.dart';
+import 'package:spare_kart/data/india_locations.dart';
 import 'package:spare_kart/data/models/models.dart';
 import 'package:spare_kart/data/vehicle_catalog.dart';
 
@@ -37,6 +39,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
   int? _year;
   PartCondition? _condition;
   SortOption _sort = SortOption.relevance;
+  Set<String> _selectedStates = {};
+  Set<String> _selectedDistricts = {};
   bool _loadedFromBloc = false;
   final _chassisController = TextEditingController();
   final _partNumberController = TextEditingController();
@@ -63,6 +67,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
     _year = filters.year;
     _condition = filters.condition;
     _sort = filters.sortBy;
+    _selectedStates = filters.states.toSet();
+    _selectedDistricts = filters.districts.toSet();
     _chassisController.text = filters.chassisNumber ?? '';
     _partNumberController.text = filters.partNumber ?? '';
   }
@@ -80,6 +86,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
       _year = null;
       _condition = null;
       _sort = SortOption.relevance;
+      _selectedStates = {};
+      _selectedDistricts = {};
       _chassisController.clear();
       _partNumberController.clear();
     });
@@ -99,6 +107,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
           chassisNumber: _trimmedOrNull(_chassisController.text),
           partNumber: _trimmedOrNull(_partNumberController.text),
           condition: _condition,
+          states: _selectedStates.toList()..sort(),
+          districts: _selectedDistricts.toList()..sort(),
           sortBy: _sort,
         )));
     Navigator.pop(context, _goToSearchOnApply);
@@ -112,6 +122,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
     final gap = compact ? 6.0 : 10.0;
     final sectionGap = compact ? 8.0 : 12.0;
     final catColumns = r.width < 360 ? 3 : 4;
+    final locations = IndiaLocations.instance;
+    final districtOptions = locations.districtsForStates(_selectedStates);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -184,6 +196,44 @@ class _FiltersScreenState extends State<FiltersScreen> {
                         }),
                         onModelChanged: (v) => setState(() => _model = v),
                         onYearChanged: (v) => setState(() => _year = v),
+                      ),
+                    ),
+                    SizedBox(height: sectionGap),
+                    _SectionLabel('Location', compact: compact),
+                    SizedBox(height: gap),
+                    Container(
+                      padding: EdgeInsets.all(compact ? 10 : 12),
+                      decoration: AppDecorations.elevatedCard(radius: AppDecorations.radiusMd),
+                      child: Column(
+                        children: [
+                          LocationMultiSelectField(
+                            label: 'State / Union Territory',
+                            hint: 'Select states',
+                            icon: Icons.map_outlined,
+                            options: locations.states,
+                            selected: _selectedStates,
+                            compact: compact,
+                            onChanged: (values) => setState(() {
+                              _selectedStates = values;
+                              final availableDistricts = locations.districtsForStates(values).toSet();
+                              _selectedDistricts = _selectedDistricts
+                                  .where(availableDistricts.contains)
+                                  .toSet();
+                            }),
+                          ),
+                          SizedBox(height: gap),
+                          LocationMultiSelectField(
+                            label: 'District',
+                            hint: _selectedStates.isEmpty
+                                ? 'Select districts'
+                                : 'Select districts in chosen states',
+                            icon: Icons.location_city_outlined,
+                            options: districtOptions,
+                            selected: _selectedDistricts,
+                            compact: compact,
+                            onChanged: (values) => setState(() => _selectedDistricts = values),
+                          ),
+                        ],
                       ),
                     ),
                     SizedBox(height: sectionGap),

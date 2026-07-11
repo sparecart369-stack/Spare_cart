@@ -90,6 +90,39 @@ class ListingsRepository {
     return _mapRows(rows);
   }
 
+  Future<List<Part>> fetchSavedListings(String userId) async {
+    final rows = await _client
+        .from('saved_listings')
+        .select('listings ($_listingSelect)')
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+
+    return rows
+        .whereType<Map<String, dynamic>>()
+        .map((row) {
+          final listing = row['listings'];
+          if (listing is Map<String, dynamic>) return _mapRow(listing);
+          return null;
+        })
+        .whereType<Part>()
+        .toList();
+  }
+
+  Future<void> saveListing(String userId, String listingId) async {
+    await _client.from('saved_listings').upsert({
+      'user_id': userId,
+      'listing_id': listingId,
+    });
+  }
+
+  Future<void> unsaveListing(String userId, String listingId) async {
+    await _client
+        .from('saved_listings')
+        .delete()
+        .eq('user_id', userId)
+        .eq('listing_id', listingId);
+  }
+
   Future<Part> createListing({
     required String sellerId,
     required String sellerName,

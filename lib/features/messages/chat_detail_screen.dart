@@ -9,6 +9,7 @@ import 'package:spare_kart/bloc/messages/messages_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:spare_kart/core/services/location_service.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
+import 'package:spare_kart/core/utils/date_time_utils.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/validation/form_validators.dart';
 import 'package:spare_kart/core/widgets/listing_image.dart';
@@ -686,8 +687,34 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     );
   }
 
+  Widget _buildDateSeparator(DateTime time) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.chipBg.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            formatChatDateSeparator(time),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMessageBubble(ChatMessage msg, Responsive r) {
     final isMine = _isFromCurrentUser(msg);
+    final timeLabel = formatChatMessageTime(msg.timestamp);
+    final timeColor = isMine ? Colors.white.withValues(alpha: 0.75) : AppColors.textSecondary;
+
     return Align(
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -720,6 +747,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 msg.text,
                 style: TextStyle(color: isMine ? Colors.white : AppColors.textPrimary),
               ),
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                timeLabel,
+                style: TextStyle(fontSize: 11, color: timeColor),
+              ),
+            ),
           ],
         ),
       ),
@@ -770,6 +805,33 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     }
 
     await _onFlowOption(option);
+  }
+
+  List<Widget> _buildChatListItems(Responsive r) {
+    final items = <Widget>[];
+    DateTime? previousDay;
+
+    for (final msg in _messages) {
+      final day = DateTime(
+        msg.timestamp.year,
+        msg.timestamp.month,
+        msg.timestamp.day,
+      );
+      if (previousDay == null || day != previousDay) {
+        items.add(_buildDateSeparator(msg.timestamp));
+        previousDay = day;
+      }
+      items.add(_buildMessageBubble(msg, r));
+    }
+
+    if (_isWaitingForSeller) {
+      items.add(_buildStatusBubble('Message sent. Waiting for seller to respond…', r));
+    }
+    if (_showQuickReplies) {
+      items.add(_buildWhatsAppQuickReplyBubble(r));
+    }
+
+    return items;
   }
 
   Widget _buildWhatsAppQuickReplyBubble(Responsive r) {
@@ -1111,28 +1173,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
+            child: ListView(
               controller: _scrollController,
               padding: EdgeInsets.all(r.horizontalPadding()),
-              itemCount: _messages.length +
-                  (_isWaitingForSeller ? 1 : 0) +
-                  (showQuickReplies ? 1 : 0),
-              itemBuilder: (context, i) {
-                if (i < _messages.length) {
-                  return _buildMessageBubble(_messages[i], r);
-                }
-                var offset = _messages.length;
-                if (_isWaitingForSeller) {
-                  if (i == offset) {
-                    return _buildStatusBubble(
-                      'Message sent. Waiting for seller to respond…',
-                      r,
-                    );
-                  }
-                  offset++;
-                }
-                return _buildWhatsAppQuickReplyBubble(r);
-              },
+              children: _buildChatListItems(r),
             ),
           ),
           specialPanel,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spare_kart/bloc/app_mode/app_mode_bloc.dart';
 import 'package:spare_kart/bloc/auth/auth_bloc.dart';
-import 'package:spare_kart/bloc/messages/messages_bloc.dart';
+import 'package:spare_kart/bloc/favourites/favourites_bloc.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
 import 'package:spare_kart/core/constants/app_assets.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
@@ -77,8 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final r = Responsive(context);
     final user = context.watch<AuthBloc>().state.user;
-    final unreadCount = context.watch<MessagesBloc>().state.threads
-        .fold(0, (sum, thread) => sum + thread.unreadCount);
+    final favouritesCount = context.watch<FavouritesBloc>().state.count;
     final firstName = (user?.name ?? 'Guest').split(' ').first;
 
     return Scaffold(
@@ -130,9 +129,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const SizedBox(width: 8),
                             PremiumIconButton(
-                              icon: Icons.chat_bubble_outline_rounded,
-                              onPressed: () => Navigator.pushNamed(context, AppRoutes.messages),
-                              badge: unreadCount > 0 ? '$unreadCount' : null,
+                              icon: Icons.favorite_border_rounded,
+                              onPressed: () => Navigator.pushNamed(context, AppRoutes.savedItems),
+                              badge: favouritesCount > 0 ? '$favouritesCount' : null,
                             ),
                           ],
                         ),

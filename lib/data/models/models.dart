@@ -69,6 +69,38 @@ class Part extends Equatable {
         ListingFulfillment.inStorePickup => location,
       };
 
+  String? get locationDistrict {
+    final parsed = _parseDistrictState();
+    return parsed.$1;
+  }
+
+  String? get locationState {
+    final parsed = _parseDistrictState();
+    return parsed.$2;
+  }
+
+  (String?, String?) _parseDistrictState() {
+    final trimmed = location.trim();
+    if (trimmed.isEmpty) return (null, null);
+
+    final parts = trimmed
+        .split(',')
+        .map((segment) => segment.trim())
+        .where((segment) => segment.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return (null, null);
+
+    if (fulfillment == ListingFulfillment.doorstepDelivery) {
+      if (parts.length >= 2) return (parts[0], parts[1]);
+      return (parts[0], null);
+    }
+
+    if (parts.length >= 2) {
+      return (parts[parts.length - 2], parts[parts.length - 1]);
+    }
+    return (parts[0], null);
+  }
+
   String get fullTitle => '$name $make $model $year';
 
   String get conditionLabel {

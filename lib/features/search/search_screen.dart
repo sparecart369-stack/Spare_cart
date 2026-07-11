@@ -72,7 +72,8 @@ class _SearchScreenState extends State<SearchScreen> {
                       padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 0, r.horizontalPadding(), 10),
                       child: ActiveFilterChips(
                         chips: chips,
-                        onClear: (field) => context.read<ListingsBloc>().add(ListingFilterCleared(field)),
+                        onClear: (field, {value}) =>
+                            context.read<ListingsBloc>().add(ListingFilterCleared(field, value: value)),
                       ),
                     ),
                   Padding(

@@ -43,19 +43,7 @@ class PartCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       const BlurredPrice(),
                       const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.location_on_rounded, size: 13, color: AppColors.textTertiary.withValues(alpha: 0.8)),
-                          const SizedBox(width: 3),
-                          Expanded(
-                            child: Text(
-                              part.displayLocation,
-                              style: AppTypography.textTheme.bodySmall,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
+                      _LocationChips(part: part),
                     ],
                   ),
                 ),
@@ -128,22 +116,7 @@ class PartCard extends StatelessWidget {
                       style: AppTypography.textTheme.titleSmall?.copyWith(height: 1.35),
                     ),
                     const SizedBox(height: 10),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        const BlurredPrice(),
-                        const Spacer(),
-                        Icon(Icons.location_on_rounded, size: 13, color: AppColors.textTertiary),
-                        const SizedBox(width: 2),
-                        Flexible(
-                          child: Text(
-                            part.displayLocation.split(',').first,
-                            style: AppTypography.textTheme.labelSmall,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
+                    const BlurredPrice(),
                   ],
                 ),
               ),
@@ -151,6 +124,49 @@ class PartCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _LocationChips extends StatelessWidget {
+  const _LocationChips({required this.part});
+
+  final Part part;
+
+  @override
+  Widget build(BuildContext context) {
+    final district = part.locationDistrict;
+    final state = part.locationState;
+    final locationText = part.displayLocation;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.location_on_rounded, size: 13, color: AppColors.textTertiary.withValues(alpha: 0.8)),
+            const SizedBox(width: 3),
+            Expanded(
+              child: Text(
+                locationText,
+                style: AppTypography.textTheme.bodySmall,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        if (district != null || state != null) ...[
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: [
+              if (district != null) LocationChip(label: district),
+              if (state != null) LocationChip(label: state),
+            ],
+          ),
+        ],
+      ],
     );
   }
 }

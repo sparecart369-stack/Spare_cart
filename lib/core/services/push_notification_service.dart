@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
@@ -16,6 +17,7 @@ typedef PushNavigateHandler = void Function(String route, {String? threadId});
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Background display is handled by the OS; no extra local notification here.
 }
 
 class PushNotificationService {
@@ -144,12 +146,17 @@ class PushNotificationService {
     _currentToken = token;
     try {
       await _tokenRepository.saveToken(token);
+      if (kDebugMode) {
+        debugPrint('FCM token saved for user $_activeUserId');
+      }
     } catch (error) {
       debugPrint('Failed to save FCM token: $error');
     }
   }
 
   void _onForegroundMessage(RemoteMessage message) {
+    if (_shouldIgnoreMessage(message.data)) return;
+
     final notification = message.notification;
     final data = message.data;
     final title = notification?.title ?? data['title'] ?? 'SpareKart';
@@ -185,13 +192,25 @@ class PushNotificationService {
   }
 
   void _onRemoteMessageOpened(RemoteMessage message) {
+    if (_shouldIgnoreMessage(message.data)) return;
     _navigateFromData(message.data);
   }
 
   void _scheduleNavigationFromMessage(RemoteMessage message) {
+    if (_shouldIgnoreMessage(message.data)) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _navigateFromData(message.data);
     });
+  }
+
+  bool _shouldIgnoreMessage(Map<String, dynamic> data) {
+    final senderId = data['sender_id'] as String?;
+    if (senderId != null &&
+        _activeUserId != null &&
+        senderId == _activeUserId) {
+      return true;
+    }
+    return false;
   }
 
   void _handleLocalNotificationTap(NotificationResponse response) {

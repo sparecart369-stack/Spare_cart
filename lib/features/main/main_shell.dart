@@ -6,8 +6,8 @@ import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/features/account/account_screen.dart';
 import 'package:spare_kart/features/admin/admin_home_screen.dart';
 import 'package:spare_kart/features/home/home_screen.dart';
-import 'package:spare_kart/bloc/cart/cart_bloc.dart';
-import 'package:spare_kart/features/cart/cart_screen.dart';
+import 'package:spare_kart/bloc/messages/messages_bloc.dart';
+import 'package:spare_kart/features/messages/messages_screen.dart';
 import 'package:spare_kart/features/search/search_screen.dart';
 import 'package:spare_kart/features/sell/sell_screen.dart';
 
@@ -50,11 +50,12 @@ class _MainShellState extends State<MainShell> {
           const HomeScreen(),
           const SearchScreen(),
           const SellScreen(),
-          const CartScreen(),
+          const MessagesScreen(),
           const AccountScreen(),
         ];
 
-        final cartCount = context.watch<CartBloc>().state.itemCount;
+        final unreadCount = context.watch<MessagesBloc>().state.threads
+            .fold(0, (sum, thread) => sum + thread.unreadCount);
 
         return MainShellTabController(
           selectTab: (i) => setState(() => _index = i),
@@ -86,7 +87,7 @@ class _MainShellState extends State<MainShell> {
                       selectedIcon: _SellNavIcon(selected: true),
                       label: 'Sell',
                     ),
-                    _cartNavDest(cartCount),
+                    _messagesNavDest(unreadCount),
                     _navDest(Icons.person_rounded, Icons.person_outline_rounded, 'Account', 4),
                   ],
                 ),
@@ -107,19 +108,19 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  NavigationDestination _cartNavDest(int cartCount) {
+  NavigationDestination _messagesNavDest(int unreadCount) {
     return NavigationDestination(
       icon: Badge(
-        isLabelVisible: cartCount > 0,
-        label: Text('$cartCount'),
-        child: const Icon(Icons.shopping_bag_outlined),
+        isLabelVisible: unreadCount > 0,
+        label: Text('$unreadCount'),
+        child: const Icon(Icons.chat_bubble_outline_rounded),
       ),
       selectedIcon: Badge(
-        isLabelVisible: cartCount > 0,
-        label: Text('$cartCount'),
-        child: const Icon(Icons.shopping_bag_rounded),
+        isLabelVisible: unreadCount > 0,
+        label: Text('$unreadCount'),
+        child: const Icon(Icons.chat_bubble_rounded),
       ),
-      label: 'Cart',
+      label: 'Messages',
     );
   }
 }

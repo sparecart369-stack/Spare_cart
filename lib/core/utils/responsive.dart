@@ -31,15 +31,24 @@ class Responsive {
 
   /// Scroll/list bottom inset for tab screens inside [MainShell].
   double bottomNavPadding({double extra = 16}) {
-    const navBarHeight = 76.0; // SafeArea + 8 + NavigationBar(64) + 4
-    return MediaQuery.paddingOf(context).bottom + navBarHeight + extra;
+    return MediaQuery.paddingOf(context).bottom + _mainShellNavContentHeight() + extra;
+  }
+
+  /// Bottom inset for content that must sit above [MainShell]'s bottom nav.
+  /// Uses [MediaQuery.viewPadding] because [MainShell] uses `extendBody: true`,
+  /// which clears bottom [MediaQuery.padding] on tab screens.
+  double mainShellNavOverlayHeight({double extra = 12}) {
+    return MediaQuery.viewPaddingOf(context).bottom + _mainShellNavContentHeight() + extra;
   }
 
   /// Bottom padding for a sticky footer above [MainShell]'s bottom nav.
-  /// Uses [MediaQuery.viewPadding] because [MainShell] uses `extendBody: true`,
-  /// which clears bottom [MediaQuery.padding] on tab screens.
-  double stickyFooterBottomPadding({double extra = 4}) {
-    const navBarHeight = 76.0; // 8 + NavigationBar(64) + 4
-    return MediaQuery.viewPaddingOf(context).bottom + navBarHeight + extra;
+  double stickyFooterBottomPadding({double extra = 12}) => mainShellNavOverlayHeight(extra: extra);
+
+  /// Matches [MainShell]'s bottom nav: top padding + bar + bottom padding.
+  double _mainShellNavContentHeight() {
+    const base = 8.0 + 64.0 + 4.0; // padding + NavigationBar + padding
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    if (textScale <= 1.0) return base;
+    return base + ((textScale - 1.0) * 16).clamp(0, 24);
   }
 }

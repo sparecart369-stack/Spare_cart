@@ -193,6 +193,31 @@ class ConditionChip extends StatelessWidget {
   }
 }
 
+class LocationChip extends StatelessWidget {
+  const LocationChip({super.key, required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.chipBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.textTheme.labelSmall?.copyWith(
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
 class ActiveFilterChips extends StatelessWidget {
   const ActiveFilterChips({
     super.key,
@@ -201,7 +226,7 @@ class ActiveFilterChips extends StatelessWidget {
   });
 
   final List<ActiveFilterChip> chips;
-  final void Function(FilterChipField field) onClear;
+  final void Function(FilterChipField field, {String? value}) onClear;
 
   @override
   Widget build(BuildContext context) {
@@ -218,7 +243,7 @@ class ActiveFilterChips extends StatelessWidget {
           final chip = chips[i];
           return _RemovableFilterChip(
             label: chip.label,
-            onClear: () => onClear(chip.field),
+            onClear: () => onClear(chip.field, value: chip.value),
           );
         },
       ),

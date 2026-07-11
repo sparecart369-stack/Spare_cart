@@ -34,7 +34,7 @@ class _SellScreenState extends State<SellScreen> {
   static const _maxPhotos = 3;
 
   int _step = 0;
-  bool? _needsBankAccountStep;
+  static const _steps = ['Details', 'Location', 'Photos', 'Review'];
   final _nameController = TextEditingController();
   final _partNumberController = TextEditingController();
   final _descController = TextEditingController();
@@ -54,22 +54,9 @@ class _SellScreenState extends State<SellScreen> {
   bool _currentLocationLoading = false;
   String? _currentLocationError;
   final _customPickupLocationController = TextEditingController();
-  final _upiController = TextEditingController();
-  final _bankNameController = TextEditingController();
-  final _accountNumberController = TextEditingController();
-  final _accountNameController = TextEditingController();
-  final _ifscController = TextEditingController();
   final List<String> _photoPaths = [];
   final _imagePicker = ImagePicker();
   bool _awaitingPublishResult = false;
-
-  List<String> get _steps {
-    _needsBankAccountStep ??=
-        !(context.read<AuthBloc>().state.user?.bankAccount?.isComplete ?? false);
-    return _needsBankAccountStep!
-        ? ['Details', 'Location', 'Photos', 'Bank Account', 'Review']
-        : ['Details', 'Location', 'Photos', 'Review'];
-  }
 
   int get _lastStep => _steps.length - 1;
 
@@ -112,11 +99,6 @@ class _SellScreenState extends State<SellScreen> {
     _descController.dispose();
     _chassisController.dispose();
     _customPickupLocationController.dispose();
-    _upiController.dispose();
-    _bankNameController.dispose();
-    _accountNumberController.dispose();
-    _accountNameController.dispose();
-    _ifscController.dispose();
     super.dispose();
   }
 
@@ -125,9 +107,7 @@ class _SellScreenState extends State<SellScreen> {
     if (stepName == 'Details' && !_validateDetails()) return;
     if (stepName == 'Location' && !_validateLocation()) return;
     if (stepName == 'Photos' && !_validatePhotos()) return;
-    if (stepName == 'Bank Account' && !_validateBankAccount()) return;
     if (stepName == 'Location') _persistSellerLocation();
-    if (stepName == 'Bank Account') _saveBankAccount();
 
     if (_step < _lastStep) {
       setState(() => _step++);
@@ -344,49 +324,9 @@ class _SellScreenState extends State<SellScreen> {
     setState(() => _photoPaths.removeAt(index));
   }
 
-  bool _validateBankAccount() {
-    final validators = [
-      FormValidators.upiId(_upiController.text),
-      FormValidators.bankName(_bankNameController.text),
-      FormValidators.accountNumber(_accountNumberController.text),
-      FormValidators.accountHolderName(_accountNameController.text),
-      FormValidators.ifscCode(_ifscController.text),
-    ];
-    for (final error in validators) {
-      if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-        return false;
-      }
-    }
-    return true;
-  }
-
-  void _saveBankAccount() {
-    context.read<AuthBloc>().add(
-          AuthBankAccountUpdated(
-            SellerBankAccount(
-              upiId: _upiController.text.trim(),
-              bankName: _bankNameController.text.trim(),
-              accountNumber: _accountNumberController.text.trim(),
-              accountName: _accountNameController.text.trim(),
-              ifscCode: _ifscController.text.trim().toUpperCase(),
-            ),
-          ),
-        );
-  }
-
   SellerBankAccount? get _bankAccountForReview {
     final saved = context.read<AuthBloc>().state.user?.bankAccount;
     if (saved != null && saved.isComplete) return saved;
-    if (_upiController.text.trim().isNotEmpty) {
-      return SellerBankAccount(
-        upiId: _upiController.text.trim(),
-        bankName: _bankNameController.text.trim(),
-        accountNumber: _accountNumberController.text.trim(),
-        accountName: _accountNameController.text.trim(),
-        ifscCode: _ifscController.text.trim().toUpperCase(),
-      );
-    }
     return null;
   }
 
@@ -416,12 +356,16 @@ class _SellScreenState extends State<SellScreen> {
           'Let buyers collect the part from your store or location. No shipping required.',
       };
 
+  double _footerBarHeight(bool compact) =>
+      (compact ? 10.0 : 12.0) + (compact ? 50.0 : 54.0) + (compact ? 10.0 : 12.0);
+
   @override
   Widget build(BuildContext context) {
     final r = Responsive(context);
     final pad = r.horizontalPadding();
     final compact = r.height < 740;
-    final navInset = r.stickyFooterBottomPadding();
+    final navOverlay = r.mainShellNavOverlayHeight();
+    final footerHeight = _footerBarHeight(compact);
 
     return BlocListener<ListingsBloc, ListingsState>(
       listenWhen: (previous, current) =>
@@ -443,71 +387,48 @@ class _SellScreenState extends State<SellScreen> {
       },
       child: Scaffold(
       backgroundColor: AppColors.background,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
             _SellHeader(step: _step, stepCount: _steps.length, steps: _steps, compact: compact),
             Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(pad, compact ? 6 : 10, pad, compact ? 12 : 16),
-                child: switch (_steps[_step]) {
-                  'Details' => _buildDetails(compact),
-                  'Location' => _buildLocation(compact),
-                  'Photos' => _buildPhotos(compact),
-                  'Bank Account' => _buildBankAccount(compact),
-                  _ => _buildReview(compact),
-                },
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                boxShadow: AppDecorations.shadowNav,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              padding: EdgeInsets.fromLTRB(
-                pad,
-                compact ? 10 : 12,
-                pad,
-                navInset,
-              ),
-              child: BlocBuilder<ListingsBloc, ListingsState>(
-                builder: (context, listingsState) {
-                  final isPublishing = listingsState.isPublishing;
-                  return Row(
-                    children: [
-                      if (_step > 0) ...[
-                        Expanded(
-                          child: SecondaryButton(
-                            label: 'Back',
-                            onPressed: () {
-                              if (isPublishing) return;
-                              setState(() => _step--);
-                            },
-                          ),
-                        ),
-                        SizedBox(width: compact ? 10 : 12),
-                      ],
-                      Expanded(
-                        flex: _step > 0 ? 2 : 1,
-                        child: PrimaryButton(
-                          label: _step < _lastStep ? 'Next' : 'Publish Listing',
-                          height: compact ? 50 : 54,
-                          icon: _step < _lastStep
-                              ? Icons.arrow_forward_rounded
-                              : Icons.publish_rounded,
-                          isLoading: _step == _lastStep && isPublishing,
-                          onPressed: () {
-                            if (isPublishing) return;
-                            _next();
-                          },
-                        ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(
+                    bottom: footerHeight + navOverlay,
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(
+                        pad,
+                        compact ? 6 : 10,
+                        pad,
+                        compact ? 12 : 16,
                       ),
-                    ],
-                  );
-                },
+                      child: switch (_steps[_step]) {
+                        'Details' => _buildDetails(compact),
+                        'Location' => _buildLocation(compact),
+                        'Photos' => _buildPhotos(compact),
+                        _ => _buildReview(compact),
+                      },
+                    ),
+                  ),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: navOverlay,
+                    child: _SellActionBar(
+                      pad: pad,
+                      compact: compact,
+                      step: _step,
+                      lastStep: _lastStep,
+                      onBack: () => setState(() => _step--),
+                      onNext: _next,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -865,67 +786,6 @@ class _SellScreenState extends State<SellScreen> {
     );
   }
 
-  Widget _buildBankAccount(bool compact) {
-    final gap = compact ? 6.0 : 8.0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionLabel('Payout Account', compact: compact),
-        SizedBox(height: gap),
-        Text(
-          'Add your bank details to receive payouts every Friday',
-          style: AppTypography.textTheme.bodySmall?.copyWith(
-            fontSize: compact ? 11 : 12,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        SizedBox(height: gap + 2),
-        _FormField(
-          controller: _upiController,
-          hint: 'UPI ID',
-          icon: Icons.account_balance_wallet_outlined,
-          compact: compact,
-          keyboardType: TextInputType.emailAddress,
-        ),
-        SizedBox(height: gap),
-        _FormField(
-          controller: _bankNameController,
-          hint: 'Bank Name',
-          icon: Icons.account_balance_outlined,
-          compact: compact,
-        ),
-        SizedBox(height: gap),
-        _FormField(
-          controller: _accountNumberController,
-          hint: 'Account Number',
-          icon: Icons.numbers_rounded,
-          compact: compact,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        ),
-        SizedBox(height: gap),
-        _FormField(
-          controller: _accountNameController,
-          hint: 'Account Holder Name',
-          icon: Icons.person_outline_rounded,
-          compact: compact,
-        ),
-        SizedBox(height: gap),
-        _FormField(
-          controller: _ifscController,
-          hint: 'IFSC Code',
-          icon: Icons.qr_code_2_rounded,
-          compact: compact,
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
-            TextInputFormatter.withFunction((old, next) => next.copyWith(text: next.text.toUpperCase())),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildReview(bool compact) {
     final gap = compact ? 8.0 : 10.0;
 
@@ -1253,6 +1113,77 @@ class _SellScreenState extends State<SellScreen> {
         PartCondition.refurbished => 'Refurbished',
         PartCondition.newPart => 'New',
       };
+}
+
+class _SellActionBar extends StatelessWidget {
+  const _SellActionBar({
+    required this.pad,
+    required this.compact,
+    required this.step,
+    required this.lastStep,
+    required this.onBack,
+    required this.onNext,
+  });
+
+  final double pad;
+  final bool compact;
+  final int step;
+  final int lastStep;
+  final VoidCallback onBack;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        boxShadow: AppDecorations.shadowNav,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        pad,
+        compact ? 10 : 12,
+        pad,
+        compact ? 10 : 12,
+      ),
+      child: BlocBuilder<ListingsBloc, ListingsState>(
+        builder: (context, listingsState) {
+          final isPublishing = listingsState.isPublishing;
+          return Row(
+            children: [
+              if (step > 0) ...[
+                Expanded(
+                  child: SecondaryButton(
+                    label: 'Back',
+                    onPressed: () {
+                      if (isPublishing) return;
+                      onBack();
+                    },
+                  ),
+                ),
+                SizedBox(width: compact ? 10 : 12),
+              ],
+              Expanded(
+                flex: step > 0 ? 2 : 1,
+                child: PrimaryButton(
+                  label: step < lastStep ? 'Next' : 'Publish Listing',
+                  height: compact ? 50 : 54,
+                  icon: step < lastStep
+                      ? Icons.arrow_forward_rounded
+                      : Icons.publish_rounded,
+                  isLoading: step == lastStep && isPublishing,
+                  onPressed: () {
+                    if (isPublishing) return;
+                    onNext();
+                  },
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 }
 
 class _SellHeader extends StatelessWidget {

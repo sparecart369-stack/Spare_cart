@@ -52,7 +52,7 @@ class AccountScreen extends StatelessWidget {
                   items: [
                     _MenuData(Icons.inventory_2_rounded, 'My Listings', AppColors.primary, () => Navigator.pushNamed(context, AppRoutes.myListings)),
                     _MenuData(Icons.receipt_long_rounded, 'My Orders', AppColors.primaryMid, () => Navigator.pushNamed(context, AppRoutes.myOrders)),
-                    _MenuData(Icons.favorite_rounded, 'Saved Items', AppColors.error, () => Navigator.pushNamed(context, AppRoutes.savedItems)),
+                    _MenuData(Icons.favorite_rounded, 'Favourites', AppColors.error, () => Navigator.pushNamed(context, AppRoutes.savedItems)),
                   ],
                 ),
                 const SizedBox(height: 16),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spare_kart/bloc/app_mode/app_mode_bloc.dart';
 import 'package:spare_kart/bloc/auth/auth_bloc.dart';
-import 'package:spare_kart/bloc/cart/cart_bloc.dart';
+import 'package:spare_kart/bloc/favourites/favourites_bloc.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
 import 'package:spare_kart/bloc/messages/messages_bloc.dart';
 import 'package:spare_kart/bloc/orders/orders_bloc.dart';
@@ -19,8 +19,7 @@ import 'package:spare_kart/features/account/saved_items_screen.dart';
 import 'package:spare_kart/features/account/settings_screen.dart';
 import 'package:spare_kart/features/auth/login_screen.dart';
 import 'package:spare_kart/features/auth/signup_screen.dart';
-import 'package:spare_kart/features/cart/cart_screen.dart';
-import 'package:spare_kart/features/cart/checkout_screen.dart';
+import 'package:spare_kart/features/favourites/favourites_sync_host.dart';
 import 'package:spare_kart/features/main/main_shell.dart';
 import 'package:spare_kart/features/messages/chat_detail_screen.dart';
 import 'package:spare_kart/features/messages/message_sync_host.dart';
@@ -43,20 +42,22 @@ class SpareKartApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => AuthBloc()..add(AuthSessionChecked())),
         BlocProvider(create: (_) => AppModeBloc()),
-        BlocProvider(create: (_) => CartBloc()),
+        BlocProvider(create: (_) => FavouritesBloc()),
         BlocProvider(create: (_) => ListingsBloc()),
         BlocProvider(create: (_) => OrdersBloc()),
         BlocProvider(create: (_) => MessagesBloc()),
       ],
       child: PushNotificationHost(
         child: MessageSyncHost(
-          child: MaterialApp(
+          child: FavouritesSyncHost(
+            child: MaterialApp(
             navigatorKey: AppNavigator.rootKey,
             title: 'SpareKart',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
             initialRoute: AppRoutes.splash,
             onGenerateRoute: _onGenerateRoute,
+            ),
           ),
         ),
       ),
@@ -85,10 +86,6 @@ class SpareKartApp extends StatelessWidget {
       case AppRoutes.sellerProfile:
         final part = settings.arguments as Part;
         return _page(SellerProfileScreen(part: part), settings);
-      case AppRoutes.cart:
-        return _page(const CartScreen(), settings);
-      case AppRoutes.checkout:
-        return _page(const CheckoutScreen(), settings);
       case AppRoutes.myOrders:
         return _page(const MyOrdersScreen(), settings);
       case AppRoutes.myListings:

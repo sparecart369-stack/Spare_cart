@@ -19,6 +19,35 @@ type ServiceAccount = {
   private_key: string;
 };
 
+function parseServiceAccount(raw: string): ServiceAccount {
+  const parsed = JSON.parse(raw) as Record<string, unknown>;
+
+  if (
+    typeof parsed.private_key === "string" &&
+    typeof parsed.client_email === "string" &&
+    typeof parsed.project_id === "string"
+  ) {
+    return {
+      project_id: parsed.project_id,
+      client_email: parsed.client_email,
+      private_key: parsed.private_key,
+    };
+  }
+
+  if (typeof parsed.privateKeyData === "string") {
+    const decoded = atob(parsed.privateKeyData);
+    const fromKeyData = JSON.parse(decoded) as ServiceAccount;
+    if (
+      fromKeyData.private_key && fromKeyData.client_email &&
+      fromKeyData.project_id
+    ) {
+      return fromKeyData;
+    }
+  }
+
+  throw new Error("Invalid FIREBASE_SERVICE_ACCOUNT_JSON format");
+}
+
 async function getAccessToken(serviceAccount: ServiceAccount): Promise<string> {
   const client = new JWT({
     email: serviceAccount.client_email,
@@ -146,7 +175,7 @@ Deno.serve(async (req) => {
     }
 
     const [{ data: sender }, { data: recipient }] = await Promise.all([
-      supabase.from("profiles").select("name").eq("id", senderId).maybeSingle(),
+      supabase.from("profiles").select("name, fcm_tokens").eq("id", senderId).maybeSingle(),
       supabase
         .from("profiles")
         .select("fcm_tokens")
@@ -154,11 +183,14 @@ Deno.serve(async (req) => {
         .maybeSingle(),
     ]);
 
+    const senderTokens = new Set(
+      ((sender?.fcm_tokens as string[] | null) ?? []).filter(Boolean),
+    );
     const tokens = [
       ...new Set(
         ((recipient?.fcm_tokens as string[] | null) ?? []).filter(Boolean),
       ),
-    ];
+    ].filter((token) => !senderTokens.has(token));
 
     if (!tokens.length) {
       return new Response(JSON.stringify({ sent: 0, reason: "no_tokens" }), {
@@ -166,7 +198,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const serviceAccount = JSON.parse(firebaseSaJson) as ServiceAccount;
+    const serviceAccount = parseServiceAccount(firebaseSaJson);
     const accessToken = await getAccessToken(serviceAccount);
     const title = (sender?.name as string | null)?.trim() || "New message";
     const preview = messageText ||
@@ -178,6 +210,8 @@ Deno.serve(async (req) => {
       type: "message",
       route: "/messages",
       thread_id: threadId,
+      sender_id: senderId,
+      recipient_id: String(recipientId),
     };
 
     const invalidTokens: string[] = [];

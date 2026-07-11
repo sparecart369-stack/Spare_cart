@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:spare_kart/bloc/messages/messages_bloc.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
+import 'package:spare_kart/core/utils/date_time_utils.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/features/messages/chat_detail_screen.dart';
@@ -50,7 +50,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
   @override
   Widget build(BuildContext context) {
     final r = Responsive(context);
-    final timeFormat = DateFormat('h:mm a');
 
     return Scaffold(
       appBar: AppBar(title: const Text('Messages')),
@@ -86,7 +85,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       child: Text(thread.participantName, style: const TextStyle(fontWeight: FontWeight.w600)),
                     ),
                     Text(
-                      _formatTime(thread.timestamp, timeFormat),
+                      formatChatListTimestamp(thread.timestamp),
                       style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
                   ],
@@ -119,12 +118,5 @@ class _MessagesScreenState extends State<MessagesScreen> {
         },
       ),
     );
-  }
-
-  String _formatTime(DateTime time, DateFormat format) {
-    final now = DateTime.now();
-    if (now.difference(time).inDays == 0) return format.format(time);
-    if (now.difference(time).inDays == 1) return 'Yesterday';
-    return DateFormat('MMM d').format(time);
   }
 }

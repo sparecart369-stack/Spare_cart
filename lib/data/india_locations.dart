@@ -50,6 +50,28 @@ class IndiaLocations {
     return _districtsByState[state] ?? const [];
   }
 
+  List<String> districtsForStates(Iterable<String> states) {
+    final selected = states.where((state) => state.isNotEmpty).toList();
+    if (selected.isEmpty) return allDistricts;
+
+    final districts = <String>{};
+    for (final state in selected) {
+      districts.addAll(districtsFor(state));
+    }
+    return districts.toList(growable: false)
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+  }
+
+  List<String>? _allDistrictsCache;
+
+  List<String> get allDistricts {
+    return _allDistrictsCache ??= (_districtsByState.values
+          .expand((districts) => districts)
+          .toSet()
+          .toList(growable: false)
+        ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase())));
+  }
+
   bool isValidSelection({required String state, required String district}) {
     return districtsFor(state).contains(district);
   }

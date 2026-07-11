@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:spare_kart/core/utils/date_time_utils.dart';
 import 'package:spare_kart/data/models/models.dart';
 import 'package:spare_kart/features/messages/chat_flow.dart';
 import 'package:spare_kart/features/messages/chat_session_store.dart';
@@ -281,7 +283,7 @@ class MessagesRepository {
       id: row['id'] as String,
       text: row['text'] as String,
       isMe: senderId == currentUserId,
-      timestamp: DateTime.parse(row['created_at'] as String),
+      timestamp: parseSupabaseDateTime(row['created_at']),
       imagePath: imageUrl,
       senderId: senderId,
     );
@@ -296,7 +298,7 @@ class MessagesRepository {
     for (final row in rows) {
       final senderId = row['sender_id'] as String;
       if (senderId == readerId) continue;
-      final created = DateTime.parse(row['created_at'] as String);
+      final created = parseSupabaseDateTime(row['created_at']);
       if (lastReadAt == null || created.isAfter(lastReadAt)) {
         count++;
       }
@@ -306,7 +308,7 @@ class MessagesRepository {
 
   DateTime? _parseDate(dynamic value) {
     if (value == null) return null;
-    return DateTime.parse(value as String);
+    return parseSupabaseDateTime(value);
   }
 
   String _mimeForExt(String ext) => switch (ext) {
@@ -330,7 +332,7 @@ class MessagesRepository {
     required String text,
   }) async {
     try {
-      await _client.functions.invoke(
+      final response = await _client.functions.invoke(
         'send-chat-push',
         body: {
           'thread_id': threadId,
@@ -338,8 +340,14 @@ class MessagesRepository {
           'message_text': text,
         },
       );
-    } catch (_) {
-      // Push delivery is best-effort; in-app realtime still works.
+      if (kDebugMode) {
+        debugPrint('send-chat-push: ${response.data}');
+      }
+    } catch (error, stack) {
+      if (kDebugMode) {
+        debugPrint('send-chat-push failed: $error');
+        debugPrint('$stack');
+      }
     }
   }
 }

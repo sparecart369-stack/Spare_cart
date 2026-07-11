@@ -44,23 +44,35 @@ enum FilterChipField {
   chassisNumber,
   partNumber,
   condition,
+  state,
+  district,
   price,
   sort,
 }
 
 class ListingFilterCleared extends ListingsEvent {
-  ListingFilterCleared(this.field);
+  ListingFilterCleared(this.field, {this.value});
+
   final FilterChipField field;
+  final String? value;
+
+  @override
+  List<Object?> get props => [field, value];
 }
 
 class ActiveFilterChip extends Equatable {
-  const ActiveFilterChip({required this.label, required this.field});
+  const ActiveFilterChip({
+    required this.label,
+    required this.field,
+    this.value,
+  });
 
   final String label;
   final FilterChipField field;
+  final String? value;
 
   @override
-  List<Object?> get props => [label, field];
+  List<Object?> get props => [label, field, value];
 }
 
 class ListingsState extends Equatable {
@@ -141,6 +153,8 @@ class PartFilters extends Equatable {
     this.chassisNumber,
     this.partNumber,
     this.condition,
+    this.states = const [],
+    this.districts = const [],
     this.minPrice = 0,
     this.maxPrice = AppCurrency.maxFilterPrice,
     this.sortBy = SortOption.relevance,
@@ -153,6 +167,8 @@ class PartFilters extends Equatable {
   final String? chassisNumber;
   final String? partNumber;
   final PartCondition? condition;
+  final List<String> states;
+  final List<String> districts;
   final double minPrice;
   final double maxPrice;
   final SortOption sortBy;
@@ -165,6 +181,8 @@ class PartFilters extends Equatable {
     String? chassisNumber,
     String? partNumber,
     PartCondition? condition,
+    List<String>? states,
+    List<String>? districts,
     double? minPrice,
     double? maxPrice,
     SortOption? sortBy,
@@ -175,6 +193,8 @@ class PartFilters extends Equatable {
     bool clearChassisNumber = false,
     bool clearPartNumber = false,
     bool clearCondition = false,
+    bool clearStates = false,
+    bool clearDistricts = false,
   }) {
     return PartFilters(
       category: clearCategory ? null : (category ?? this.category),
@@ -184,6 +204,8 @@ class PartFilters extends Equatable {
       chassisNumber: clearChassisNumber ? null : (chassisNumber ?? this.chassisNumber),
       partNumber: clearPartNumber ? null : (partNumber ?? this.partNumber),
       condition: clearCondition ? null : (condition ?? this.condition),
+      states: clearStates ? const [] : (states ?? this.states),
+      districts: clearDistricts ? const [] : (districts ?? this.districts),
       minPrice: minPrice ?? this.minPrice,
       maxPrice: maxPrice ?? this.maxPrice,
       sortBy: sortBy ?? this.sortBy,
@@ -191,8 +213,20 @@ class PartFilters extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [category, make, model, year, chassisNumber, partNumber, condition, minPrice, maxPrice, sortBy];
+  List<Object?> get props => [
+        category,
+        make,
+        model,
+        year,
+        chassisNumber,
+        partNumber,
+        condition,
+        states,
+        districts,
+        minPrice,
+        maxPrice,
+        sortBy,
+      ];
 
   List<ActiveFilterChip> get activeChips {
     final chips = <ActiveFilterChip>[];
@@ -224,6 +258,20 @@ class PartFilters extends Equatable {
       chips.add(ActiveFilterChip(
         label: _filterConditionLabel(condition!),
         field: FilterChipField.condition,
+      ));
+    }
+    for (final state in states) {
+      chips.add(ActiveFilterChip(
+        label: state,
+        field: FilterChipField.state,
+        value: state,
+      ));
+    }
+    for (final district in districts) {
+      chips.add(ActiveFilterChip(
+        label: district,
+        field: FilterChipField.district,
+        value: district,
       ));
     }
     if (minPrice > 0 || maxPrice < AppCurrency.maxFilterPrice) {
@@ -358,6 +406,16 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
       FilterChipField.chassisNumber => state.filters.copyWith(clearChassisNumber: true),
       FilterChipField.partNumber => state.filters.copyWith(clearPartNumber: true),
       FilterChipField.condition => state.filters.copyWith(clearCondition: true),
+      FilterChipField.state => event.value == null
+          ? state.filters.copyWith(clearStates: true)
+          : state.filters.copyWith(
+              states: state.filters.states.where((value) => value != event.value).toList(),
+            ),
+      FilterChipField.district => event.value == null
+          ? state.filters.copyWith(clearDistricts: true)
+          : state.filters.copyWith(
+              districts: state.filters.districts.where((value) => value != event.value).toList(),
+            ),
       FilterChipField.price => state.filters.copyWith(
           minPrice: 0,
           maxPrice: AppCurrency.maxFilterPrice,
@@ -388,6 +446,8 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
         if (!partNo.contains(filters.partNumber!.toLowerCase())) return false;
       }
       if (filters.condition != null && part.condition != filters.condition) return false;
+      if (!_matchesLocationFilter(part.locationState, filters.states)) return false;
+      if (!_matchesLocationFilter(part.locationDistrict, filters.districts)) return false;
       if (part.price < filters.minPrice || part.price > filters.maxPrice) return false;
       return true;
     }).toList();
@@ -399,6 +459,13 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
         break;
     }
     return result;
+  }
+
+  bool _matchesLocationFilter(String? partValue, List<String> selected) {
+    if (selected.isEmpty) return true;
+    if (partValue == null || partValue.isEmpty) return false;
+    final normalized = partValue.toLowerCase();
+    return selected.any((value) => value.toLowerCase() == normalized);
   }
 
   bool _matchesSearchQuery(Part part, String query) {
