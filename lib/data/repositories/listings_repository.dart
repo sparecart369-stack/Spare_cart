@@ -17,6 +17,8 @@ class CreateListingInput {
     this.pickupAddress,
     this.localPhotoPaths = const [],
     this.compatibility = const [],
+    this.chassisNumber,
+    this.partNumber,
   });
 
   final String name;
@@ -31,6 +33,8 @@ class CreateListingInput {
   final String? pickupAddress;
   final List<String> localPhotoPaths;
   final List<String> compatibility;
+  final String? chassisNumber;
+  final String? partNumber;
 }
 
 class ListingsRepository {
@@ -53,6 +57,8 @@ class ListingsRepository {
     description,
     fulfillment,
     pickup_address,
+    chassis_number,
+    part_number,
     status,
     is_admin_listing,
     seller_rating,
@@ -104,6 +110,8 @@ class ListingsRepository {
           'description': input.description,
           'fulfillment': _fulfillmentToDb(input.fulfillment),
           'pickup_address': input.pickupAddress,
+          'chassis_number': _nullableTrimmed(input.chassisNumber),
+          'part_number': _nullableTrimmed(input.partNumber),
           'status': 'active',
           'is_admin_listing': true,
         })
@@ -236,7 +244,15 @@ class ListingsRepository {
       isAdminListing: row['is_admin_listing'] as bool? ?? false,
       compatibility: compatibility,
       fulfillment: _fulfillmentFromDb(row['fulfillment'] as String),
+      chassisNumber: row['chassis_number'] as String?,
+      partNumber: row['part_number'] as String?,
     );
+  }
+
+  String? _nullableTrimmed(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    return trimmed;
   }
 
   List<String> _sortedImageUrls(dynamic value) {

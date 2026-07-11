@@ -6,6 +6,7 @@ import 'package:spare_kart/bloc/cart/cart_bloc.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
 import 'package:spare_kart/bloc/messages/messages_bloc.dart';
 import 'package:spare_kart/bloc/orders/orders_bloc.dart';
+import 'package:spare_kart/core/navigation/app_navigator.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_theme.dart';
 import 'package:spare_kart/data/models/models.dart';
@@ -25,6 +26,7 @@ import 'package:spare_kart/features/messages/chat_detail_screen.dart';
 import 'package:spare_kart/features/messages/message_sync_host.dart';
 import 'package:spare_kart/features/messages/messages_screen.dart';
 import 'package:spare_kart/features/notifications/notifications_screen.dart';
+import 'package:spare_kart/features/notifications/push_notification_host.dart';
 import 'package:spare_kart/features/onboarding/welcome_screen.dart';
 import 'package:spare_kart/features/product/product_detail_screen.dart';
 import 'package:spare_kart/features/product/seller_profile_screen.dart';
@@ -46,13 +48,16 @@ class SpareKartApp extends StatelessWidget {
         BlocProvider(create: (_) => OrdersBloc()),
         BlocProvider(create: (_) => MessagesBloc()),
       ],
-      child: MessageSyncHost(
-        child: MaterialApp(
-          title: 'SpareKart',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
-          initialRoute: AppRoutes.splash,
-          onGenerateRoute: _onGenerateRoute,
+      child: PushNotificationHost(
+        child: MessageSyncHost(
+          child: MaterialApp(
+            navigatorKey: AppNavigator.rootKey,
+            title: 'SpareKart',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light,
+            initialRoute: AppRoutes.splash,
+            onGenerateRoute: _onGenerateRoute,
+          ),
         ),
       ),
     );

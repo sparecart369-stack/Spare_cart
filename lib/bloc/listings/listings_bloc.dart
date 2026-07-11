@@ -36,7 +36,17 @@ class ListingFiltersApplied extends ListingsEvent {
   final PartFilters filters;
 }
 
-enum FilterChipField { category, make, model, year, condition, price, sort }
+enum FilterChipField {
+  category,
+  make,
+  model,
+  year,
+  chassisNumber,
+  partNumber,
+  condition,
+  price,
+  sort,
+}
 
 class ListingFilterCleared extends ListingsEvent {
   ListingFilterCleared(this.field);
@@ -128,6 +138,8 @@ class PartFilters extends Equatable {
     this.make,
     this.model,
     this.year,
+    this.chassisNumber,
+    this.partNumber,
     this.condition,
     this.minPrice = 0,
     this.maxPrice = AppCurrency.maxFilterPrice,
@@ -138,6 +150,8 @@ class PartFilters extends Equatable {
   final String? make;
   final String? model;
   final int? year;
+  final String? chassisNumber;
+  final String? partNumber;
   final PartCondition? condition;
   final double minPrice;
   final double maxPrice;
@@ -148,6 +162,8 @@ class PartFilters extends Equatable {
     String? make,
     String? model,
     int? year,
+    String? chassisNumber,
+    String? partNumber,
     PartCondition? condition,
     double? minPrice,
     double? maxPrice,
@@ -156,6 +172,8 @@ class PartFilters extends Equatable {
     bool clearMake = false,
     bool clearModel = false,
     bool clearYear = false,
+    bool clearChassisNumber = false,
+    bool clearPartNumber = false,
     bool clearCondition = false,
   }) {
     return PartFilters(
@@ -163,6 +181,8 @@ class PartFilters extends Equatable {
       make: clearMake ? null : (make ?? this.make),
       model: clearModel ? null : (model ?? this.model),
       year: clearYear ? null : (year ?? this.year),
+      chassisNumber: clearChassisNumber ? null : (chassisNumber ?? this.chassisNumber),
+      partNumber: clearPartNumber ? null : (partNumber ?? this.partNumber),
       condition: clearCondition ? null : (condition ?? this.condition),
       minPrice: minPrice ?? this.minPrice,
       maxPrice: maxPrice ?? this.maxPrice,
@@ -171,7 +191,8 @@ class PartFilters extends Equatable {
   }
 
   @override
-  List<Object?> get props => [category, make, model, year, condition, minPrice, maxPrice, sortBy];
+  List<Object?> get props =>
+      [category, make, model, year, chassisNumber, partNumber, condition, minPrice, maxPrice, sortBy];
 
   List<ActiveFilterChip> get activeChips {
     final chips = <ActiveFilterChip>[];
@@ -186,6 +207,18 @@ class PartFilters extends Equatable {
     }
     if (year != null) {
       chips.add(ActiveFilterChip(label: '$year', field: FilterChipField.year));
+    }
+    if (chassisNumber != null && chassisNumber!.isNotEmpty) {
+      chips.add(ActiveFilterChip(
+        label: 'Chassis: $chassisNumber',
+        field: FilterChipField.chassisNumber,
+      ));
+    }
+    if (partNumber != null && partNumber!.isNotEmpty) {
+      chips.add(ActiveFilterChip(
+        label: 'Part: $partNumber',
+        field: FilterChipField.partNumber,
+      ));
     }
     if (condition != null) {
       chips.add(ActiveFilterChip(
@@ -322,6 +355,8 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
         ),
       FilterChipField.model => state.filters.copyWith(clearModel: true, clearYear: true),
       FilterChipField.year => state.filters.copyWith(clearYear: true),
+      FilterChipField.chassisNumber => state.filters.copyWith(clearChassisNumber: true),
+      FilterChipField.partNumber => state.filters.copyWith(clearPartNumber: true),
       FilterChipField.condition => state.filters.copyWith(clearCondition: true),
       FilterChipField.price => state.filters.copyWith(
           minPrice: 0,
@@ -337,18 +372,21 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
 
   List<Part> _applyFilters(List<Part> parts, String query, PartFilters filters) {
     var result = parts.where((part) {
-      if (query.isNotEmpty) {
-        final q = query.toLowerCase();
-        if (!part.fullTitle.toLowerCase().contains(q) &&
-            !part.category.toLowerCase().contains(q) &&
-            !part.location.toLowerCase().contains(q)) {
-          return false;
-        }
+      if (query.isNotEmpty && !_matchesSearchQuery(part, query)) {
+        return false;
       }
       if (filters.category != null && part.category != filters.category) return false;
       if (filters.make != null && part.make != filters.make) return false;
       if (filters.model != null && part.model != filters.model) return false;
       if (filters.year != null && part.year != filters.year) return false;
+      if (filters.chassisNumber != null && filters.chassisNumber!.isNotEmpty) {
+        final chassis = part.chassisNumber?.toLowerCase() ?? '';
+        if (!chassis.contains(filters.chassisNumber!.toLowerCase())) return false;
+      }
+      if (filters.partNumber != null && filters.partNumber!.isNotEmpty) {
+        final partNo = part.partNumber?.toLowerCase() ?? '';
+        if (!partNo.contains(filters.partNumber!.toLowerCase())) return false;
+      }
       if (filters.condition != null && part.condition != filters.condition) return false;
       if (part.price < filters.minPrice || part.price > filters.maxPrice) return false;
       return true;
@@ -361,5 +399,23 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
         break;
     }
     return result;
+  }
+
+  bool _matchesSearchQuery(Part part, String query) {
+    final q = query.toLowerCase().trim();
+    if (q.isEmpty) return true;
+
+    bool contains(String? value) =>
+        value != null && value.trim().isNotEmpty && value.toLowerCase().contains(q);
+
+    return part.fullTitle.toLowerCase().contains(q) ||
+        part.category.toLowerCase().contains(q) ||
+        part.location.toLowerCase().contains(q) ||
+        part.description.toLowerCase().contains(q) ||
+        part.make.toLowerCase().contains(q) ||
+        part.model.toLowerCase().contains(q) ||
+        contains(part.chassisNumber) ||
+        contains(part.partNumber) ||
+        part.compatibility.any((label) => label.toLowerCase().contains(q));
   }
 }

@@ -16,6 +16,4 @@ const categories = [
   ('Fuel System', 'local_gas_station'),
 ];
 
-const makes = ['Toyota', 'Honda', 'Ford', 'BMW', 'Mercedes', 'Nissan', 'Hyundai', 'Chevrolet'];
-const models = ['Corolla', 'Civic', 'F-150', '3 Series', 'C-Class', 'Altima', 'Elantra', 'Malibu'];
 const kDefaultSellerAddress = '123 Main Street, Los Angeles, CA 90001';

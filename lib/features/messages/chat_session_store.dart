@@ -154,14 +154,18 @@ class ChatSession {
         sellerId == userId;
   }
 
-  MessageThread toThread({required bool isSeller}) => MessageThread(
-        id: id,
-        participantName: isSeller ? buyerName : sellerName,
-        lastMessage: messages.isNotEmpty ? messages.last.text : '',
-        timestamp: messages.isNotEmpty ? messages.last.timestamp : DateTime.now(),
-        unreadCount: isSeller ? sellerUnreadCount : buyerUnreadCount,
-        partTitle: partTitle,
-      );
+  MessageThread toThread({required String? currentUserId}) {
+    final isCurrentUserSeller =
+        currentUserId != null && sellerId == currentUserId;
+    return MessageThread(
+      id: id,
+      participantName: isCurrentUserSeller ? buyerName : sellerName,
+      lastMessage: messages.isNotEmpty ? messages.last.text : '',
+      timestamp: messages.isNotEmpty ? messages.last.timestamp : DateTime.now(),
+      unreadCount: isCurrentUserSeller ? sellerUnreadCount : buyerUnreadCount,
+      partTitle: partTitle,
+    );
+  }
 }
 
 class ChatSessionStore extends ChangeNotifier {
@@ -180,7 +184,7 @@ class ChatSessionStore extends ChangeNotifier {
 
   List<ChatSession> get allSessions => _sessions.values.toList();
 
-  List<ChatSession> sessionsFor({required bool isSeller, String? userId}) {
+  List<ChatSession> sessionsFor({String? userId}) {
     return _sessions.values.where((session) => session.isVisibleTo(userId: userId)).toList();
   }
 

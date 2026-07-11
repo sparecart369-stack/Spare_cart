@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:spare_kart/bloc/app_mode/app_mode_bloc.dart';
 import 'package:spare_kart/bloc/auth/auth_bloc.dart';
 import 'package:spare_kart/bloc/messages/messages_bloc.dart';
 import 'package:spare_kart/features/messages/chat_session_store.dart';
@@ -40,26 +39,18 @@ class _MessageSyncHostState extends State<MessageSyncHost> {
 
   void _syncMessages() {
     if (!mounted) return;
-    final isSeller = context.read<AppModeBloc>().state.isAdmin;
     final userId = Supabase.instance.client.auth.currentUser?.id;
     context.read<MessagesBloc>().add(
-          MessagesSyncedFromStore(isSeller: isSeller, currentUserId: userId),
+          MessagesSyncedFromStore(currentUserId: userId),
         );
   }
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<AppModeBloc, AppModeState>(
-          listener: (context, state) => _syncMessages(),
-        ),
-        BlocListener<AuthBloc, AuthState>(
-          listener: (context, state) {
-            _bootstrap();
-          },
-        ),
-      ],
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        _bootstrap();
+      },
       child: widget.child,
     );
   }

@@ -429,7 +429,7 @@ class PremiumIconButton extends StatelessWidget {
 class PremiumSearchBar extends StatelessWidget {
   const PremiumSearchBar({
     super.key,
-    this.hint = 'Search by part name, car model or VIN',
+    this.hint = 'Search by name, chassis, part no...',
     this.onTap,
   });
 

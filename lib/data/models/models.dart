@@ -35,6 +35,8 @@ class Part extends Equatable {
     this.isAdminListing = false,
     this.compatibility = const [],
     this.fulfillment = ListingFulfillment.doorstepDelivery,
+    this.chassisNumber,
+    this.partNumber,
   });
 
   final String id;
@@ -55,6 +57,8 @@ class Part extends Equatable {
   final bool isAdminListing;
   final List<String> compatibility;
   final ListingFulfillment fulfillment;
+  final String? chassisNumber;
+  final String? partNumber;
 
   List<String> get displayImages => imageUrls.isNotEmpty ? imageUrls : [imageUrl];
 
@@ -97,6 +101,8 @@ class Part extends Equatable {
     bool? isAdminListing,
     List<String>? compatibility,
     ListingFulfillment? fulfillment,
+    String? chassisNumber,
+    String? partNumber,
   }) {
     return Part(
       id: id ?? this.id,
@@ -117,6 +123,8 @@ class Part extends Equatable {
       isAdminListing: isAdminListing ?? this.isAdminListing,
       compatibility: compatibility ?? this.compatibility,
       fulfillment: fulfillment ?? this.fulfillment,
+      chassisNumber: chassisNumber ?? this.chassisNumber,
+      partNumber: partNumber ?? this.partNumber,
     );
   }
 

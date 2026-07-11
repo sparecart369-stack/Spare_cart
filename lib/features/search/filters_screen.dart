@@ -7,8 +7,11 @@ import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
+import 'package:spare_kart/core/widgets/vehicle_identifier_fields.dart';
+import 'package:spare_kart/core/widgets/vehicle_picker_field.dart';
 import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/data/models/models.dart';
+import 'package:spare_kart/data/vehicle_catalog.dart';
 
 class FiltersRouteArgs {
   const FiltersRouteArgs({
@@ -35,6 +38,15 @@ class _FiltersScreenState extends State<FiltersScreen> {
   PartCondition? _condition;
   SortOption _sort = SortOption.relevance;
   bool _loadedFromBloc = false;
+  final _chassisController = TextEditingController();
+  final _partNumberController = TextEditingController();
+
+  @override
+  void dispose() {
+    _chassisController.dispose();
+    _partNumberController.dispose();
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {
@@ -51,6 +63,13 @@ class _FiltersScreenState extends State<FiltersScreen> {
     _year = filters.year;
     _condition = filters.condition;
     _sort = filters.sortBy;
+    _chassisController.text = filters.chassisNumber ?? '';
+    _partNumberController.text = filters.partNumber ?? '';
+  }
+
+  String? _trimmedOrNull(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 
   void _reset() {
@@ -61,6 +80,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
       _year = null;
       _condition = null;
       _sort = SortOption.relevance;
+      _chassisController.clear();
+      _partNumberController.clear();
     });
   }
 
@@ -75,6 +96,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
           make: _make,
           model: _model,
           year: _year,
+          chassisNumber: _trimmedOrNull(_chassisController.text),
+          partNumber: _trimmedOrNull(_partNumberController.text),
           condition: _condition,
           sortBy: _sort,
         )));
@@ -147,15 +170,16 @@ class _FiltersScreenState extends State<FiltersScreen> {
                     _SectionLabel('Vehicle', compact: compact),
                     SizedBox(height: gap),
                     SizedBox(
-                      height: compact ? 108 : 120,
                       child: _VehicleCard(
                         make: _make,
                         model: _model,
                         year: _year,
                         compact: compact,
+                        chassisController: _chassisController,
+                        partNumberController: _partNumberController,
                         onMakeChanged: (v) => setState(() {
                           _make = v;
-                          _model = null;
+                          _model = VehicleCatalog.instance.defaultModelFor(v);
                           _year = null;
                         }),
                         onModelChanged: (v) => setState(() => _model = v),
@@ -485,6 +509,8 @@ class _VehicleCard extends StatelessWidget {
     required this.model,
     required this.year,
     required this.compact,
+    required this.chassisController,
+    required this.partNumberController,
     required this.onMakeChanged,
     required this.onModelChanged,
     required this.onYearChanged,
@@ -494,62 +520,76 @@ class _VehicleCard extends StatelessWidget {
   final String? model;
   final int? year;
   final bool compact;
+  final TextEditingController chassisController;
+  final TextEditingController partNumberController;
   final ValueChanged<String?> onMakeChanged;
   final ValueChanged<String?> onModelChanged;
   final ValueChanged<int?> onYearChanged;
 
   @override
   Widget build(BuildContext context) {
-    final years = List.generate(15, (i) => 2025 - i);
+    final years = VehicleCatalog.vehicleYears;
     final innerGap = compact ? 6.0 : 8.0;
+    final catalog = VehicleCatalog.instance;
+    final modelOptions = catalog.modelPickerItems(make);
+    final modelLabel = catalog.modelDisplayLabel(make: make, model: model);
 
     return Container(
       padding: EdgeInsets.all(compact ? 10 : 12),
       decoration: AppDecorations.elevatedCard(radius: AppDecorations.radiusMd),
       child: Column(
         children: [
-          Expanded(
-            child: _dropdown<String>(
-              hint: 'Make',
-              value: make,
-              items: makes,
-              onChanged: onMakeChanged,
-              icon: Icons.directions_car_rounded,
-              compact: compact,
-            ),
+          VehiclePickerField(
+            hint: 'Make',
+            value: make,
+            items: catalog.makes,
+            icon: Icons.directions_car_rounded,
+            compact: compact,
+            onChanged: onMakeChanged,
           ),
           SizedBox(height: innerGap),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: _dropdown<String>(
-                    hint: 'Model',
-                    value: model,
-                    items: models,
-                    onChanged: make == null ? null : onModelChanged,
-                    icon: Icons.apps_rounded,
-                    enabled: make != null,
-                    compact: compact,
-                  ),
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: VehiclePickerField(
+                  hint: 'Model',
+                  value: modelLabel,
+                  items: modelOptions,
+                  icon: Icons.apps_rounded,
+                  enabled: make != null,
+                  compact: compact,
+                  onChanged: make == null
+                      ? null
+                      : (v) {
+                          if (v == null) return;
+                          onModelChanged(
+                            catalog.modelValueFromPicker(make: make!, pickerLabel: v),
+                          );
+                        },
                 ),
-                SizedBox(width: innerGap),
-                Expanded(
-                  flex: 2,
-                  child: _dropdown<int>(
-                    hint: 'Year',
-                    value: year,
-                    items: years,
-                    onChanged: model == null ? null : onYearChanged,
-                    icon: Icons.calendar_month_rounded,
-                    enabled: model != null,
-                    display: (v) => '$v',
-                    compact: compact,
-                  ),
+              ),
+              SizedBox(width: innerGap),
+              Expanded(
+                flex: 2,
+                child: _dropdown<int>(
+                  hint: 'Year',
+                  value: year,
+                  items: years,
+                  onChanged: model == null ? null : onYearChanged,
+                  icon: Icons.calendar_month_rounded,
+                  enabled: model != null,
+                  display: (v) => '$v',
+                  compact: compact,
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
+          SizedBox(height: innerGap),
+          VehicleIdentifierFields(
+            chassisController: chassisController,
+            partNumberController: partNumberController,
+            compact: compact,
           ),
         ],
       ),

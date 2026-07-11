@@ -193,7 +193,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   void _syncThread() {
     if (_session == null) return;
     context.read<MessagesBloc>().add(
-          MessagesThreadUpserted(_session!.toThread(isSeller: _showSellerControls)),
+          MessagesThreadUpserted(_session!.toThread(currentUserId: _currentUserId)),
         );
   }
 

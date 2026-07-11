@@ -11,12 +11,11 @@ sealed class MessagesEvent extends Equatable {
 class MessagesLoaded extends MessagesEvent {}
 
 class MessagesSyncedFromStore extends MessagesEvent {
-  MessagesSyncedFromStore({required this.isSeller, this.currentUserId});
-  final bool isSeller;
+  MessagesSyncedFromStore({this.currentUserId});
   final String? currentUserId;
 
   @override
-  List<Object?> get props => [isSeller, currentUserId];
+  List<Object?> get props => [currentUserId];
 }
 
 class MessagesThreadUpserted extends MessagesEvent {
@@ -53,8 +52,8 @@ class MessagesBloc extends Bloc<MessagesEvent, MessagesState> {
     });
     on<MessagesSyncedFromStore>((event, emit) {
       final threads = ChatSessionStore.instance
-          .sessionsFor(isSeller: event.isSeller, userId: event.currentUserId)
-          .map((session) => session.toThread(isSeller: event.isSeller))
+          .sessionsFor(userId: event.currentUserId)
+          .map((session) => session.toThread(currentUserId: event.currentUserId))
           .toList()
         ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
       emit(MessagesState(threads: threads, isLoaded: true));

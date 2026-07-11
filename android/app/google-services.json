@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "726470037175",
+    "project_id": "sparekart-marketplace",
+    "storage_bucket": "sparekart-marketplace.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:726470037175:android:7bf23347d088fcd4314732",
+        "android_client_info": {
+          "package_name": "com.spare.kart"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVnHQwrJJtiKa0rbKgT-xLXy1Gz6pulFI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -12,7 +12,9 @@ import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/core/widgets/part_card.dart';
+import 'package:spare_kart/core/widgets/vehicle_picker_field.dart';
 import 'package:spare_kart/data/dummy_data.dart';
+import 'package:spare_kart/data/vehicle_catalog.dart';
 import 'package:spare_kart/features/home/widgets/marketplace_hero_banner.dart';
 import 'package:spare_kart/features/main/main_shell.dart';
 import 'package:spare_kart/features/search/filters_screen.dart';
@@ -159,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           year: _selectedYear,
                           onMakeChanged: (v) => setState(() {
                             _selectedMake = v;
-                            _selectedModel = null;
+                            _selectedModel = VehicleCatalog.instance.defaultModelFor(v);
                             _selectedYear = null;
                           }),
                           onModelChanged: (v) => setState(() {
@@ -452,31 +454,42 @@ class _VehicleDropdowns extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final years = List.generate(15, (i) => 2025 - i);
+    final years = VehicleCatalog.vehicleYears;
+    final catalog = VehicleCatalog.instance;
+    final modelOptions = catalog.modelPickerItems(make);
+    final modelLabel = catalog.modelDisplayLabel(make: make, model: model);
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: AppDecorations.elevatedCard(radius: AppDecorations.radiusLg),
       child: Column(
         children: [
-          _dropdown<String>(
+          VehiclePickerField(
             hint: 'Make',
             value: make,
-            items: makes,
-            onChanged: onMakeChanged,
+            items: catalog.makes,
             icon: Icons.directions_car_rounded,
+            onChanged: onMakeChanged,
           ),
           const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 flex: 3,
-                child: _dropdown<String>(
+                child: VehiclePickerField(
                   hint: 'Model',
-                  value: model,
-                  items: models,
-                  onChanged: make == null ? null : onModelChanged,
+                  value: modelLabel,
+                  items: modelOptions,
                   icon: Icons.apps_rounded,
                   enabled: make != null,
+                  onChanged: make == null
+                      ? null
+                      : (v) {
+                          if (v == null) return;
+                          onModelChanged(
+                            catalog.modelValueFromPicker(make: make!, pickerLabel: v),
+                          );
+                        },
                 ),
               ),
               const SizedBox(width: 10),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:spare_kart/bloc/app_mode/app_mode_bloc.dart';
 import 'package:spare_kart/bloc/messages/messages_bloc.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
@@ -42,10 +41,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   void _syncMessages() {
     if (!mounted) return;
-    final isSeller = context.read<AppModeBloc>().state.isAdmin;
     final userId = Supabase.instance.client.auth.currentUser?.id;
     context.read<MessagesBloc>().add(
-          MessagesSyncedFromStore(isSeller: isSeller, currentUserId: userId),
+          MessagesSyncedFromStore(currentUserId: userId),
         );
   }
 

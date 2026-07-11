@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:spare_kart/data/models/models.dart';
@@ -162,6 +163,8 @@ class MessagesRepository {
         .select('id, sender_id, text, image_url, created_at')
         .single();
 
+    unawaited(_invokeChatPush(threadId: threadId, senderId: senderId, text: text));
+
     return _mapMessageRow(row, senderId);
   }
 
@@ -318,6 +321,25 @@ class MessagesRepository {
         DateTime.now().isAfter(session.blockedUntil!)) {
       session.flowStep = ChatFlowStep.started;
       session.blockedUntil = null;
+    }
+  }
+
+  Future<void> _invokeChatPush({
+    required String threadId,
+    required String senderId,
+    required String text,
+  }) async {
+    try {
+      await _client.functions.invoke(
+        'send-chat-push',
+        body: {
+          'thread_id': threadId,
+          'sender_id': senderId,
+          'message_text': text,
+        },
+      );
+    } catch (_) {
+      // Push delivery is best-effort; in-app realtime still works.
     }
   }
 }

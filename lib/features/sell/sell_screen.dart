@@ -8,15 +8,20 @@ import 'package:geolocator/geolocator.dart';
 import 'package:spare_kart/bloc/auth/auth_bloc.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
 import 'package:spare_kart/core/services/location_service.dart';
+import 'package:spare_kart/core/services/seller_location_store.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/validation/form_validators.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
+import 'package:spare_kart/core/widgets/vehicle_identifier_fields.dart';
+import 'package:spare_kart/core/widgets/vehicle_picker_field.dart';
+import 'package:spare_kart/data/india_locations.dart';
 import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/data/models/models.dart';
 import 'package:spare_kart/data/repositories/listings_repository.dart';
+import 'package:spare_kart/data/vehicle_catalog.dart';
 
 class SellScreen extends StatefulWidget {
   const SellScreen({super.key});
@@ -31,11 +36,16 @@ class _SellScreenState extends State<SellScreen> {
   int _step = 0;
   bool? _needsBankAccountStep;
   final _nameController = TextEditingController();
+  final _partNumberController = TextEditingController();
   final _descController = TextEditingController();
+  final _chassisController = TextEditingController();
   String? _category;
   String? _make;
   String? _model;
   int? _year;
+  String? _sellerState;
+  String? _sellerDistrict;
+  final _sellerLocationStore = SellerLocationStore();
   PartCondition _condition = PartCondition.used;
   ListingFulfillment _fulfillment = ListingFulfillment.doorstepDelivery;
   PickupLocationSource _pickupLocationSource = PickupLocationSource.current;
@@ -57,8 +67,8 @@ class _SellScreenState extends State<SellScreen> {
     _needsBankAccountStep ??=
         !(context.read<AuthBloc>().state.user?.bankAccount?.isComplete ?? false);
     return _needsBankAccountStep!
-        ? ['Details', 'Photos', 'Bank Account', 'Review']
-        : ['Details', 'Photos', 'Review'];
+        ? ['Details', 'Location', 'Photos', 'Bank Account', 'Review']
+        : ['Details', 'Location', 'Photos', 'Review'];
   }
 
   int get _lastStep => _steps.length - 1;
@@ -68,9 +78,39 @@ class _SellScreenState extends State<SellScreen> {
       _pickupLocationSource == PickupLocationSource.current;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSavedSellerLocation();
+  }
+
+  Future<void> _loadSavedSellerLocation() async {
+    final saved = await _sellerLocationStore.load();
+    if (!mounted || saved == null) return;
+    if (!IndiaLocations.instance.isValidSelection(
+      state: saved.state,
+      district: saved.district,
+    )) {
+      return;
+    }
+    setState(() {
+      _sellerState = saved.state;
+      _sellerDistrict = saved.district;
+    });
+  }
+
+  Future<void> _persistSellerLocation() async {
+    final state = _sellerState;
+    final district = _sellerDistrict;
+    if (state == null || district == null) return;
+    await _sellerLocationStore.save(state: state, district: district);
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
+    _partNumberController.dispose();
     _descController.dispose();
+    _chassisController.dispose();
     _customPickupLocationController.dispose();
     _upiController.dispose();
     _bankNameController.dispose();
@@ -83,8 +123,10 @@ class _SellScreenState extends State<SellScreen> {
   void _next() {
     final stepName = _steps[_step];
     if (stepName == 'Details' && !_validateDetails()) return;
+    if (stepName == 'Location' && !_validateLocation()) return;
     if (stepName == 'Photos' && !_validatePhotos()) return;
     if (stepName == 'Bank Account' && !_validateBankAccount()) return;
+    if (stepName == 'Location') _persistSellerLocation();
     if (stepName == 'Bank Account') _saveBankAccount();
 
     if (_step < _lastStep) {
@@ -127,6 +169,22 @@ class _SellScreenState extends State<SellScreen> {
     final descError = FormValidators.listingDescription(_descController.text);
     if (descError != null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(descError)));
+      return false;
+    }
+    return true;
+  }
+
+  bool _validateLocation() {
+    if (_sellerState == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your state')),
+      );
+      return false;
+    }
+    if (_sellerDistrict == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your district')),
+      );
       return false;
     }
     return true;
@@ -332,8 +390,17 @@ class _SellScreenState extends State<SellScreen> {
     return null;
   }
 
+  String _formatSellerLocation() {
+    final district = _sellerDistrict?.trim() ?? '';
+    final state = _sellerState?.trim() ?? '';
+    if (district.isEmpty || state.isEmpty) return '';
+    return '$district, $state';
+  }
+
   String _resolveListingLocation() {
     if (_fulfillment == ListingFulfillment.doorstepDelivery) {
+      final sellerLocation = _formatSellerLocation();
+      if (sellerLocation.isNotEmpty) return sellerLocation;
       return kDefaultSellerAddress.split(',').skip(1).join(',').trim();
     }
     if (_pickupLocationSource == PickupLocationSource.current) {
@@ -387,6 +454,7 @@ class _SellScreenState extends State<SellScreen> {
                 padding: EdgeInsets.fromLTRB(pad, compact ? 6 : 10, pad, compact ? 12 : 16),
                 child: switch (_steps[_step]) {
                   'Details' => _buildDetails(compact),
+                  'Location' => _buildLocation(compact),
                   'Photos' => _buildPhotos(compact),
                   'Bank Account' => _buildBankAccount(compact),
                   _ => _buildReview(compact),
@@ -451,7 +519,7 @@ class _SellScreenState extends State<SellScreen> {
 
   Widget _buildDetails(bool compact) {
     final gap = compact ? 6.0 : 8.0;
-    final years = List.generate(15, (i) => 2025 - i);
+    final years = VehicleCatalog.vehicleYears;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -463,6 +531,19 @@ class _SellScreenState extends State<SellScreen> {
           hint: 'Part Name',
           icon: Icons.inventory_2_outlined,
           compact: compact,
+        ),
+        SizedBox(height: gap),
+        _FormField(
+          controller: _partNumberController,
+          hint: 'Part No.',
+          icon: Icons.tag_outlined,
+          compact: compact,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9\-]')),
+            TextInputFormatter.withFunction(
+              (old, next) => next.copyWith(text: next.text.toUpperCase()),
+            ),
+          ],
         ),
         SizedBox(height: gap),
         _DropdownField<String>(
@@ -479,15 +560,15 @@ class _SellScreenState extends State<SellScreen> {
           decoration: AppDecorations.elevatedCard(radius: AppDecorations.radiusMd),
           child: Column(
             children: [
-              _DropdownField<String>(
+              VehiclePickerField(
                 hint: 'Make',
                 value: _make,
-                items: makes,
+                items: VehicleCatalog.instance.makes,
                 icon: Icons.directions_car_rounded,
                 compact: compact,
                 onChanged: (v) => setState(() {
                   _make = v;
-                  _model = null;
+                  _model = VehicleCatalog.instance.defaultModelFor(v);
                   _year = null;
                 }),
               ),
@@ -496,14 +577,24 @@ class _SellScreenState extends State<SellScreen> {
                 children: [
                   Expanded(
                     flex: 3,
-                    child: _DropdownField<String>(
+                    child: VehiclePickerField(
                       hint: 'Model',
-                      value: _model,
-                      items: models,
+                      value: VehicleCatalog.instance.modelDisplayLabel(make: _make, model: _model),
+                      items: VehicleCatalog.instance.modelPickerItems(_make),
                       icon: Icons.apps_rounded,
                       compact: compact,
                       enabled: _make != null,
-                      onChanged: _make == null ? null : (v) => setState(() => _model = v),
+                      onChanged: _make == null
+                          ? null
+                          : (v) {
+                              if (v == null) return;
+                              setState(() {
+                                _model = VehicleCatalog.instance.modelValueFromPicker(
+                                  make: _make!,
+                                  pickerLabel: v,
+                                );
+                              });
+                            },
                     ),
                   ),
                   SizedBox(width: gap),
@@ -521,6 +612,11 @@ class _SellScreenState extends State<SellScreen> {
                     ),
                   ),
                 ],
+              ),
+              SizedBox(height: gap),
+              VehicleIdentifierFields(
+                chassisController: _chassisController,
+                compact: compact,
               ),
             ],
           ),
@@ -554,6 +650,49 @@ class _SellScreenState extends State<SellScreen> {
           icon: Icons.notes_rounded,
           compact: compact,
           maxLines: compact ? 4 : 5,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLocation(bool compact) {
+    final gap = compact ? 6.0 : 8.0;
+    final states = IndiaLocations.instance.states;
+    final districts = IndiaLocations.instance.districtsFor(_sellerState);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionLabel('Seller Location', compact: compact),
+        SizedBox(height: gap),
+        Text(
+          'Where are you selling from? This is saved for your next listing — you can change it anytime.',
+          style: AppTypography.textTheme.bodySmall?.copyWith(
+            fontSize: compact ? 11 : 12,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        SizedBox(height: gap + 2),
+        _DropdownField<String>(
+          hint: 'State / Union Territory',
+          value: _sellerState,
+          items: states,
+          icon: Icons.map_outlined,
+          compact: compact,
+          onChanged: (v) => setState(() {
+            _sellerState = v;
+            _sellerDistrict = null;
+          }),
+        ),
+        SizedBox(height: gap),
+        _DropdownField<String>(
+          hint: 'District',
+          value: _sellerDistrict,
+          items: districts,
+          icon: Icons.location_city_outlined,
+          compact: compact,
+          enabled: _sellerState != null,
+          onChanged: _sellerState == null ? null : (v) => setState(() => _sellerDistrict = v),
         ),
       ],
     );
@@ -846,6 +985,18 @@ class _SellScreenState extends State<SellScreen> {
                         ),
                         SizedBox(height: compact ? 4 : 6),
                         ConditionChip(label: _conditionLabel(_condition)),
+                        if (_chassisController.text.trim().isNotEmpty) ...[
+                          SizedBox(height: compact ? 4 : 6),
+                          Text(
+                            'Chassis: ${_chassisController.text.trim()}',
+                            style: AppTypography.textTheme.bodySmall?.copyWith(
+                              fontSize: compact ? 10 : 11,
+                              color: AppColors.textSecondary,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -881,6 +1032,15 @@ class _SellScreenState extends State<SellScreen> {
                 ),
               ),
               SizedBox(height: gap),
+              if (_formatSellerLocation().isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.only(bottom: compact ? 8 : 10),
+                  child: _ReviewDetailRow(
+                    label: 'Seller at',
+                    value: _formatSellerLocation(),
+                    compact: compact,
+                  ),
+                ),
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(compact ? 10 : 12),
@@ -993,6 +1153,7 @@ class _SellScreenState extends State<SellScreen> {
     final location = _resolveListingLocation();
 
     _awaitingPublishResult = true;
+    _persistSellerLocation();
     context.read<ListingsBloc>().add(
           ListingPublishRequested(
             sellerName: user?.name ?? 'You',
@@ -1009,6 +1170,8 @@ class _SellScreenState extends State<SellScreen> {
               location: location,
               pickupAddress: _fulfillment == ListingFulfillment.inStorePickup ? location : null,
               localPhotoPaths: List<String>.from(_photoPaths),
+              chassisNumber: _chassisController.text.trim(),
+              partNumber: _partNumberController.text.trim(),
               compatibility: [
                 '$make $model $year',
                 '$make $model ${year - 1}',
@@ -1020,14 +1183,20 @@ class _SellScreenState extends State<SellScreen> {
   }
 
   void _resetForm() {
+    final savedState = _sellerState;
+    final savedDistrict = _sellerDistrict;
     setState(() {
       _step = 0;
       _nameController.clear();
+      _partNumberController.clear();
       _descController.clear();
+      _chassisController.clear();
       _category = null;
       _make = null;
       _model = null;
       _year = null;
+      _sellerState = savedState;
+      _sellerDistrict = savedDistrict;
       _condition = PartCondition.used;
       _fulfillment = ListingFulfillment.doorstepDelivery;
       _pickupLocationSource = PickupLocationSource.current;

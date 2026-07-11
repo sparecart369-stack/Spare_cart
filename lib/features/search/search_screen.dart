@@ -62,7 +62,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       onChanged: (q) => context.read<ListingsBloc>().add(ListingSearchChanged(q)),
                       style: AppTypography.textTheme.bodyLarge,
                       decoration: const InputDecoration(
-                        hintText: 'Search by name, brand, location...',
+                        hintText: 'Search by name, chassis, part no...',
                         prefixIcon: Icon(Icons.search_rounded),
                       ),
                     ),
