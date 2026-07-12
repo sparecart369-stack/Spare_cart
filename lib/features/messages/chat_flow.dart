@@ -12,7 +12,6 @@ enum ChatFlowStep {
   awaitingNegotiationReply,
   awaitingBuyIntent,
   awaitingTokenPayment,
-  awaitingTokenScreenshot,
   awaitingSellerReplyForDelivery,
   awaitingBuyerLocationForDelivery,
   awaitingDeliveryChoice,
@@ -39,10 +38,62 @@ class ChatFlowOption {
 abstract final class ChatFlow {
   static const initialBuyerMessage = 'Is the item still available?';
   static const nowAvailableMessage = 'The item is now available!';
-  static const googlePayNumber = '9645299758';
   static const buyerBlockDuration = Duration(days: 3);
+  static const tokenPercent = 0.01;
 
   static String formatPrice(double price) => '₹${price.toStringAsFixed(0)}';
+
+  static double tokenAmount(double agreedPrice) {
+    if (agreedPrice <= 0) return 1;
+    final amount = agreedPrice * tokenPercent;
+    return amount < 1 ? 1 : amount.roundToDouble();
+  }
+
+  static int tokenAmountPaise(double agreedPrice) {
+    final paise = (agreedPrice * tokenPercent * 100).round();
+    return paise < 100 ? 100 : paise;
+  }
+
+  static String tokenPaymentNote(double agreedPrice) {
+    final token = tokenAmount(agreedPrice);
+    return 'Send advance token of ${formatPrice(token)} (1% of ${formatPrice(agreedPrice)}) via Razorpay to confirm your purchase.';
+  }
+
+  static String advanceTokenPaidMessage({
+    required double tokenAmount,
+    required double agreedPrice,
+  }) {
+    return 'Advance token of ${formatPrice(tokenAmount)} (1% of ${formatPrice(agreedPrice)}) paid successfully via Razorpay.';
+  }
+
+  static String advanceTokenPaidChatTitle({required bool isSellerView}) =>
+      isSellerView ? 'Buyer paid advance token' : 'Advance token paid';
+
+  static String advanceTokenPaidChatNote({
+    required bool isSellerView,
+    required double tokenAmount,
+    required double agreedPrice,
+  }) {
+    if (isSellerView) {
+      return 'Buyer sent ${formatPrice(tokenAmount)} as 1% advance token for this item (agreed price ${formatPrice(agreedPrice)}).';
+    }
+    return advanceTokenPaidMessage(
+      tokenAmount: tokenAmount,
+      agreedPrice: agreedPrice,
+    );
+  }
+
+  static String advanceTokenPercentLabel() => '1% advance token';
+
+  static String sellerPriceSetNote({double? listPrice}) {
+    if (listPrice != null && listPrice > 0) {
+      return 'Listed at ${formatPrice(listPrice)}. If needed, you can set a higher rate.';
+    }
+    return 'If needed, you can set a higher rate than the listed price.';
+  }
+
+  static const sellerNegotiationReplyNote =
+      'After negotiation, you can set your fixed last price using the option below.';
 
   static int? parseReductionAsk(String text) {
     final match = RegExp(
@@ -116,7 +167,7 @@ abstract final class ChatFlow {
         options.add(
           const ChatFlowOption(
             id: 'last_price',
-            label: 'Yes, this is the last price (tap to enter the updated last price)',
+            label: 'Set fixed last price after negotiation',
             message: '',
             nextStep: ChatFlowStep.awaitingBuyIntent,
           ),
@@ -210,48 +261,20 @@ abstract final class ChatFlow {
         ];
       case ChatFlowStep.awaitingNegotiation:
         final price = agreedPrice ?? listPrice ?? 0;
-        final reductions = _negotiationReductions(price);
+        return _buyerNegotiationOptions(price);
+      case ChatFlowStep.awaitingBuyIntent:
+        final price = agreedPrice ?? listPrice ?? 0;
         return [
           const ChatFlowOption(
-            id: 'last_price_ask',
-            label: 'Is this the last price?',
-            message: 'Is this the last price?',
-            nextStep: ChatFlowStep.awaitingNegotiationReply,
-          ),
-          ...reductions.map(
-            (amount) => ChatFlowOption(
-              id: 'reduce_$amount',
-              label: 'Reduce by ₹$amount',
-              message: 'Can you reduce the amount by ₹$amount?',
-              nextStep: ChatFlowStep.awaitingNegotiationReply,
-              reductionAmount: amount,
-            ),
-          ),
-          const ChatFlowOption(
-            id: 'custom_reduction',
-            label: 'Reduce by custom amount (tap to enter)',
-            message: '',
-            nextStep: ChatFlowStep.awaitingNegotiationReply,
-          ),
-        ];
-      case ChatFlowStep.awaitingBuyIntent:
-        return const [
-          ChatFlowOption(
             id: 'willing_to_buy',
             label: 'Okay, I am willing to buy',
             message: 'Okay, I am willing to buy this item.',
             nextStep: ChatFlowStep.awaitingTokenPayment,
           ),
+          ..._buyerNegotiationOptions(price),
         ];
       case ChatFlowStep.awaitingTokenPayment:
-        return const [
-          ChatFlowOption(
-            id: 'token_sent',
-            label: 'I have sent the token amount',
-            message: 'I have sent the token amount via Google Pay.',
-            nextStep: ChatFlowStep.awaitingTokenScreenshot,
-          ),
-        ];
+        return const [];
       case ChatFlowStep.awaitingDeliveryChoice:
         if (sellerDeliveryOffer == 'both_available') {
           return const [
@@ -265,13 +288,13 @@ abstract final class ChatFlow {
               id: 'doorstep',
               label: 'Doorstep delivery',
               message: "I'd like doorstep delivery.",
-              nextStep: ChatFlowStep.freeChat,
+              nextStep: ChatFlowStep.awaitingBuyerLocationForDelivery,
             ),
             ChatFlowOption(
               id: 'both',
               label: 'Both options work',
               message: 'Both pickup and doorstep delivery work for me.',
-              nextStep: ChatFlowStep.freeChat,
+              nextStep: ChatFlowStep.awaitingBuyerLocationForDelivery,
             ),
           ];
         }
@@ -298,15 +321,48 @@ abstract final class ChatFlow {
       case ChatFlowStep.awaitingBuyerLocationForDelivery:
         return const [
           ChatFlowOption(
-            id: 'share_location',
-            label: 'Share my delivery location',
-            message: "I'd like doorstep delivery.",
+            id: 'share_current_location',
+            label: 'Use my current location',
+            message: '',
+            nextStep: ChatFlowStep.freeChat,
+          ),
+          ChatFlowOption(
+            id: 'enter_delivery_address',
+            label: 'Enter address manually',
+            message: '',
             nextStep: ChatFlowStep.freeChat,
           ),
         ];
       default:
         return [];
     }
+  }
+
+  static List<ChatFlowOption> _buyerNegotiationOptions(double price) {
+    final reductions = _negotiationReductions(price);
+    return [
+      const ChatFlowOption(
+        id: 'last_price_ask',
+        label: 'Is this the last price?',
+        message: 'Is this the last price?',
+        nextStep: ChatFlowStep.awaitingNegotiationReply,
+      ),
+      ...reductions.map(
+        (amount) => ChatFlowOption(
+          id: 'reduce_$amount',
+          label: 'Reduce by ₹$amount',
+          message: 'Can you reduce the amount by ₹$amount?',
+          nextStep: ChatFlowStep.awaitingNegotiationReply,
+          reductionAmount: amount,
+        ),
+      ),
+      const ChatFlowOption(
+        id: 'custom_reduction',
+        label: 'Reduce by custom amount (tap to enter)',
+        message: '',
+        nextStep: ChatFlowStep.awaitingNegotiationReply,
+      ),
+    ];
   }
 
   static List<int> _negotiationReductions(double price) {
@@ -371,6 +427,29 @@ abstract final class ChatFlow {
     required String? sellerId,
   }) {
     if (buyerId == null || sellerId == null) return false;
+
+    bool buyerMessageContains(String pattern) => messages.any(
+          (msg) =>
+              msg.senderId == buyerId &&
+              msg.text.toLowerCase().contains(pattern),
+        );
+
+    final wantsDoorstep = buyerMessageContains("i'd like doorstep delivery") ||
+        buyerMessageContains('both pickup and doorstep');
+    final wantsPickupOnly = buyerMessageContains("i'd like to pick up the item");
+
+    final hasDeliveryLocation = messages.any(
+      (msg) =>
+          msg.senderId == buyerId && msg.text.startsWith('Delivery location:'),
+    );
+    final hasPickupLocation = messages.any(
+      (msg) =>
+          msg.senderId == sellerId && msg.text.startsWith('Pickup location:'),
+    );
+
+    if (wantsDoorstep) return hasDeliveryLocation;
+    if (wantsPickupOnly) return hasPickupLocation;
+
     for (final msg in messages) {
       if (msg.senderId == sellerId && msg.text.startsWith('Pickup location:')) {
         return true;
@@ -382,15 +461,46 @@ abstract final class ChatFlow {
     return false;
   }
 
+  static const doorstepPaymentWarning =
+      'For doorstep delivery, pay the remaining amount only after you receive the item and confirm it works.';
+
+  static bool isDoorstepDeliveryActive({
+    required List<ChatMessage> messages,
+    required String? buyerId,
+    required String? sellerId,
+    String? sellerDeliveryOffer,
+  }) {
+    if (buyerId == null) return false;
+
+    final buyerChoseDoorstep = messages.any((msg) {
+      if (msg.senderId != buyerId) return false;
+      final lower = msg.text.toLowerCase();
+      return lower.contains("i'd like doorstep delivery") ||
+          lower.contains('both pickup and doorstep');
+    });
+    if (buyerChoseDoorstep) return true;
+
+    if (sellerDeliveryOffer == 'doorstep_only' || sellerDeliveryOffer == 'doorstep_yes') {
+      return true;
+    }
+
+    if (sellerId == null) return false;
+
+    return messages.any((msg) {
+      if (msg.senderId != sellerId) return false;
+      final lower = msg.text.toLowerCase();
+      return lower.contains('only doorstep delivery is available') ||
+          lower.contains('doorstep delivery is available for this item') ||
+          lower.contains('yes, doorstep delivery is available');
+    });
+  }
+
   static bool showSpecialSellerDatePicker(ChatFlowStep step) =>
       step == ChatFlowStep.awaitingAvailabilityDate;
 
   static bool showSpecialSellerPriceEditor(ChatFlowStep step) =>
       step == ChatFlowStep.awaitingPriceSet;
 
-  static bool showTokenPaymentInfo(ChatFlowStep step, {required bool isSeller}) =>
+  static bool showRazorpayPaymentPanel(ChatFlowStep step, {required bool isSeller}) =>
       !isSeller && step == ChatFlowStep.awaitingTokenPayment;
-
-  static bool requiresScreenshotUpload(ChatFlowStep step, {required bool isSeller}) =>
-      !isSeller && step == ChatFlowStep.awaitingTokenScreenshot;
 }

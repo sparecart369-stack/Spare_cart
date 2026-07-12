@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:spare_kart/bloc/app_mode/app_mode_bloc.dart';
 import 'package:spare_kart/bloc/auth/auth_bloc.dart';
 import 'package:spare_kart/bloc/messages/messages_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:spare_kart/core/services/location_service.dart';
+import 'package:spare_kart/core/services/location_settings_helper.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/utils/date_time_utils.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/validation/form_validators.dart';
 import 'package:spare_kart/core/widgets/listing_image.dart';
 import 'package:spare_kart/data/models/models.dart';
+import 'package:spare_kart/core/services/razorpay_checkout_service.dart';
+import 'package:spare_kart/data/models/chat_payment.dart';
+import 'package:spare_kart/data/repositories/chat_payment_repository.dart';
 import 'package:spare_kart/features/messages/chat_flow.dart';
 import 'package:spare_kart/features/messages/chat_session_store.dart';
 
@@ -35,23 +38,30 @@ class ChatDetailScreen extends StatefulWidget {
   State<ChatDetailScreen> createState() => _ChatDetailScreenState();
 }
 
-class _ChatDetailScreenState extends State<ChatDetailScreen> {
+class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBindingObserver {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
-  final _imagePicker = ImagePicker();
   final _locationService = const LocationService();
+  final _paymentRepository = ChatPaymentRepository();
+  final _razorpayCheckout = RazorpayCheckoutService();
 
   late List<ChatMessage> _messages;
   ChatSession? _session;
+  ChatPayment? _chatPayment;
   ChatFlowStep _flowStep = ChatFlowStep.completed;
   bool _isGuided = false;
   bool _busy = false;
   bool _loading = true;
   String? _initError;
+  bool _pendingDeliveryLocationShare = false;
+  bool _deliveryLocationLoading = false;
+  String? _deliveryLocationError;
+  LocationSettingsAction _deliveryLocationSettingsAction = LocationSettingsAction.none;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _messages = [];
     _controller.addListener(_onComposerChanged);
     ChatSessionStore.instance.addListener(_onSessionUpdated);
@@ -65,11 +75,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     ChatSessionStore.instance.removeListener(_onSessionUpdated);
     _controller.removeListener(_onComposerChanged);
     FocusManager.instance.primaryFocus?.unfocus();
     _controller.dispose();
     _scrollController.dispose();
+    _razorpayCheckout.dispose();
     super.dispose();
   }
 
@@ -82,7 +94,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     if (!mounted || _session == null) return;
     final fresh = ChatSessionStore.instance.get(_session!.id);
     if (fresh == null) return;
-    final previousCount = _messages.length;
     _safeSetState(() {
       _session = fresh;
       _messages = List.from(fresh.messages);
@@ -90,9 +101,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     });
     if (!mounted) return;
     _applyFlowNormalization(persist: true);
-    if (fresh.messages.length > previousCount) {
-      _scrollToBottom();
-    }
+    _refreshChatPayment();
+    _scrollToBottom();
     _prefillInitialMessage();
     _markAsRead();
   }
@@ -102,6 +112,21 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     super.activate();
     _reloadFromStore();
     _markAsRead();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || !_pendingDeliveryLocationShare) return;
+    _pendingDeliveryLocationShare = false;
+    _retryDeliveryLocationAfterSettings();
+  }
+
+  Future<void> _retryDeliveryLocationAfterSettings() async {
+    if (!mounted || _flowStep != ChatFlowStep.awaitingBuyerLocationForDelivery) return;
+    final success = await _shareCurrentDeliveryLocation(showSettingsDialog: false);
+    if (success && mounted) {
+      await _advanceFlow(ChatFlowStep.freeChat);
+    }
   }
 
   Future<void> _initChat() async {
@@ -149,6 +174,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         _messages = List.from(_session!.messages);
         _isGuided = _session!.isGuided;
         _applyFlowNormalization(persist: true);
+        await _refreshChatPayment();
         await _markAsRead();
         if (!mounted) return;
         _prefillInitialMessage();
@@ -179,6 +205,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     });
     if (!mounted) return;
     _applyFlowNormalization(persist: true);
+    _refreshChatPayment();
     _prefillInitialMessage();
     _scrollToBottom();
   }
@@ -361,10 +388,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       return 'Respond to the buyer:';
     }
     if (_isActingAsBuyer && _flowStep == ChatFlowStep.awaitingBuyIntent) {
-      return 'Ready to purchase?';
+      return 'Ready to purchase? You can still negotiate:';
     }
     if (_isActingAsBuyer && _flowStep == ChatFlowStep.awaitingTokenPayment) {
-      return 'Confirm payment:';
+      return 'Send 1% advance token:';
     }
     if (_showSellerControls && _flowStep == ChatFlowStep.awaitingSellerReplyForDelivery) {
       return 'Respond to the buyer:';
@@ -376,19 +403,113 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       return 'Ask about delivery:';
     }
     if (_isActingAsBuyer && _flowStep == ChatFlowStep.awaitingBuyerLocationForDelivery) {
-      return 'Share your delivery details:';
+      return 'Share your delivery location:';
     }
     return null;
   }
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
+  String? get _quickReplyNote {
+    if (_showSellerControls && _flowStep == ChatFlowStep.awaitingNegotiationReply) {
+      return ChatFlow.sellerNegotiationReplyNote;
+    }
+    if (_isActingAsBuyer && _flowStep == ChatFlowStep.awaitingBuyerLocationForDelivery) {
+      return 'Use GPS or type your delivery address manually.';
+    }
+    return null;
+  }
+
+  Future<void> _refreshChatPayment() async {
+    final session = _session;
+    if (session == null) return;
+
+    try {
+      final payment = await _paymentRepository.fetchLatestForThread(session.id);
+      if (!mounted) return;
+
+      _safeSetState(() => _chatPayment = payment);
+
+      if (payment?.isPaid == true && _flowStep == ChatFlowStep.awaitingTokenPayment) {
+        await _advanceFlow(ChatFlowStep.awaitingDeliveryChoice);
+      }
+      _scrollToBottom();
+    } catch (_) {
+      // Payment lookup is optional until buyer reaches checkout.
+    }
+  }
+
+  Future<void> _startRazorpayPayment() async {
+    final session = _session;
+    if (session == null || _busy) return;
+
+    final agreedPrice = session.agreedPrice ?? session.listPrice;
+    if (agreedPrice <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Agreed price is not set yet.')),
       );
+      return;
+    }
+
+    _safeSetState(() => _busy = true);
+    try {
+      final checkout = await _paymentRepository.createCheckoutSession(session.id);
+      final result = await _razorpayCheckout.openCheckout(checkout);
+      final tokenAmount = await _paymentRepository.verifyPayment(
+        threadId: session.id,
+        orderId: result.orderId,
+        paymentId: result.paymentId,
+        signature: result.signature,
+      );
+
+      final agreedPrice = session.agreedPrice ?? session.listPrice;
+      await _sendMessage(
+        ChatFlow.advanceTokenPaidMessage(
+          tokenAmount: tokenAmount,
+          agreedPrice: agreedPrice,
+        ),
+        isBuyer: true,
+      );
+      await _advanceFlow(ChatFlowStep.awaitingDeliveryChoice);
+      await _refreshChatPayment();
+    } on RazorpayCheckoutException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } on ChatPaymentException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Payment failed: $error')),
+      );
+    } finally {
+      if (mounted) _safeSetState(() => _busy = false);
+    }
+  }
+
+  void _scrollToBottom({bool animated = false}) {
+    void scrollNow() {
+      if (!mounted || !_scrollController.hasClients) return;
+      final max = _scrollController.position.maxScrollExtent;
+      if (animated) {
+        _scrollController.animateTo(
+          max,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      } else {
+        _scrollController.jumpTo(max);
+      }
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      scrollNow();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        scrollNow();
+      });
     });
   }
 
@@ -409,6 +530,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       ChatSessionStore.instance.cacheSession(_session!);
     }
     await _persistSession();
+    _scrollToBottom();
   }
 
   Future<void> _sendMessage(
@@ -432,7 +554,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       setState(() {
         _messages = List.from(_session!.messages);
       });
-      _scrollToBottom();
+      _scrollToBottom(animated: true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -507,9 +629,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   Future<void> _setSellerPrice() async {
     final initial = (_session?.agreedPrice ?? _session?.listPrice ?? 0).toStringAsFixed(0);
 
+    final listPrice = _session?.listPrice;
     final price = await showDialog<double>(
       context: context,
-      builder: (ctx) => _SetPriceDialog(initialPrice: initial),
+      builder: (ctx) => _SetPriceDialog(
+        initialPrice: initial,
+        hint: ChatFlow.sellerPriceSetNote(
+          listPrice: listPrice != null && listPrice > 0 ? listPrice : null,
+        ),
+      ),
     );
 
     if (price == null || !mounted) return;
@@ -575,8 +703,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       context: context,
       builder: (ctx) => _SetPriceDialog(
         initialPrice: initial,
-        title: 'Updated last price',
+        title: 'Fixed last price',
         label: 'Last price (₹)',
+        hint: 'Enter the final price after negotiation. This will be the fixed last price offered to the buyer.',
       ),
     );
 
@@ -587,25 +716,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       isBuyer: false,
     );
     await _advanceFlow(ChatFlowStep.awaitingBuyIntent, agreedPrice: price);
-  }
-
-  Future<void> _uploadTokenScreenshot() async {
-    final picked = await _imagePicker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-    );
-    if (picked == null || !mounted) return;
-
-    setState(() {
-      _session?.tokenScreenshotPath = picked.path;
-    });
-
-    await _sendMessage(
-      'Payment screenshot attached.',
-      isBuyer: true,
-      imagePath: picked.path,
-    );
-    await _advanceFlow(ChatFlowStep.awaitingDeliveryChoice);
   }
 
   Future<void> _handleBuyerDeliveryAsk(ChatFlowOption option) async {
@@ -641,50 +751,118 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   Future<void> _handleBuyerLocationShare() async {
-    await _sendMessage("I'd like doorstep delivery.", isBuyer: true);
-    await _shareCustomerLocation();
-    await _advanceFlow(ChatFlowStep.freeChat);
+    final success = await _shareCurrentDeliveryLocation();
+    if (success && mounted) {
+      await _advanceFlow(ChatFlowStep.freeChat);
+    }
+  }
+
+  Future<bool> _shareCurrentDeliveryLocation({bool showSettingsDialog = true}) async {
+    if (_busy) return false;
+
+    setState(() {
+      _busy = true;
+      _deliveryLocationLoading = true;
+      _deliveryLocationError = null;
+      _deliveryLocationSettingsAction = LocationSettingsAction.none;
+    });
+    _scrollToBottom();
+
+    try {
+      final location = await _locationService.getCurrentLocation();
+      if (!mounted) return false;
+
+      await _sendMessage(
+        'Delivery location: ${location.address}',
+        isBuyer: true,
+      );
+
+      setState(() {
+        _deliveryLocationLoading = false;
+        _deliveryLocationError = null;
+        _deliveryLocationSettingsAction = LocationSettingsAction.none;
+        _pendingDeliveryLocationShare = false;
+      });
+      return true;
+    } on LocationServiceException catch (e) {
+      if (!mounted) return false;
+
+      setState(() {
+        _deliveryLocationLoading = false;
+        _deliveryLocationError = e.message;
+        _deliveryLocationSettingsAction = e.settingsAction;
+      });
+      _scrollToBottom();
+
+      if (!showSettingsDialog) {
+        return false;
+      }
+
+      final openedSettings = await handleLocationServiceException(
+        context,
+        e,
+        title: 'Location required for delivery',
+      );
+      if (openedSettings) {
+        setState(() => _pendingDeliveryLocationShare = true);
+      }
+      return false;
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _openDeliveryLocationSettings() async {
+    if (_deliveryLocationSettingsAction == LocationSettingsAction.none) return;
+
+    setState(() => _pendingDeliveryLocationShare = true);
+    await LocationService.openSettingsFor(
+      LocationServiceException(
+        _deliveryLocationError ?? '',
+        settingsAction: _deliveryLocationSettingsAction,
+      ),
+    );
   }
 
   Future<void> _handleDeliveryPreference(ChatFlowOption option) async {
     await _sendMessage(option.message, isBuyer: true);
     setState(() => _session?.deliveryChoiceMade = true);
 
-    if (option.id == 'pickup' || option.id == 'both') {
+    if (option.id == 'pickup') {
       final location = _session?.pickupLocation ?? 'Pickup location not set';
       await _sendMessage('Pickup location: $location', isBuyer: false);
+      await _advanceFlow(ChatFlowStep.freeChat);
+      return;
     }
 
-    if (option.id == 'doorstep' || option.id == 'both') {
-      await _shareCustomerLocation();
+    if (option.id == 'doorstep') {
+      await _advanceFlow(ChatFlowStep.awaitingBuyerLocationForDelivery);
+      return;
     }
 
-    await _advanceFlow(ChatFlowStep.freeChat);
-  }
-
-  Future<void> _shareCustomerLocation() async {
-    if (_busy) return;
-    setState(() => _busy = true);
-    try {
-      final location = await _locationService.getCurrentLocation();
-      if (!mounted) return;
-      await _sendMessage(
-        'Delivery location: ${location.address}',
-        isBuyer: true,
-      );
-    } on LocationServiceException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
-    } finally {
-      if (mounted) setState(() => _busy = false);
+    if (option.id == 'both') {
+      final location = _session?.pickupLocation ?? 'Pickup location not set';
+      await _sendMessage('Pickup location: $location', isBuyer: false);
+      await _advanceFlow(ChatFlowStep.awaitingBuyerLocationForDelivery);
     }
   }
 
-  void _copyGooglePayNumber() {
-    Clipboard.setData(const ClipboardData(text: ChatFlow.googlePayNumber));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Google Pay number copied')),
+  Future<void> _enterManualDeliveryAddress() async {
+    final address = await showDialog<String>(
+      context: context,
+      builder: (context) => const _DeliveryAddressDialog(),
     );
+    if (address == null || !mounted) return;
+
+    setState(() {
+      _deliveryLocationLoading = false;
+      _deliveryLocationError = null;
+      _pendingDeliveryLocationShare = false;
+      _deliveryLocationSettingsAction = LocationSettingsAction.none;
+    });
+
+    await _sendMessage('Delivery location: $address', isBuyer: true);
+    await _advanceFlow(ChatFlowStep.freeChat);
   }
 
   Widget _buildDateSeparator(DateTime time) {
@@ -779,8 +957,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       return;
     }
 
-    if (option.id == 'share_location') {
+    if (option.id == 'share_current_location') {
       await _handleBuyerLocationShare();
+      return;
+    }
+
+    if (option.id == 'enter_delivery_address') {
+      await _enterManualDeliveryAddress();
       return;
     }
 
@@ -810,8 +993,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   List<Widget> _buildChatListItems(Responsive r) {
     final items = <Widget>[];
     DateTime? previousDay;
+    final paymentAnchor = _willingToBuyMessageIndex;
+    final deliveryAnchor = _deliveryLocationAnchorIndex;
 
-    for (final msg in _messages) {
+    for (var i = 0; i < _messages.length; i++) {
+      final msg = _messages[i];
       final day = DateTime(
         msg.timestamp.year,
         msg.timestamp.month,
@@ -822,6 +1008,20 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         previousDay = day;
       }
       items.add(_buildMessageBubble(msg, r));
+
+      if (paymentAnchor != null && i == paymentAnchor) {
+        items.addAll(_inlinePaymentWidgets(r));
+      }
+      if (deliveryAnchor != null && i == deliveryAnchor) {
+        items.addAll(_inlineDeliveryLocationWidgets(r));
+      }
+    }
+
+    if (paymentAnchor == null) {
+      items.addAll(_inlinePaymentWidgets(r));
+    }
+    if (deliveryAnchor == null) {
+      items.addAll(_inlineDeliveryLocationWidgets(r));
     }
 
     if (_isWaitingForSeller) {
@@ -833,6 +1033,165 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
     return items;
   }
+
+  List<Widget> _inlineDeliveryLocationWidgets(Responsive r) {
+    if (!_showDeliveryLocationStatusInChat) return const [];
+    return [_buildDeliveryLocationStatusCard(r)];
+  }
+
+  bool get _showDeliveryLocationStatusInChat =>
+      _isActingAsBuyer &&
+      !_showSellerControls &&
+      _flowStep == ChatFlowStep.awaitingBuyerLocationForDelivery &&
+      (_deliveryLocationLoading || _deliveryLocationError != null);
+
+  int? get _deliveryLocationAnchorIndex {
+    if (_flowStep != ChatFlowStep.awaitingBuyerLocationForDelivery) return null;
+
+    final buyerId = _session?.buyerId;
+    if (buyerId != null) {
+      for (var i = _messages.length - 1; i >= 0; i--) {
+        final msg = _messages[i];
+        if (msg.senderId != buyerId) continue;
+        final lower = msg.text.toLowerCase();
+        if (lower.contains("i'd like doorstep delivery") ||
+            lower.contains('both pickup and doorstep')) {
+          return i;
+        }
+      }
+    }
+
+    return _messages.isEmpty ? null : _messages.length - 1;
+  }
+
+  Widget _buildDeliveryLocationStatusCard(Responsive r) {
+    final canOpenSettings = _deliveryLocationSettingsAction != LocationSettingsAction.none;
+    final settingsLabel = switch (_deliveryLocationSettingsAction) {
+      LocationSettingsAction.openLocationSettings => 'Open Location Settings',
+      LocationSettingsAction.openAppSettings => 'Open App Settings',
+      LocationSettingsAction.none => 'Open Settings',
+    };
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Align(
+        alignment: Alignment.center,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: r.width * 0.92),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _deliveryLocationLoading ? AppColors.primaryLight : AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: (_deliveryLocationError != null ? AppColors.warning : AppColors.primary)
+                    .withValues(alpha: 0.25),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      _deliveryLocationLoading
+                          ? Icons.my_location_rounded
+                          : Icons.location_off_rounded,
+                      color: _deliveryLocationLoading ? AppColors.primary : AppColors.warning,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _deliveryLocationLoading
+                            ? 'Getting your location...'
+                            : 'Location access needed',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                if (_deliveryLocationLoading)
+                  const Row(
+                    children: [
+                      SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Please wait while we fetch your delivery address.',
+                          style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ],
+                  )
+                else ...[
+                  Text(
+                    _deliveryLocationError ?? 'Enable location to share your delivery address.',
+                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      if (canOpenSettings)
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: _busy ? null : _openDeliveryLocationSettings,
+                            icon: const Icon(Icons.settings_rounded, size: 18),
+                            label: Text(settingsLabel),
+                          ),
+                        ),
+                      if (canOpenSettings) const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _busy ? null : _handleBuyerLocationShare,
+                          icon: const Icon(Icons.refresh_rounded, size: 18),
+                          label: const Text('Try again'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _inlinePaymentWidgets(Responsive r) {
+    if (_showInlinePaymentPrompt) {
+      return [_buildInlineRazorpayPaymentCard(r)];
+    }
+    if (_showAdvanceTokenPaidInChat) {
+      return [_buildAdvanceTokenPaidChatCard(r)];
+    }
+    return const [];
+  }
+
+  int? get _willingToBuyMessageIndex {
+    final buyerId = _session?.buyerId;
+    if (buyerId == null) return null;
+
+    for (var i = _messages.length - 1; i >= 0; i--) {
+      final msg = _messages[i];
+      if (msg.senderId == buyerId && msg.text.toLowerCase().contains('willing to buy')) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  bool get _showInlinePaymentPrompt =>
+      _isActingAsBuyer &&
+      !_showSellerControls &&
+      ChatFlow.showRazorpayPaymentPanel(_flowStep, isSeller: false) &&
+      _chatPayment?.isPaid != true;
 
   Widget _buildWhatsAppQuickReplyBubble(Responsive r) {
     final options = _displayQuickReplies;
@@ -860,23 +1219,40 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (_quickReplyPrompt != null)
+            if (_quickReplyPrompt != null || _quickReplyNote != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
-                child: Text(
-                  _quickReplyPrompt!,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    height: 1.35,
-                    color: AppColors.textPrimary,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_quickReplyPrompt != null)
+                      Text(
+                        _quickReplyPrompt!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          height: 1.35,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    if (_quickReplyNote != null) ...[
+                      if (_quickReplyPrompt != null) const SizedBox(height: 6),
+                      Text(
+                        _quickReplyNote!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          height: 1.35,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ...List.generate(options.length, (index) {
               final option = options[index];
               return Column(
                 children: [
-                  if (index > 0 || _quickReplyPrompt != null)
+                  if (index > 0 || _quickReplyPrompt != null || _quickReplyNote != null)
                     Divider(
                       height: 1,
                       thickness: 1,
@@ -915,6 +1291,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               );
             }),
           ],
+        ),
+      ),
+    );
+  }
+
+  bool get _showAdvanceTokenPaidInChat => _chatPayment?.isPaid == true;
+
+  bool get _isSellerView =>
+      _showSellerControls || (_session?.sellerId == _currentUserId);
+
+  Widget _buildAdvanceTokenPaidChatCard(Responsive r) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Align(
+        alignment: Alignment.center,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: r.width * 0.92),
+          child: _buildAdvanceTokenPaidContent(
+            isSellerView: _isSellerView,
+          ),
         ),
       ),
     );
@@ -963,25 +1359,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     }
 
     if (_showSellerControls && ChatFlow.showSpecialSellerPriceEditor(_flowStep)) {
+      final listPrice = _session?.listPrice;
       return _actionPanel(
         r,
         label: 'Set item price',
         onPressed: _setSellerPrice,
         icon: Icons.currency_rupee_rounded,
-      );
-    }
-
-    if (ChatFlow.showTokenPaymentInfo(_flowStep, isSeller: _showSellerControls)) {
-      return _tokenPaymentPanel(r);
-    }
-
-    if (ChatFlow.requiresScreenshotUpload(_flowStep, isSeller: _showSellerControls)) {
-      return _actionPanel(
-        r,
-        label: 'Upload payment screenshot (required)',
-        onPressed: _uploadTokenScreenshot,
-        icon: Icons.upload_file_rounded,
-        filled: true,
+        note: ChatFlow.sellerPriceSetNote(
+          listPrice: listPrice != null && listPrice > 0 ? listPrice : null,
+        ),
       );
     }
 
@@ -1032,6 +1418,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     required VoidCallback onPressed,
     required IconData icon,
     bool filled = false,
+    String? note,
   }) {
     return Container(
       width: double.infinity,
@@ -1042,77 +1429,230 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       ),
       child: SafeArea(
         top: false,
-        child: filled
-            ? FilledButton.icon(
-                onPressed: _busy ? null : onPressed,
-                icon: Icon(icon),
-                label: Text(label),
-              )
-            : OutlinedButton.icon(
-                onPressed: _busy ? null : onPressed,
-                icon: Icon(icon),
-                label: Text(label),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (note != null) ...[
+              Text(
+                note,
+                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
+              const SizedBox(height: 8),
+            ],
+            filled
+                ? FilledButton.icon(
+                    onPressed: _busy ? null : onPressed,
+                    icon: Icon(icon),
+                    label: Text(label),
+                  )
+                : OutlinedButton.icon(
+                    onPressed: _busy ? null : onPressed,
+                    icon: Icon(icon),
+                    label: Text(label),
+                  ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _tokenPaymentPanel(Responsive r) {
+  Widget _buildInlineRazorpayPaymentCard(Responsive r) {
+    final agreedPrice = _session?.agreedPrice ?? _session?.listPrice ?? 0;
+    final tokenAmount = ChatFlow.tokenAmount(agreedPrice);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Align(
+        alignment: Alignment.center,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: r.width * 0.92),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Send 1% advance token',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _tokenBreakdownRow('Agreed item price', ChatFlow.formatPrice(agreedPrice)),
+                      const SizedBox(height: 8),
+                      _tokenBreakdownRow(
+                        'Advance token (1%)',
+                        ChatFlow.formatPrice(tokenAmount),
+                        emphasized: true,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        ChatFlow.tokenPaymentNote(agreedPrice),
+                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: _busy || agreedPrice <= 0 ? null : _startRazorpayPayment,
+                  icon: const Icon(Icons.payment_rounded),
+                  label: Text('Send ${ChatFlow.formatPrice(tokenAmount)} via Razorpay'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdvanceTokenPaidContent({
+    required bool isSellerView,
+  }) {
+    final payment = _chatPayment;
+    final agreedPrice = payment?.agreedPrice ?? _session?.agreedPrice ?? _session?.listPrice ?? 0;
+    final tokenAmount = payment?.tokenAmount ?? ChatFlow.tokenAmount(agreedPrice);
+
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 12, r.horizontalPadding(), 8),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.divider)),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.successSoft,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.25)),
       ),
-      child: SafeArea(
-        top: false,
-        child: Column(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: AppColors.success),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  ChatFlow.advanceTokenPaidChatTitle(isSellerView: isSellerView),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _tokenBreakdownRow('Agreed item price', ChatFlow.formatPrice(agreedPrice)),
+          const SizedBox(height: 6),
+          _tokenBreakdownRow(
+            isSellerView ? 'Advance token received (1%)' : 'Advance token sent (1%)',
+            ChatFlow.formatPrice(tokenAmount),
+            emphasized: true,
+          ),
+          if (payment?.razorpayPaymentId != null) ...[
+            const SizedBox(height: 6),
+            _tokenBreakdownRow('Payment ID', payment!.razorpayPaymentId!),
+          ],
+          const SizedBox(height: 8),
+          Text(
+            ChatFlow.advanceTokenPaidChatNote(
+              isSellerView: isSellerView,
+              tokenAmount: tokenAmount,
+              agreedPrice: agreedPrice,
+            ),
+            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDoorstepDeliveryWarning(Responsive r) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 10, r.horizontalPadding(), 0),
+      color: AppColors.surface,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.warningSoft,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+        ),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Send token amount via Google Pay',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+            const Icon(Icons.shield_outlined, size: 18, color: AppColors.warning),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                ChatFlow.doorstepPaymentWarning,
+                style: const TextStyle(
+                  fontSize: 12,
+                  height: 1.4,
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.account_balance_wallet_rounded, color: AppColors.primary),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      ChatFlow.googlePayNumber,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: _copyGooglePayNumber,
-                    icon: const Icon(Icons.copy_rounded, color: AppColors.primary),
-                    tooltip: 'Copy number',
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'After paying, tap "I have sent the token amount" below.',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  bool get _showDoorstepDeliveryWarning =>
+      _isActingAsBuyer &&
+      !_showSellerControls &&
+      _isGuided &&
+      ChatFlow.isDoorstepDeliveryActive(
+        messages: _messages,
+        buyerId: _session?.buyerId,
+        sellerId: _session?.sellerId,
+        sellerDeliveryOffer: _session?.sellerDeliveryOffer,
+      );
+
+  Widget _tokenBreakdownRow(String label, String value, {bool emphasized = false}) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: emphasized ? 14 : 13,
+              fontWeight: emphasized ? FontWeight.w600 : FontWeight.normal,
+              color: emphasized ? AppColors.textPrimary : AppColors.textSecondary,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: emphasized ? 16 : 13,
+            fontWeight: emphasized ? FontWeight.w700 : FontWeight.w600,
+            color: emphasized ? AppColors.primary : AppColors.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1152,6 +1692,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       );
     }
 
+    _scrollToBottom();
+
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -1176,12 +1718,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             child: ListView(
               controller: _scrollController,
               padding: EdgeInsets.all(r.horizontalPadding()),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               children: _buildChatListItems(r),
             ),
           ),
           specialPanel,
-          if (inputEnabled &&
-              !ChatFlow.requiresScreenshotUpload(_flowStep, isSeller: _showSellerControls))
+          if (_showDoorstepDeliveryWarning) _buildDoorstepDeliveryWarning(r),
+          if (inputEnabled)
             Container(
               padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 8, r.horizontalPadding(), 8),
               decoration: BoxDecoration(
@@ -1304,11 +1847,13 @@ class _SetPriceDialog extends StatefulWidget {
     required this.initialPrice,
     this.title = 'Set price',
     this.label = 'Price (₹)',
+    this.hint,
   });
 
   final String initialPrice;
   final String title;
   final String label;
+  final String? hint;
 
   @override
   State<_SetPriceDialog> createState() => _SetPriceDialogState();
@@ -1344,20 +1889,91 @@ class _SetPriceDialogState extends State<_SetPriceDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget.title),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.hint != null) ...[
+            Text(
+              widget.hint!,
+              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 12),
+          ],
+          TextField(
+            controller: _controller,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: widget.label,
+              prefixText: '₹ ',
+            ),
+            autofocus: true,
+            onSubmitted: (_) => _confirm(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        FilledButton(onPressed: _confirm, child: const Text('Confirm')),
+      ],
+    );
+  }
+}
+
+class _DeliveryAddressDialog extends StatefulWidget {
+  const _DeliveryAddressDialog();
+
+  @override
+  State<_DeliveryAddressDialog> createState() => _DeliveryAddressDialogState();
+}
+
+class _DeliveryAddressDialogState extends State<_DeliveryAddressDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _confirm() {
+    final address = _controller.text.trim();
+    if (address.length < 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a complete delivery address')),
+      );
+      return;
+    }
+    Navigator.pop(context, address);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Delivery address'),
       content: TextField(
         controller: _controller,
-        keyboardType: TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        decoration: InputDecoration(
-          labelText: widget.label,
-          prefixText: '₹ ',
+        keyboardType: TextInputType.streetAddress,
+        textCapitalization: TextCapitalization.sentences,
+        maxLines: 3,
+        decoration: const InputDecoration(
+          labelText: 'Full address',
+          hintText: 'House no., street, area, city, pincode',
+          alignLabelWithHint: true,
         ),
         autofocus: true,
         onSubmitted: (_) => _confirm(),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        FilledButton(onPressed: _confirm, child: const Text('Confirm')),
+        FilledButton(onPressed: _confirm, child: const Text('Share address')),
       ],
     );
   }

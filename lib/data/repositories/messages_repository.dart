@@ -363,6 +363,9 @@ class MessagesRepositoryException implements Exception {
 extension ChatFlowStepX on ChatFlowStep {
   static ChatFlowStep fromStorage(String? value) {
     if (value == null || value.isEmpty) return ChatFlowStep.completed;
+    if (value == 'awaitingTokenScreenshot') {
+      return ChatFlowStep.awaitingDeliveryChoice;
+    }
     for (final step in ChatFlowStep.values) {
       if (step.name == value) return step;
     }

@@ -1,16 +1,10 @@
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 
-class DeviceLocation {
-  const DeviceLocation({
-    required this.latitude,
-    required this.longitude,
-    required this.address,
-  });
-
-  final double latitude;
-  final double longitude;
-  final String address;
+enum LocationSettingsAction {
+  none,
+  openLocationSettings,
+  openAppSettings,
 }
 
 class LocationService {
@@ -22,11 +16,23 @@ class LocationService {
 
   Future<LocationPermission> requestPermission() => Geolocator.requestPermission();
 
+  static Future<bool> openSettingsFor(LocationServiceException error) {
+    switch (error.settingsAction) {
+      case LocationSettingsAction.openLocationSettings:
+        return Geolocator.openLocationSettings();
+      case LocationSettingsAction.openAppSettings:
+        return Geolocator.openAppSettings();
+      case LocationSettingsAction.none:
+        return Future.value(false);
+    }
+  }
+
   Future<DeviceLocation> getCurrentLocation() async {
     final serviceEnabled = await isLocationServiceEnabled();
     if (!serviceEnabled) {
       throw const LocationServiceException(
-        'Location services are turned off. Enable them in device settings.',
+        'Location services are turned off. Enable them in Settings to continue.',
+        settingsAction: LocationSettingsAction.openLocationSettings,
       );
     }
 
@@ -37,14 +43,15 @@ class LocationService {
 
     if (permission == LocationPermission.denied) {
       throw const LocationServiceException(
-        'Location permission is required to use your current pickup address.',
+        'Location permission is required. Allow access in Settings.',
+        settingsAction: LocationSettingsAction.openAppSettings,
       );
     }
 
     if (permission == LocationPermission.deniedForever) {
       throw const LocationServiceException(
-        'Location permission is permanently denied. Enable it in app settings.',
-        openSettings: true,
+        'Location permission is permanently denied. Enable it in app Settings.',
+        settingsAction: LocationSettingsAction.openAppSettings,
       );
     }
 
@@ -100,11 +107,34 @@ class LocationService {
   }
 }
 
+class DeviceLocation {
+  const DeviceLocation({
+    required this.latitude,
+    required this.longitude,
+    required this.address,
+  });
+
+  final double latitude;
+  final double longitude;
+  final String address;
+}
+
 class LocationServiceException implements Exception {
-  const LocationServiceException(this.message, {this.openSettings = false});
+  const LocationServiceException(
+    this.message, {
+    this.settingsAction = LocationSettingsAction.none,
+  });
 
   final String message;
-  final bool openSettings;
+  final LocationSettingsAction settingsAction;
+
+  bool get canOpenSettings => settingsAction != LocationSettingsAction.none;
+
+  String get settingsButtonLabel => switch (settingsAction) {
+        LocationSettingsAction.openLocationSettings => 'Open Location Settings',
+        LocationSettingsAction.openAppSettings => 'Open App Settings',
+        LocationSettingsAction.none => 'Open Settings',
+      };
 
   @override
   String toString() => message;

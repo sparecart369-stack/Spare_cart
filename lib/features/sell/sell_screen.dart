@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:spare_kart/bloc/auth/auth_bloc.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
 import 'package:spare_kart/core/services/location_service.dart';
+import 'package:spare_kart/core/services/location_settings_helper.dart';
 import 'package:spare_kart/core/services/seller_location_store.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
@@ -53,6 +53,7 @@ class _SellScreenState extends State<SellScreen> {
   DeviceLocation? _currentDeviceLocation;
   bool _currentLocationLoading = false;
   String? _currentLocationError;
+  LocationSettingsAction _locationSettingsAction = LocationSettingsAction.none;
   final _customPickupLocationController = TextEditingController();
   final List<String> _photoPaths = [];
   final _imagePicker = ImagePicker();
@@ -223,6 +224,7 @@ class _SellScreenState extends State<SellScreen> {
         _currentDeviceLocation = location;
         _currentLocationLoading = false;
         _currentLocationError = null;
+        _locationSettingsAction = LocationSettingsAction.none;
       });
     } on LocationServiceException catch (error) {
       if (!mounted || !_usesCurrentPickupLocation) return;
@@ -230,7 +232,11 @@ class _SellScreenState extends State<SellScreen> {
         _currentDeviceLocation = null;
         _currentLocationLoading = false;
         _currentLocationError = error.message;
+        _locationSettingsAction = error.settingsAction;
       });
+      if (error.canOpenSettings) {
+        await handleLocationServiceException(context, error);
+      }
     } catch (_) {
       if (!mounted || !_usesCurrentPickupLocation) return;
       setState(() {
@@ -242,7 +248,12 @@ class _SellScreenState extends State<SellScreen> {
   }
 
   Future<void> _openLocationSettings() async {
-    await Geolocator.openAppSettings();
+    await LocationService.openSettingsFor(
+      LocationServiceException(
+        _currentLocationError ?? '',
+        settingsAction: _locationSettingsAction,
+      ),
+    );
   }
 
   void _onFulfillmentChanged(ListingFulfillment fulfillment) {
@@ -724,6 +735,7 @@ class _SellScreenState extends State<SellScreen> {
               loading: _currentLocationLoading,
               address: _currentDeviceLocation?.address,
               error: _currentLocationError,
+              canOpenSettings: _locationSettingsAction != LocationSettingsAction.none,
               onRetry: _fetchCurrentLocation,
               onOpenSettings: _openLocationSettings,
             )
@@ -1679,6 +1691,7 @@ class _CurrentLocationCard extends StatelessWidget {
     required this.loading,
     required this.address,
     required this.error,
+    required this.canOpenSettings,
     required this.onRetry,
     required this.onOpenSettings,
   });
@@ -1687,15 +1700,12 @@ class _CurrentLocationCard extends StatelessWidget {
   final bool loading;
   final String? address;
   final String? error;
+  final bool canOpenSettings;
   final VoidCallback onRetry;
   final VoidCallback onOpenSettings;
 
   @override
   Widget build(BuildContext context) {
-    final showSettings = error != null &&
-        (error!.toLowerCase().contains('permanently denied') ||
-            error!.toLowerCase().contains('settings'));
-
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(compact ? 10 : 12),
@@ -1772,7 +1782,7 @@ class _CurrentLocationCard extends StatelessWidget {
                         ),
                         child: const Text('Retry'),
                       ),
-                      if (showSettings)
+                      if (canOpenSettings)
                         TextButton(
                           onPressed: onOpenSettings,
                           style: TextButton.styleFrom(

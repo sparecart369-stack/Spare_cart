@@ -69,8 +69,23 @@ class ChatSession {
     }
 
     if (fromBuyer &&
-        (flowStep == ChatFlowStep.awaitingTokenScreenshot ||
-            flowStep == ChatFlowStep.awaitingTokenPayment) &&
+        flowStep == ChatFlowStep.awaitingTokenPayment &&
+        last.text.toLowerCase().contains('advance token') &&
+        last.text.toLowerCase().contains('paid successfully')) {
+      flowStep = ChatFlowStep.awaitingDeliveryChoice;
+      return;
+    }
+
+    if (fromBuyer &&
+        flowStep == ChatFlowStep.awaitingTokenPayment &&
+        last.text.toLowerCase().contains('token payment') &&
+        last.text.toLowerCase().contains('razorpay')) {
+      flowStep = ChatFlowStep.awaitingDeliveryChoice;
+      return;
+    }
+
+    if (fromBuyer &&
+        (flowStep == ChatFlowStep.awaitingTokenPayment) &&
         (last.text.toLowerCase().contains('payment screenshot') || last.imagePath != null)) {
       flowStep = ChatFlowStep.awaitingDeliveryChoice;
       return;
@@ -109,6 +124,40 @@ class ChatSession {
           sellerRepliedAfterToken = true;
           break;
         }
+      }
+    }
+
+    final hasDeliveryLocation = messages.any(
+      (msg) =>
+          msg.senderId == buyerId && msg.text.startsWith('Delivery location:'),
+    );
+
+    if (!hasDeliveryLocation) {
+      final buyerWantsDoorstep = messages.any(
+        (msg) =>
+            msg.senderId == buyerId &&
+            (msg.text.toLowerCase().contains("i'd like doorstep delivery") ||
+                msg.text.toLowerCase().contains('both pickup and doorstep')),
+      );
+      final sellerDoorstepOnly = sellerDeliveryOffer == 'doorstep_only' ||
+          sellerDeliveryOffer == 'doorstep_yes';
+
+      if (buyerWantsDoorstep || sellerDoorstepOnly) {
+        flowStep = ChatFlowStep.awaitingBuyerLocationForDelivery;
+        if (buyerWantsDoorstep) deliveryChoiceMade = true;
+        return;
+      }
+
+      if (fromSeller &&
+          last.text.startsWith('Pickup location:') &&
+          messages.any(
+            (msg) =>
+                msg.senderId == buyerId &&
+                msg.text.toLowerCase().contains('both pickup and doorstep'),
+          )) {
+        flowStep = ChatFlowStep.awaitingBuyerLocationForDelivery;
+        deliveryChoiceMade = true;
+        return;
       }
     }
 

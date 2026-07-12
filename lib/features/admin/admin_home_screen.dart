@@ -14,6 +14,8 @@ import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/core/widgets/listing_image.dart';
 import 'package:spare_kart/data/models/models.dart';
 import 'package:spare_kart/features/admin/admin_dashboard_screen.dart';
+import 'package:spare_kart/features/admin/admin_payments_screen.dart';
+import 'package:spare_kart/features/admin/admin_refunds_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -50,6 +52,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               children: const [
                 AdminDashboardScreen(),
                 _AdminListingsTab(),
+                AdminPaymentsScreen(),
+                AdminRefundsScreen(),
               ],
             ),
           ),
@@ -81,6 +85,16 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   icon: Icon(Icons.inventory_2_outlined),
                   selectedIcon: Icon(Icons.inventory_2_rounded),
                   label: 'My Items',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.payments_outlined),
+                  selectedIcon: Icon(Icons.payments_rounded),
+                  label: 'Payments',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.undo_outlined),
+                  selectedIcon: Icon(Icons.undo_rounded),
+                  label: 'Refunds',
                 ),
               ],
             ),

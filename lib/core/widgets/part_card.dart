@@ -65,48 +65,52 @@ class PartCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusLg)),
-                    child: _PartImage(url: part.imageUrl, size: double.infinity, height: 148),
-                  ),
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: ConditionChip(label: part.conditionLabel),
-                  ),
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.92),
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: AppDecorations.shadowSm,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.star_rounded, size: 14, color: AppColors.accent),
-                          const SizedBox(width: 3),
-                          Text(
-                            part.sellerRating.toStringAsFixed(1),
-                            style: AppTypography.textTheme.labelSmall?.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDecorations.radiusLg)),
+                      child: _PartImage(url: part.imageUrl, size: double.infinity, height: double.infinity),
+                    ),
+                    Positioned(
+                      top: 10,
+                      left: 10,
+                      child: ConditionChip(label: part.conditionLabel),
+                    ),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: AppDecorations.shadowSm,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.star_rounded, size: 14, color: AppColors.accent),
+                            const SizedBox(width: 3),
+                            Text(
+                              part.sellerRating.toStringAsFixed(1),
+                              style: AppTypography.textTheme.labelSmall?.copyWith(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -115,7 +119,7 @@ class PartCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.textTheme.titleSmall?.copyWith(height: 1.35),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     const BlurredPrice(),
                   ],
                 ),
