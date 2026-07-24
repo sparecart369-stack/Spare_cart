@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,6 +8,7 @@ import 'package:spare_kart/bloc/app_mode/app_mode_bloc.dart';
 import 'package:spare_kart/bloc/auth/auth_bloc.dart';
 import 'package:spare_kart/bloc/messages/messages_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/services/location_service.dart';
 import 'package:spare_kart/core/services/location_settings_helper.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
@@ -16,7 +19,10 @@ import 'package:spare_kart/core/widgets/listing_image.dart';
 import 'package:spare_kart/data/models/models.dart';
 import 'package:spare_kart/core/services/razorpay_checkout_service.dart';
 import 'package:spare_kart/data/models/chat_payment.dart';
+import 'package:spare_kart/data/models/chat_transaction.dart';
+import 'package:spare_kart/data/repositories/chat_transaction_repository.dart';
 import 'package:spare_kart/data/repositories/chat_payment_repository.dart';
+import 'package:spare_kart/data/repositories/listings_repository.dart';
 import 'package:spare_kart/features/messages/chat_flow.dart';
 import 'package:spare_kart/features/messages/chat_session_store.dart';
 
@@ -43,11 +49,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
   final _scrollController = ScrollController();
   final _locationService = const LocationService();
   final _paymentRepository = ChatPaymentRepository();
+  final _transactionRepository = ChatTransactionRepository();
+  final _listingsRepository = ListingsRepository();
   final _razorpayCheckout = RazorpayCheckoutService();
 
   late List<ChatMessage> _messages;
   ChatSession? _session;
+  Part? _listingPart;
   ChatPayment? _chatPayment;
+  ChatTransaction? _chatTransaction;
+  DeliveryPartnerRating? _deliveryRating;
   ChatFlowStep _flowStep = ChatFlowStep.completed;
   bool _isGuided = false;
   bool _busy = false;
@@ -56,6 +67,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
   bool _pendingDeliveryLocationShare = false;
   bool _deliveryLocationLoading = false;
   String? _deliveryLocationError;
+  String? _fetchedDeliveryAddress;
   LocationSettingsAction _deliveryLocationSettingsAction = LocationSettingsAction.none;
 
   @override
@@ -98,13 +110,24 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
       _session = fresh;
       _messages = List.from(fresh.messages);
       _isGuided = fresh.isGuided;
+      _flowStep = fresh.flowStep;
     });
     if (!mounted) return;
-    _applyFlowNormalization(persist: true);
-    _refreshChatPayment();
+    unawaited(_syncRealtimeSessionState());
+  }
+
+  Future<void> _syncRealtimeSessionState() async {
+    if (!mounted || _session == null) return;
+
+    _applyFlowNormalization(persist: false);
+    await _refreshChatPayment();
+    await _refreshChatTransaction();
+    if (!mounted) return;
+
+    _applyFlowNormalization(persist: false);
     _scrollToBottom();
     _prefillInitialMessage();
-    _markAsRead();
+    await _markAsRead();
   }
 
   @override
@@ -125,7 +148,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     if (!mounted || _flowStep != ChatFlowStep.awaitingBuyerLocationForDelivery) return;
     final success = await _shareCurrentDeliveryLocation(showSettingsDialog: false);
     if (success && mounted) {
-      await _advanceFlow(ChatFlowStep.freeChat);
+      await _afterFulfillmentReady();
     }
   }
 
@@ -173,9 +196,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
       if (_session != null) {
         _messages = List.from(_session!.messages);
         _isGuided = _session!.isGuided;
-        _applyFlowNormalization(persist: true);
-        await _refreshChatPayment();
-        await _markAsRead();
+        _flowStep = _session!.flowStep;
+        await _loadListingPart();
+        await _syncRealtimeSessionState();
         if (!mounted) return;
         _prefillInitialMessage();
         _scrollToBottom();
@@ -202,12 +225,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
       _session = fresh;
       _messages = List.from(fresh.messages);
       _isGuided = fresh.isGuided;
+      _flowStep = fresh.flowStep;
     });
     if (!mounted) return;
-    _applyFlowNormalization(persist: true);
-    _refreshChatPayment();
-    _prefillInitialMessage();
-    _scrollToBottom();
+    unawaited(_syncRealtimeSessionState());
   }
 
   Future<void> _markAsRead() async {
@@ -255,22 +276,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
   void _applyFlowNormalization({bool persist = false}) {
     if (!mounted || _session == null) return;
     final before = _session!.flowStep;
-    final localStep = _flowStep;
     _session!.normalizeFlowStep();
 
     var nextStep = _session!.flowStep;
-    if (localStep == ChatFlowStep.freeChat &&
-        nextStep != ChatFlowStep.freeChat &&
-        nextStep != ChatFlowStep.completed) {
-      nextStep = ChatFlowStep.freeChat;
-      _session!.flowStep = ChatFlowStep.freeChat;
-    } else if (ChatFlow.isDeliveryFlowComplete(
-      messages: _session!.messages,
-      buyerId: _session!.buyerId,
-      sellerId: _session!.sellerId,
-    )) {
-      nextStep = ChatFlowStep.freeChat;
-      _session!.flowStep = ChatFlowStep.freeChat;
+
+    if (_chatTransaction != null) {
+      final txStep = _transactionRepository.flowStepForTransaction(_chatTransaction);
+      if (_deliveryRating != null && txStep == ChatFlowStep.awaitingDeliveryPartnerRating) {
+        nextStep = ChatFlowStep.completed;
+      } else {
+        nextStep = txStep;
+      }
+      _session!.flowStep = nextStep;
     }
 
     _safeSetState(() => _flowStep = nextStep);
@@ -287,6 +304,74 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
   }
 
   String? get _partTitle => _session?.partTitle ?? widget.args?.thread?.partTitle;
+
+  bool get _canOpenSellerProfile =>
+      _isActingAsBuyer && _session?.sellerId?.isNotEmpty == true;
+
+  Future<void> _loadListingPart() async {
+    if (widget.args?.part != null) {
+      _listingPart = widget.args!.part;
+      return;
+    }
+
+    final listingId = _session?.listingId;
+    if (listingId == null || listingId.isEmpty) return;
+
+    try {
+      _listingPart = await _listingsRepository.fetchListingById(listingId);
+    } catch (_) {
+      // Seller profile can still open with a fallback part.
+    }
+  }
+
+  Future<void> _openSellerProfile() async {
+    if (!_canOpenSellerProfile) return;
+
+    final part = _listingPart ?? widget.args?.part ?? _fallbackPartForSellerProfile();
+    if (part == null) return;
+
+    await Navigator.pushNamed(context, AppRoutes.sellerProfile, arguments: part);
+  }
+
+  Part? _fallbackPartForSellerProfile() {
+    final session = _session;
+    final sellerId = session?.sellerId;
+    if (sellerId == null || sellerId.isEmpty) return null;
+
+    return Part(
+      id: session?.listingId ?? sellerId,
+      name: _partTitle ?? session!.sellerName,
+      category: '',
+      make: '',
+      model: '',
+      year: 0,
+      condition: PartCondition.used,
+      price: session?.listPrice ?? 0,
+      location: session?.pickupLocation ?? '',
+      sellerId: sellerId,
+      sellerName: session?.sellerName ?? 'Seller',
+      imageUrl: '',
+      description: '',
+    );
+  }
+
+  Widget _buildAppBarTitle() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(_participantName, style: const TextStyle(fontSize: 16)),
+        if (_partTitle != null)
+          Text(
+            _partTitle!,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.normal,
+            ),
+          ),
+      ],
+    );
+  }
 
   bool _isFromCurrentUser(ChatMessage msg) {
     final userId = _currentUserId;
@@ -308,18 +393,40 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
   bool get _isBuyerBlocked =>
       _isActingAsBuyer && _isGuided && (_session?.isBuyerBlocked ?? false);
 
+  bool get _isInHandoverPhase {
+    if (_flowStep == ChatFlowStep.completed) return false;
+    return _chatPayment?.isPaid == true &&
+        (_chatTransaction != null || ChatFlow.isHandoverFlowStep(_flowStep));
+  }
+
   bool get _isFreeChatPhase {
-    if (_flowStep == ChatFlowStep.freeChat || _flowStep == ChatFlowStep.completed) {
+    if (_flowStep == ChatFlowStep.completed) return false;
+    if (_isInHandoverPhase) return false;
+    if (_flowStep == ChatFlowStep.freeChat) {
       return true;
     }
     final session = _session;
     if (session == null) return false;
+    if (_chatPayment?.isPaid == true &&
+        ChatFlow.isDeliveryFlowComplete(
+          messages: _messages,
+          buyerId: session.buyerId,
+          sellerId: session.sellerId,
+        )) {
+      return false;
+    }
     return ChatFlow.isDeliveryFlowComplete(
       messages: _messages,
       buyerId: session.buyerId,
       sellerId: session.sellerId,
     );
   }
+
+  ChatFulfillmentMode get _fulfillmentMode => ChatFlow.resolveFulfillmentMode(
+        messages: _messages,
+        buyerId: _session?.buyerId,
+        sellerDeliveryOffer: _session?.sellerDeliveryOffer,
+      );
 
   int? get _lastBuyerReductionAsk {
     final buyerId = _session?.buyerId;
@@ -343,6 +450,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
         listPrice: _session?.listPrice,
         lastReductionAsk: _lastBuyerReductionAsk,
         buyerDeliveryAsk: _session?.buyerDeliveryAsk,
+        fulfillmentMode: _fulfillmentMode,
+        agreedPrice: _session?.agreedPrice,
       );
     }
     if (_isActingAsBuyer) {
@@ -352,6 +461,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
         listPrice: _session?.listPrice,
         sellerDeliveryOffer: _session?.sellerDeliveryOffer,
         buyerDeliveryAsk: _session?.buyerDeliveryAsk,
+        fulfillmentMode: _fulfillmentMode,
       );
     }
     return [];
@@ -405,6 +515,25 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     if (_isActingAsBuyer && _flowStep == ChatFlowStep.awaitingBuyerLocationForDelivery) {
       return 'Share your delivery location:';
     }
+    if (_showSellerControls && _flowStep == ChatFlowStep.awaitingSellerHandoff) {
+      return _fulfillmentMode == ChatFulfillmentMode.pickup
+          ? 'Mark item ready for pickup:'
+          : 'Mark item as dispatched:';
+    }
+    if (_isActingAsBuyer && _flowStep == ChatFlowStep.awaitingBuyerReceipt) {
+      return 'Confirm after you receive the item:';
+    }
+    if (_showSellerControls && _flowStep == ChatFlowStep.awaitingSellerConfirm) {
+      return 'Confirm handover:';
+    }
+    if (_isActingAsBuyer && _flowStep == ChatFlowStep.awaitingDeliveryPartnerRating) {
+      return _fulfillmentMode == ChatFulfillmentMode.pickup
+          ? 'Rate the seller:'
+          : 'Rate your delivery experience:';
+    }
+    if (_flowStep == ChatFlowStep.disputeOpen) {
+      return 'Issue reported:';
+    }
     return null;
   }
 
@@ -431,9 +560,93 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
       if (payment?.isPaid == true && _flowStep == ChatFlowStep.awaitingTokenPayment) {
         await _advanceFlow(ChatFlowStep.awaitingDeliveryChoice);
       }
+      if (payment?.isPaid == true &&
+          ChatFlow.isDeliveryFlowComplete(
+            messages: _messages,
+            buyerId: session.buyerId,
+            sellerId: session.sellerId,
+          ) &&
+          !ChatFlow.isHandoverFlowStep(_flowStep) &&
+          _flowStep != ChatFlowStep.completed) {
+        await _ensureHandoverTransaction();
+      }
       _scrollToBottom();
     } catch (_) {
       // Payment lookup is optional until buyer reaches checkout.
+    }
+  }
+
+  Future<void> _refreshChatTransaction() async {
+    final session = _session;
+    if (session == null) return;
+
+    try {
+      final transaction = await _transactionRepository.fetchForThread(session.id);
+      DeliveryPartnerRating? rating;
+      if (transaction != null) {
+        rating = await _transactionRepository.fetchRatingForTransaction(transaction.id);
+      }
+      if (!mounted) return;
+
+      _safeSetState(() {
+        _chatTransaction = transaction;
+        _deliveryRating = rating;
+      });
+
+      if (transaction != null) {
+        final step = _transactionRepository.flowStepForTransaction(transaction);
+        final resolvedStep =
+            rating != null && step == ChatFlowStep.awaitingDeliveryPartnerRating
+                ? ChatFlowStep.completed
+                : step;
+        if (_flowStep != resolvedStep) {
+          _safeSetState(() => _flowStep = resolvedStep);
+          if (_session != null) {
+            _session!.flowStep = resolvedStep;
+            ChatSessionStore.instance.cacheSession(_session!);
+          }
+        }
+      }
+    } catch (_) {
+      // Handover tables may be missing until migration is applied.
+    }
+  }
+
+  Future<void> _ensureHandoverTransaction() async {
+    final session = _session;
+    final payment = _chatPayment;
+    if (session == null || payment?.isPaid != true) return;
+    if (session.buyerId == null || session.sellerId == null) return;
+
+    final agreedPrice = session.agreedPrice ?? session.listPrice;
+    if (agreedPrice <= 0) return;
+
+    try {
+      final transaction = await _transactionRepository.ensureTransaction(
+        threadId: session.id,
+        buyerId: session.buyerId!,
+        sellerId: session.sellerId!,
+        fulfillmentMode: _fulfillmentMode,
+        agreedPrice: agreedPrice,
+        tokenAmount: payment!.tokenAmount,
+        advancePaymentId: payment.id,
+      );
+      if (!mounted) return;
+      _safeSetState(() => _chatTransaction = transaction);
+    } catch (_) {
+      // Optional until migration is applied.
+    }
+  }
+
+  Future<void> _afterFulfillmentReady() async {
+    await _refreshChatPayment();
+    if (_chatPayment?.isPaid == true) {
+      await _ensureHandoverTransaction();
+      final step =
+          _transactionRepository.flowStepForTransaction(_chatTransaction);
+      await _advanceFlow(step);
+    } else {
+      await _advanceFlow(ChatFlowStep.freeChat);
     }
   }
 
@@ -533,14 +746,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     _scrollToBottom();
   }
 
-  Future<void> _sendMessage(
+  Future<bool> _sendMessage(
     String text, {
     required bool isBuyer,
     String? imagePath,
+    bool bypassBusy = false,
   }) async {
-    if (_session == null || _busy) return;
+    if (_session == null || (!bypassBusy && _busy)) return false;
     final senderId = _currentUserId;
-    if (senderId == null) return;
+    if (senderId == null) return false;
 
     setState(() => _busy = true);
     try {
@@ -550,16 +764,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
         text: text,
         localImagePath: imagePath,
       );
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() {
         _messages = List.from(_session!.messages);
       });
       _scrollToBottom(animated: true);
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to send message: $e')),
       );
+      return false;
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -603,6 +819,22 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     if (_isGuided) {
       if (previousStep == ChatFlowStep.started && isBuyer) {
         await _advanceFlow(ChatFlowStep.awaitingAvailability);
+        return;
+      }
+      if (_showSellerControls) {
+        final lower = text.toLowerCase();
+        if (lower.contains('delivery and payment confirmed') ||
+            lower.contains('pickup and payment confirmed')) {
+          final transaction = _chatTransaction;
+          if (transaction != null) {
+            final updated = await _transactionRepository.markSellerConfirmed(
+              transactionId: transaction.id,
+            );
+            if (mounted) _safeSetState(() => _chatTransaction = updated);
+          }
+          await _advanceFlow(ChatFlowStep.awaitingDeliveryPartnerRating);
+          return;
+        }
       }
     }
   }
@@ -627,7 +859,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
   }
 
   Future<void> _setSellerPrice() async {
-    final initial = (_session?.agreedPrice ?? _session?.listPrice ?? 0).toStringAsFixed(0);
+    final existing = _session?.agreedPrice ?? _session?.listPrice;
+    final initial = existing != null && existing > 0
+        ? existing.toStringAsFixed(0)
+        : '';
 
     final listPrice = _session?.listPrice;
     final price = await showDialog<double>(
@@ -697,7 +932,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
   }
 
   Future<void> _setLastOfferedPrice() async {
-    final initial = (_session?.agreedPrice ?? _session?.listPrice ?? 0).toStringAsFixed(0);
+    final existing = _session?.agreedPrice ?? _session?.listPrice;
+    final initial = existing != null && existing > 0
+        ? existing.toStringAsFixed(0)
+        : '';
 
     final price = await showDialog<double>(
       context: context,
@@ -736,7 +974,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     if (option.id == 'pickup_only' || option.id == 'pickup_yes') {
       final location = _session?.pickupLocation ?? 'Pickup location not set';
       await _sendMessage('Pickup location: $location', isBuyer: false);
-      await _advanceFlow(ChatFlowStep.freeChat);
+      await _afterFulfillmentReady();
       return;
     }
 
@@ -753,17 +991,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
   Future<void> _handleBuyerLocationShare() async {
     final success = await _shareCurrentDeliveryLocation();
     if (success && mounted) {
-      await _advanceFlow(ChatFlowStep.freeChat);
+      await _afterFulfillmentReady();
     }
   }
 
   Future<bool> _shareCurrentDeliveryLocation({bool showSettingsDialog = true}) async {
-    if (_busy) return false;
+    if (_busy && !_deliveryLocationLoading) return false;
 
     setState(() {
-      _busy = true;
       _deliveryLocationLoading = true;
       _deliveryLocationError = null;
+      _fetchedDeliveryAddress = null;
       _deliveryLocationSettingsAction = LocationSettingsAction.none;
     });
     _scrollToBottom();
@@ -772,14 +1010,29 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
       final location = await _locationService.getCurrentLocation();
       if (!mounted) return false;
 
-      await _sendMessage(
+      setState(() => _fetchedDeliveryAddress = location.address);
+      _scrollToBottom();
+
+      final sent = await _sendMessage(
         'Delivery location: ${location.address}',
         isBuyer: true,
+        bypassBusy: true,
       );
+      if (!mounted) return false;
+
+      if (!sent) {
+        setState(() {
+          _deliveryLocationLoading = false;
+          _deliveryLocationError = 'Could not send your delivery location. Please try again.';
+        });
+        _scrollToBottom();
+        return false;
+      }
 
       setState(() {
         _deliveryLocationLoading = false;
         _deliveryLocationError = null;
+        _fetchedDeliveryAddress = null;
         _deliveryLocationSettingsAction = LocationSettingsAction.none;
         _pendingDeliveryLocationShare = false;
       });
@@ -790,6 +1043,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
       setState(() {
         _deliveryLocationLoading = false;
         _deliveryLocationError = e.message;
+        _fetchedDeliveryAddress = null;
         _deliveryLocationSettingsAction = e.settingsAction;
       });
       _scrollToBottom();
@@ -807,8 +1061,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
         setState(() => _pendingDeliveryLocationShare = true);
       }
       return false;
-    } finally {
-      if (mounted) setState(() => _busy = false);
+    } catch (e) {
+      if (!mounted) return false;
+      setState(() {
+        _deliveryLocationLoading = false;
+        _deliveryLocationError = 'Failed to get location: $e';
+        _fetchedDeliveryAddress = null;
+      });
+      _scrollToBottom();
+      return false;
     }
   }
 
@@ -831,7 +1092,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     if (option.id == 'pickup') {
       final location = _session?.pickupLocation ?? 'Pickup location not set';
       await _sendMessage('Pickup location: $location', isBuyer: false);
-      await _advanceFlow(ChatFlowStep.freeChat);
+      await _afterFulfillmentReady();
       return;
     }
 
@@ -862,7 +1123,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     });
 
     await _sendMessage('Delivery location: $address', isBuyer: true);
-    await _advanceFlow(ChatFlowStep.freeChat);
+    if (!mounted) return;
+    if (!_messages.any((m) => m.text == 'Delivery location: $address')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not send delivery address. Please try again.')),
+      );
+      return;
+    }
+    await _afterFulfillmentReady();
   }
 
   Widget _buildDateSeparator(DateTime time) {
@@ -939,6 +1207,204 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     );
   }
 
+  Future<void> _handleSellerDispatch(ChatFlowOption option) async {
+    String? partnerName;
+    if (option.id == 'dispatched') {
+      partnerName = await showDialog<String>(
+        context: context,
+        builder: (ctx) => const _DeliveryPartnerDialog(),
+      );
+      if (!mounted || partnerName == null) return;
+    }
+
+    final message = option.id == 'ready_pickup'
+        ? ChatFlow.sellerReadyPickupMessage
+        : ChatFlow.sellerDispatchedMessage(deliveryPartnerName: partnerName);
+
+    await _sendMessage(message, isBuyer: false);
+
+    final transaction = _chatTransaction;
+    if (transaction != null) {
+      final updated = await _transactionRepository.markDispatched(
+        transactionId: transaction.id,
+        deliveryPartnerName: partnerName,
+      );
+      if (!mounted) return;
+      _safeSetState(() => _chatTransaction = updated);
+    }
+
+    await _advanceFlow(ChatFlowStep.awaitingBuyerReceipt);
+  }
+
+  Future<void> _handleBuyerReceiptConfirm(ChatFlowOption option) async {
+    await _sendMessage(option.message, isBuyer: true);
+
+    final transaction = _chatTransaction;
+    if (transaction == null) {
+      await _advanceFlow(option.nextStep);
+      return;
+    }
+
+    if (option.id == 'report_issue') {
+      final updated = await _transactionRepository.markBuyerDispute(
+        transactionId: transaction.id,
+        reason: option.message,
+      );
+      if (!mounted) return;
+      _safeSetState(() => _chatTransaction = updated);
+      await _advanceFlow(ChatFlowStep.disputeOpen);
+      return;
+    }
+
+    final updated = await _transactionRepository.markBuyerConfirmed(
+      transactionId: transaction.id,
+    );
+    if (!mounted) return;
+    _safeSetState(() => _chatTransaction = updated);
+    await _advanceFlow(ChatFlowStep.awaitingSellerConfirm);
+  }
+
+  Future<void> _handleSellerHandoffConfirm(ChatFlowOption option) async {
+    await _sendMessage(option.message, isBuyer: false);
+
+    final transaction = _chatTransaction;
+    if (transaction == null) {
+      await _advanceFlow(option.nextStep);
+      return;
+    }
+
+    if (option.id == 'seller_dispute') {
+      final updated = await _transactionRepository.markSellerDispute(
+        transactionId: transaction.id,
+        reason: option.message,
+      );
+      if (!mounted) return;
+      _safeSetState(() => _chatTransaction = updated);
+      await _advanceFlow(ChatFlowStep.disputeOpen);
+      return;
+    }
+
+    final updated = await _transactionRepository.markSellerConfirmed(
+      transactionId: transaction.id,
+    );
+    if (!mounted) return;
+    _safeSetState(() => _chatTransaction = updated);
+    await _advanceFlow(ChatFlowStep.awaitingDeliveryPartnerRating);
+  }
+
+  Future<void> _requestAdvanceRefund() async {
+    final payment = _chatPayment;
+    if (payment == null || !payment.isPaid || _busy) return;
+
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (ctx) => const _RefundReasonDialog(),
+    );
+    if (reason == null || !mounted) return;
+
+    _safeSetState(() => _busy = true);
+    try {
+      await _paymentRepository.requestRefund(
+        paymentId: payment.id,
+        reason: reason,
+      );
+      final transaction = _chatTransaction;
+      if (transaction != null) {
+        final updated = await _transactionRepository.markRefundRequested(transaction.id);
+        if (mounted) _safeSetState(() => _chatTransaction = updated);
+      }
+      await _refreshChatPayment();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Refund request submitted for admin review.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to request refund: $error')),
+      );
+    } finally {
+      if (mounted) _safeSetState(() => _busy = false);
+    }
+  }
+
+  Future<void> _openDeliveryPartnerRating() async {
+    final transaction = _chatTransaction;
+    if (transaction == null || _busy || !_isActingAsBuyer) return;
+
+    final isPickup = transaction.isPickup;
+    final ratedPartyName = isPickup
+        ? _session?.sellerName ?? 'Seller'
+        : transaction.deliveryPartnerName ?? 'Delivery partner';
+
+    final result = await showDialog<({int rating, String? review})>(
+      context: context,
+      builder: (ctx) => _DeliveryPartnerRatingDialog(
+        title: isPickup ? 'Rate seller' : 'Rate delivery partner',
+        partnerName: ratedPartyName,
+      ),
+    );
+    if (result == null || !mounted) return;
+
+    _safeSetState(() => _busy = true);
+    try {
+      final rating = await _transactionRepository.submitDeliveryRating(
+        transaction: transaction,
+        rating: result.rating,
+        reviewText: result.review,
+        ratedPartyName: ratedPartyName,
+      );
+      if (!mounted) return;
+      _safeSetState(() => _deliveryRating = rating);
+      await _refreshChatTransaction();
+      await _advanceFlow(ChatFlowStep.completed);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            transaction.isPickup
+                ? 'Thanks for rating the seller.'
+                : 'Thanks for rating the delivery partner.',
+          ),
+        ),
+      );
+    } on ChatTransactionException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit rating: $error')),
+      );
+    } finally {
+      if (mounted) _safeSetState(() => _busy = false);
+    }
+  }
+
+  Future<void> _skipDeliveryPartnerRating() async {
+    final transaction = _chatTransaction;
+    if (transaction == null) {
+      await _advanceFlow(ChatFlowStep.completed);
+      return;
+    }
+
+    _safeSetState(() => _busy = true);
+    try {
+      await _transactionRepository.markCompleted(transaction.id);
+      await _refreshChatTransaction();
+      await _advanceFlow(ChatFlowStep.completed);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to complete transaction: $error')),
+      );
+    } finally {
+      if (mounted) _safeSetState(() => _busy = false);
+    }
+  }
+
   Future<void> _onQuickReplyTap(ChatFlowOption option) async {
     if (_busy) return;
 
@@ -987,6 +1453,31 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
       return;
     }
 
+    if (_showSellerControls && _flowStep == ChatFlowStep.awaitingSellerHandoff) {
+      await _handleSellerDispatch(option);
+      return;
+    }
+
+    if (_isActingAsBuyer && _flowStep == ChatFlowStep.awaitingBuyerReceipt) {
+      await _handleBuyerReceiptConfirm(option);
+      return;
+    }
+
+    if (_showSellerControls && _flowStep == ChatFlowStep.awaitingSellerConfirm) {
+      await _handleSellerHandoffConfirm(option);
+      return;
+    }
+
+    if (option.id == 'rate_delivery_partner') {
+      await _openDeliveryPartnerRating();
+      return;
+    }
+
+    if (option.id == 'skip_delivery_rating') {
+      await _skipDeliveryPartnerRating();
+      return;
+    }
+
     await _onFlowOption(option);
   }
 
@@ -995,6 +1486,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     DateTime? previousDay;
     final paymentAnchor = _willingToBuyMessageIndex;
     final deliveryAnchor = _deliveryLocationAnchorIndex;
+    final handoverAnchor = _handoverAnchorIndex;
 
     for (var i = 0; i < _messages.length; i++) {
       final msg = _messages[i];
@@ -1015,6 +1507,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
       if (deliveryAnchor != null && i == deliveryAnchor) {
         items.addAll(_inlineDeliveryLocationWidgets(r));
       }
+      if (handoverAnchor != null && i == handoverAnchor) {
+        items.addAll(_inlineHandoverWidgets(r));
+      }
     }
 
     if (paymentAnchor == null) {
@@ -1023,9 +1518,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     if (deliveryAnchor == null) {
       items.addAll(_inlineDeliveryLocationWidgets(r));
     }
+    if (handoverAnchor == null) {
+      items.addAll(_inlineHandoverWidgets(r));
+    }
 
     if (_isWaitingForSeller) {
       items.add(_buildStatusBubble('Message sent. Waiting for seller to respond…', r));
+    }
+    if (_showSellerControls &&
+        _flowStep == ChatFlowStep.awaitingDeliveryPartnerRating) {
+      items.add(_buildStatusBubble('Waiting for buyer to rate the experience…', r));
     }
     if (_showQuickReplies) {
       items.add(_buildWhatsAppQuickReplyBubble(r));
@@ -1043,7 +1545,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
       _isActingAsBuyer &&
       !_showSellerControls &&
       _flowStep == ChatFlowStep.awaitingBuyerLocationForDelivery &&
-      (_deliveryLocationLoading || _deliveryLocationError != null);
+      (_deliveryLocationLoading ||
+          _deliveryLocationError != null ||
+          _fetchedDeliveryAddress != null);
 
   int? get _deliveryLocationAnchorIndex {
     if (_flowStep != ChatFlowStep.awaitingBuyerLocationForDelivery) return null;
@@ -1071,6 +1575,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
       LocationSettingsAction.openAppSettings => 'Open App Settings',
       LocationSettingsAction.none => 'Open Settings',
     };
+    final hasFetchedAddress =
+        _fetchedDeliveryAddress != null && _fetchedDeliveryAddress!.isNotEmpty;
+    final isError = _deliveryLocationError != null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -1082,10 +1589,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: _deliveryLocationLoading ? AppColors.primaryLight : AppColors.surface,
+              color: isError
+                  ? AppColors.surface
+                  : hasFetchedAddress
+                      ? AppColors.successSoft
+                      : AppColors.primaryLight,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: (_deliveryLocationError != null ? AppColors.warning : AppColors.primary)
+                color: (isError
+                        ? AppColors.warning
+                        : hasFetchedAddress
+                            ? AppColors.success
+                            : AppColors.primary)
                     .withValues(alpha: 0.25),
               ),
             ),
@@ -1095,24 +1610,32 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
                 Row(
                   children: [
                     Icon(
-                      _deliveryLocationLoading
-                          ? Icons.my_location_rounded
-                          : Icons.location_off_rounded,
-                      color: _deliveryLocationLoading ? AppColors.primary : AppColors.warning,
+                      isError
+                          ? Icons.location_off_rounded
+                          : hasFetchedAddress
+                              ? Icons.check_circle_rounded
+                              : Icons.my_location_rounded,
+                      color: isError
+                          ? AppColors.warning
+                          : hasFetchedAddress
+                              ? AppColors.success
+                              : AppColors.primary,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _deliveryLocationLoading
-                            ? 'Getting your location...'
-                            : 'Location access needed',
+                        isError
+                            ? 'Location access needed'
+                            : hasFetchedAddress
+                                ? 'Delivery location found'
+                                : 'Getting your location...',
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
-                if (_deliveryLocationLoading)
+                if (_deliveryLocationLoading && !hasFetchedAddress)
                   const Row(
                     children: [
                       SizedBox(
@@ -1129,7 +1652,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
                       ),
                     ],
                   )
-                else ...[
+                else if (hasFetchedAddress)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _fetchedDeliveryAddress!,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          height: 1.4,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Sending location to seller...',
+                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                    ],
+                  )
+                else if (isError) ...[
                   Text(
                     _deliveryLocationError ?? 'Enable location to share your delivery address.',
                     style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
@@ -1154,6 +1696,278 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
                         ),
                       ),
                     ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  int? get _handoverAnchorIndex {
+    if (!_isInHandoverPhase) return null;
+
+    for (var i = _messages.length - 1; i >= 0; i--) {
+      final text = _messages[i].text;
+      if (text.startsWith('Delivery location:') || text.startsWith('Pickup location:')) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  List<Widget> _inlineHandoverWidgets(Responsive r) {
+    if (!_isInHandoverPhase || _chatTransaction == null) return const [];
+
+    final widgets = <Widget>[];
+    final transaction = _chatTransaction!;
+
+    if ((transaction.status == ChatTransactionStatus.buyerConfirmed ||
+            transaction.status == ChatTransactionStatus.sellerConfirmed ||
+            transaction.status == ChatTransactionStatus.completed) &&
+        !transaction.isDispute) {
+      widgets.add(_buildOfflinePaymentCard(r, transaction));
+    }
+
+    if (transaction.isCompleted) {
+      widgets.add(_buildTransactionCompleteCard(r, transaction));
+    }
+
+    if (_deliveryRating != null) {
+      widgets.add(_buildDeliveryRatingCard(r, _deliveryRating!));
+    }
+
+    if (transaction.isDispute) {
+      widgets.add(_buildDisputeCard(r, transaction));
+    }
+
+    return widgets;
+  }
+
+  Widget _buildOfflinePaymentCard(Responsive r, ChatTransaction transaction) {
+    final paidToLabel = transaction.isPickup
+        ? 'Paid to seller (offline)'
+        : 'Paid to delivery agent (offline)';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Align(
+        alignment: Alignment.center,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: r.width * 0.92),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.successSoft,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.success.withValues(alpha: 0.25)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.check_circle_rounded, color: AppColors.success),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Remaining balance paid offline',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _tokenBreakdownRow('Agreed item price', ChatFlow.formatPrice(transaction.agreedPrice)),
+                const SizedBox(height: 6),
+                _tokenBreakdownRow(
+                  'Advance token (in app)',
+                  ChatFlow.formatPrice(transaction.tokenAmount),
+                ),
+                const SizedBox(height: 6),
+                _tokenBreakdownRow(
+                  paidToLabel,
+                  ChatFlow.formatPrice(transaction.remainingAmount),
+                  emphasized: true,
+                ),
+                if (transaction.buyerConfirmedAt != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Buyer confirmed on ${DateFormat('d MMM yyyy, h:mm a').format(transaction.buyerConfirmedAt!)}',
+                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransactionCompleteCard(Responsive r, ChatTransaction transaction) {
+    final completedAt = transaction.completedAt ?? transaction.sellerConfirmedAt;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Align(
+        alignment: Alignment.center,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: r.width * 0.92),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.verified_rounded, color: AppColors.primary),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Transaction complete',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Advance token ${ChatFlow.formatPrice(transaction.tokenAmount)} was paid in app. '
+                  'Remaining ${ChatFlow.formatPrice(transaction.remainingAmount)} was paid offline.',
+                  style: const TextStyle(fontSize: 13, height: 1.4),
+                ),
+                if (completedAt != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Both parties confirmed on ${DateFormat('d MMM yyyy, h:mm a').format(completedAt)}',
+                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeliveryRatingCard(Responsive r, DeliveryPartnerRating rating) {
+    final isPickup = _chatTransaction?.isPickup == true;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Align(
+        alignment: Alignment.center,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: r.width * 0.92),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.chipBg,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.divider),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isPickup ? 'Seller rated' : 'Delivery partner rated',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  rating.deliveryPartnerName,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: List.generate(5, (index) {
+                    return Icon(
+                      index < rating.rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                      color: AppColors.warning,
+                      size: 20,
+                    );
+                  }),
+                ),
+                if (rating.reviewText?.trim().isNotEmpty == true) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    rating.reviewText!,
+                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDisputeCard(Responsive r, ChatTransaction transaction) {
+    final canRequestRefund = _isActingAsBuyer &&
+        _chatPayment?.isPaid == true &&
+        _chatPayment?.status != ChatPaymentStatus.refundRequested &&
+        _chatPayment?.status != ChatPaymentStatus.refunded;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Align(
+        alignment: Alignment.center,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: r.width * 0.92),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.warningSoft,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.report_problem_outlined, color: AppColors.warning),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Return / issue reported',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  transaction.disputeReason?.trim().isNotEmpty == true
+                      ? transaction.disputeReason!
+                      : 'Waiting for resolution. Offline remaining payment disputes are between buyer and seller.',
+                  style: const TextStyle(fontSize: 13, height: 1.4),
+                ),
+                if (_chatPayment?.status == ChatPaymentStatus.refundRequested) ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Advance token refund requested — waiting for admin review.',
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                ],
+                if (canRequestRefund) ...[
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _busy ? null : _requestAdvanceRefund,
+                    icon: const Icon(Icons.currency_rupee_rounded, size: 18),
+                    label: const Text('Request refund of advance token'),
                   ),
                 ],
               ],
@@ -1586,6 +2400,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
   }
 
   Widget _buildDoorstepDeliveryWarning(Responsive r) {
+    final remaining = _chatTransaction?.remainingAmount ??
+        ChatFlow.remainingAmount(_session?.agreedPrice ?? _session?.listPrice ?? 0);
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 10, r.horizontalPadding(), 0),
@@ -1605,7 +2422,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                ChatFlow.doorstepPaymentWarning,
+                '${ChatFlow.doorstepPaymentWarning} Remaining: ${ChatFlow.formatPrice(remaining)}.',
                 style: const TextStyle(
                   fontSize: 12,
                   height: 1.4,
@@ -1623,13 +2440,58 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
   bool get _showDoorstepDeliveryWarning =>
       _isActingAsBuyer &&
       !_showSellerControls &&
-      _isGuided &&
-      ChatFlow.isDoorstepDeliveryActive(
-        messages: _messages,
-        buyerId: _session?.buyerId,
-        sellerId: _session?.sellerId,
-        sellerDeliveryOffer: _session?.sellerDeliveryOffer,
-      );
+      _isInHandoverPhase &&
+      _fulfillmentMode == ChatFulfillmentMode.doorstep &&
+      _chatTransaction != null &&
+      !_chatTransaction!.isCompleted &&
+      !_chatTransaction!.isDispute;
+
+  bool get _showPickupPaymentWarning =>
+      _isActingAsBuyer &&
+      !_showSellerControls &&
+      _isInHandoverPhase &&
+      _fulfillmentMode == ChatFulfillmentMode.pickup &&
+      _chatTransaction != null &&
+      !_chatTransaction!.isCompleted &&
+      !_chatTransaction!.isDispute;
+
+  Widget _buildPickupPaymentWarning(Responsive r) {
+    final remaining = _chatTransaction?.remainingAmount ??
+        ChatFlow.remainingAmount(_session?.agreedPrice ?? _session?.listPrice ?? 0);
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 10, r.horizontalPadding(), 0),
+      color: AppColors.surface,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.warningSoft,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.shield_outlined, size: 18, color: AppColors.warning),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                '${ChatFlow.pickupPaymentWarning} Remaining: ${ChatFlow.formatPrice(remaining)}.',
+                style: const TextStyle(
+                  fontSize: 12,
+                  height: 1.4,
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _tokenBreakdownRow(String label, String value, {bool emphasized = false}) {
     return Row(
@@ -1671,11 +2533,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     final hasFlowOptions = flowOptions.isNotEmpty;
     final guidedInputLocked = _isGuided &&
         !_isFreeChatPhase &&
+        !canTypeFreely &&
         (showQuickReplies || hasFlowOptions || _isWaitingForSeller);
     final inputEnabled = !_isBuyerBlocked &&
         !_isWaitingForSeller &&
-        (_isFreeChatPhase || canTypeFreely) &&
-        !showQuickReplies;
+        (_isFreeChatPhase || canTypeFreely);
     final canSend = !_busy && inputEnabled && _controller.text.trim().isNotEmpty;
 
     if (_loading) {
@@ -1696,21 +2558,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_participantName, style: const TextStyle(fontSize: 16)),
-            if (_partTitle != null)
-              Text(
-                _partTitle!,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.normal,
+        title: _canOpenSellerProfile
+            ? InkWell(
+                onTap: _openSellerProfile,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: _buildAppBarTitle(),
                 ),
-              ),
-          ],
-        ),
+              )
+            : _buildAppBarTitle(),
       ),
       body: Column(
         children: [
@@ -1724,6 +2581,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
           ),
           specialPanel,
           if (_showDoorstepDeliveryWarning) _buildDoorstepDeliveryWarning(r),
+          if (_showPickupPaymentWarning) _buildPickupPaymentWarning(r),
           if (inputEnabled)
             Container(
               padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 8, r.horizontalPadding(), 8),
@@ -1974,6 +2832,205 @@ class _DeliveryAddressDialogState extends State<_DeliveryAddressDialog> {
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         FilledButton(onPressed: _confirm, child: const Text('Share address')),
+      ],
+    );
+  }
+}
+
+class _DeliveryPartnerDialog extends StatefulWidget {
+  const _DeliveryPartnerDialog();
+
+  @override
+  State<_DeliveryPartnerDialog> createState() => _DeliveryPartnerDialogState();
+}
+
+class _DeliveryPartnerDialogState extends State<_DeliveryPartnerDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _confirm() {
+    final name = _controller.text.trim();
+    if (name.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter the delivery partner name')),
+      );
+      return;
+    }
+    Navigator.pop(context, name);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Delivery partner'),
+      content: TextField(
+        controller: _controller,
+        textCapitalization: TextCapitalization.words,
+        decoration: const InputDecoration(
+          labelText: 'Partner / agent name',
+          hintText: 'e.g. FastDrop, Rajesh',
+        ),
+        autofocus: true,
+        onSubmitted: (_) => _confirm(),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        FilledButton(onPressed: _confirm, child: const Text('Dispatch')),
+      ],
+    );
+  }
+}
+
+class _DeliveryPartnerRatingDialog extends StatefulWidget {
+  const _DeliveryPartnerRatingDialog({
+    required this.partnerName,
+    this.title = 'Rate delivery partner',
+  });
+
+  final String partnerName;
+  final String title;
+
+  @override
+  State<_DeliveryPartnerRatingDialog> createState() =>
+      _DeliveryPartnerRatingDialogState();
+}
+
+class _DeliveryPartnerRatingDialogState extends State<_DeliveryPartnerRatingDialog> {
+  int _rating = 5;
+  late final TextEditingController _reviewController;
+
+  @override
+  void initState() {
+    super.initState();
+    _reviewController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _reviewController.dispose();
+    super.dispose();
+  }
+
+  void _confirm() {
+    Navigator.pop(
+      context,
+      (rating: _rating, review: _reviewController.text.trim()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.partnerName,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (index) {
+              final star = index + 1;
+              return IconButton(
+                onPressed: () => setState(() => _rating = star),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  star <= _rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                  color: AppColors.warning,
+                  size: 32,
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _reviewController,
+            maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              labelText: 'Review (optional)',
+              hintText: 'How was the delivery experience?',
+              alignLabelWithHint: true,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        FilledButton(onPressed: _confirm, child: const Text('Submit rating')),
+      ],
+    );
+  }
+}
+
+class _RefundReasonDialog extends StatefulWidget {
+  const _RefundReasonDialog();
+
+  @override
+  State<_RefundReasonDialog> createState() => _RefundReasonDialogState();
+}
+
+class _RefundReasonDialogState extends State<_RefundReasonDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _confirm() {
+    final reason = _controller.text.trim();
+    if (reason.length < 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please describe the issue briefly')),
+      );
+      return;
+    }
+    Navigator.pop(context, reason);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Request advance token refund'),
+      content: TextField(
+        controller: _controller,
+        maxLines: 3,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: const InputDecoration(
+          labelText: 'Reason',
+          hintText: 'Why should the advance token be refunded?',
+          alignLabelWithHint: true,
+        ),
+        autofocus: true,
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        FilledButton(onPressed: _confirm, child: const Text('Submit request')),
       ],
     );
   }

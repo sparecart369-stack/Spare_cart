@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:spare_kart/bloc/favourites/favourites_bloc.dart';
+import 'package:spare_kart/bloc/listings/listings_bloc.dart';
 import 'package:spare_kart/core/router/app_routes.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
@@ -10,6 +11,7 @@ import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/core/widgets/listing_image.dart';
 import 'package:spare_kart/data/models/models.dart';
+import 'package:spare_kart/data/repositories/listings_repository.dart';
 import 'package:spare_kart/features/messages/chat_detail_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -24,11 +26,31 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _imageIndex = 0;
   late final PageController _pageController;
+  late Part _part;
+  bool _isUpdatingAvailability = false;
+  final _listingsRepository = ListingsRepository();
 
   @override
   void initState() {
     super.initState();
+    _part = widget.part;
     _pageController = PageController();
+    _refreshPartRatings();
+  }
+
+  Future<void> _refreshPartRatings() async {
+    try {
+      await _listingsRepository.refreshSellerRatingStats(_part.sellerId);
+      final refreshed = await _listingsRepository.fetchListingById(_part.id);
+      if (!mounted || refreshed == null) return;
+      if (refreshed.sellerRatingCount == _part.sellerRatingCount &&
+          refreshed.sellerRating == _part.sellerRating) {
+        return;
+      }
+      setState(() => _part = refreshed);
+    } catch (_) {
+      // Ratings are optional until migrations/data exist.
+    }
   }
 
   @override
@@ -37,9 +59,47 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     super.dispose();
   }
 
+  Future<void> _setAvailability(bool isAvailable) async {
+    if (_isUpdatingAvailability || _part.isAvailable == isAvailable) return;
+
+    setState(() {
+      _isUpdatingAvailability = true;
+      _part = _part.copyWith(isAvailable: isAvailable);
+    });
+
+    try {
+      await _listingsRepository.updateListingAvailability(
+        listingId: _part.id,
+        isAvailable: isAvailable,
+      );
+      if (!mounted) return;
+      context.read<ListingsBloc>().add(
+            ListingAvailabilityChanged(
+              listingId: _part.id,
+              isAvailable: isAvailable,
+            ),
+          );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isAvailable ? 'Listing is now available' : 'Listing marked as out of stock',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _part = _part.copyWith(isAvailable: !isAvailable));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not update availability. Please try again.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isUpdatingAvailability = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final part = widget.part;
+    final part = _part;
     final images = part.displayImages;
     final r = Responsive(context);
     final isFavourite = context.watch<FavouritesBloc>().state.contains(part.id);
@@ -138,23 +198,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     Row(
                       children: [
                         ConditionChip(label: part.conditionLabel),
+                        if (!part.isAvailable) ...[
+                          const SizedBox(width: 8),
+                          const OutOfStockChip(),
+                        ],
                         const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentSoft,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.star_rounded, size: 16, color: AppColors.accent),
-                              const SizedBox(width: 4),
-                              Text(
-                                part.sellerRating.toStringAsFixed(1),
-                                style: AppTypography.textTheme.labelMedium?.copyWith(color: AppColors.warning),
-                              ),
-                            ],
-                          ),
+                        SellerRatingBadge(
+                          part: part,
+                          style: SellerRatingBadgeStyle.detail,
+                          showCount: true,
                         ),
                       ],
                     ),
@@ -178,6 +230,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         _DetailRow(label: 'Condition', value: part.conditionLabel),
                       ],
                     ),
+                    if (isOwnListing) ...[
+                      const SizedBox(height: 20),
+                      _AvailabilitySection(
+                        isAvailable: part.isAvailable,
+                        isUpdating: _isUpdatingAvailability,
+                        onChanged: _setAvailability,
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     GestureDetector(
                       onTap: () => Navigator.pushNamed(context, AppRoutes.sellerProfile, arguments: part),
@@ -252,6 +312,81 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         isFavourite: isFavourite,
         currentUserId: currentUserId,
         part: part,
+        isAvailable: part.isAvailable,
+      ),
+    );
+  }
+}
+
+class _AvailabilitySection extends StatelessWidget {
+  const _AvailabilitySection({
+    required this.isAvailable,
+    required this.isUpdating,
+    required this.onChanged,
+  });
+
+  final bool isAvailable;
+  final bool isUpdating;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: AppDecorations.card(radius: AppDecorations.radiusMd),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Availability', style: AppTypography.textTheme.titleSmall),
+                    const SizedBox(height: 4),
+                    Text(
+                      isAvailable
+                          ? 'Buyers can view and message you about this part.'
+                          : 'Hidden from search. Buyers will see out of stock.',
+                      style: AppTypography.textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isUpdating)
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Switch.adaptive(
+                  value: isAvailable,
+                  onChanged: onChanged,
+                ),
+            ],
+          ),
+          if (!isAvailable) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const OutOfStockChip(),
+                const SizedBox(width: 8),
+                Text(
+                  'Currently out of stock',
+                  style: AppTypography.textTheme.bodySmall?.copyWith(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -321,6 +456,7 @@ class _ProductDetailBottomBar extends StatelessWidget {
     required this.isFavourite,
     required this.currentUserId,
     required this.part,
+    required this.isAvailable,
   });
 
   final Responsive responsive;
@@ -328,6 +464,7 @@ class _ProductDetailBottomBar extends StatelessWidget {
   final bool isFavourite;
   final String? currentUserId;
   final Part part;
+  final bool isAvailable;
 
   @override
   Widget build(BuildContext context) {
@@ -335,7 +472,11 @@ class _ProductDetailBottomBar extends StatelessWidget {
     final compact = width < 400;
     final tight = width < 340;
 
-    final chatLabel = isOwnListing ? (tight ? 'Yours' : 'Your listing') : 'Chat';
+    final chatLabel = isOwnListing
+        ? (tight ? 'Yours' : 'Your listing')
+        : !isAvailable
+            ? 'Out of Stock'
+            : 'Chat';
     final favouriteLabel = isFavourite
         ? 'Saved'
         : tight
@@ -370,7 +511,7 @@ class _ProductDetailBottomBar extends StatelessWidget {
                   label: chatLabel,
                   showLabel: !tight || !isOwnListing,
                   padding: buttonPadding,
-                  onTap: isOwnListing
+                  onTap: isOwnListing || !isAvailable
                       ? null
                       : () => Navigator.pushNamed(
                             context,

@@ -12,6 +12,7 @@ class VehiclePickerField extends StatelessWidget {
     required this.icon,
     required this.onChanged,
     this.compact = false,
+    this.showIcon = true,
     this.enabled = true,
   });
 
@@ -21,6 +22,7 @@ class VehiclePickerField extends StatelessWidget {
   final IconData icon;
   final ValueChanged<String?>? onChanged;
   final bool compact;
+  final bool showIcon;
   final bool enabled;
 
   Future<void> _openPicker(BuildContext context) async {
@@ -46,7 +48,10 @@ class VehiclePickerField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasValue = value != null;
-    final verticalPadding = compact ? 10.0 : 13.0;
+    final verticalPadding = compact ? 11.0 : 13.0;
+    final horizontalPadding = showIcon ? (compact ? 10.0 : 14.0) : 12.0;
+    final iconSize = compact ? 18.0 : 20.0;
+    final iconBox = compact ? 36.0 : 44.0;
     final textStyle = compact
         ? AppTypography.textTheme.bodySmall
         : AppTypography.textTheme.bodyMedium;
@@ -62,20 +67,24 @@ class VehiclePickerField extends StatelessWidget {
           decoration: InputDecoration(
             filled: true,
             fillColor: enabled ? AppColors.surfaceElevated : AppColors.chipBg,
-            contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: verticalPadding),
-            prefixIcon: Icon(
-              icon,
-              size: 20,
-              color: hasValue
-                  ? AppColors.primary
-                  : enabled
-                      ? AppColors.textTertiary
-                      : AppColors.textTertiary.withValues(alpha: 0.4),
-            ),
-            prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            contentPadding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+            prefixIcon: showIcon
+                ? Icon(
+                    icon,
+                    size: iconSize,
+                    color: hasValue
+                        ? AppColors.primary
+                        : enabled
+                            ? AppColors.textTertiary
+                            : AppColors.textTertiary.withValues(alpha: 0.4),
+                  )
+                : null,
+            prefixIconConstraints: showIcon
+                ? BoxConstraints(minWidth: iconBox, minHeight: iconBox)
+                : null,
             suffixIcon: Icon(
-              Icons.unfold_more_rounded,
-              size: 20,
+              showIcon ? Icons.unfold_more_rounded : Icons.keyboard_arrow_down_rounded,
+              size: iconSize,
               color: enabled ? AppColors.textTertiary : AppColors.textTertiary.withValues(alpha: 0.4),
             ),
             border: OutlineInputBorder(

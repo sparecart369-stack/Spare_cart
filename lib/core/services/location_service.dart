@@ -68,15 +68,19 @@ class LocationService {
     );
 
     if (placemarks.isEmpty) {
-      throw const LocationServiceException(
-        'Could not resolve an address for your current location.',
+      return DeviceLocation(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        address: _formatCoordinates(position.latitude, position.longitude),
       );
     }
 
     final address = _formatPlacemark(placemarks.first);
     if (address.isEmpty) {
-      throw const LocationServiceException(
-        'Could not resolve an address for your current location.',
+      return DeviceLocation(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        address: _formatCoordinates(position.latitude, position.longitude),
       );
     }
 
@@ -105,6 +109,9 @@ class LocationService {
     }
     return unique.join(', ');
   }
+
+  String _formatCoordinates(double latitude, double longitude) =>
+      '${latitude.toStringAsFixed(6)}, ${longitude.toStringAsFixed(6)}';
 }
 
 class DeviceLocation {

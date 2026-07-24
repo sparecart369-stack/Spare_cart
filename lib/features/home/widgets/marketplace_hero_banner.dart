@@ -25,7 +25,11 @@ class MarketplaceHeroBanner extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final height = (width / 2.05).clamp(168.0, 220.0);
+        // Width-based aspect keeps the banner ~18–22% of typical phone viewports.
+        final height = (width / 2.05).clamp(168.0, 200.0);
+        final titleSize = (width * 0.048).clamp(16.0, 20.0);
+        final subtitleSize = (width * 0.032).clamp(11.5, 13.0);
+        final showSubtitle = height >= 176;
 
         return SizedBox(
           height: height,
@@ -42,10 +46,10 @@ class MarketplaceHeroBanner extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  right: -width * 0.04,
-                  top: -height * 0.1,
-                  bottom: -height * 0.14,
-                  width: width * 0.54,
+                  right: -width * 0.02,
+                  top: -height * 0.08,
+                  bottom: -height * 0.1,
+                  width: width * 0.5,
                   child: Image.asset(
                     AppAssets.heroBrakeRotor,
                     fit: BoxFit.contain,
@@ -53,7 +57,12 @@ class MarketplaceHeroBanner extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.fromLTRB(width * 0.06, height * 0.14, width * 0.4, height * 0.14),
+                  padding: EdgeInsets.fromLTRB(
+                    width * 0.055,
+                    height * 0.14,
+                    width * 0.42,
+                    height * 0.14,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -62,25 +71,27 @@ class MarketplaceHeroBanner extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Global Marketplace for \nNew & Used Auto Parts',
+                            'Global Marketplace for\nNew & Used Auto Parts',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: (width * 0.028).clamp(17.0, 22.0),
+                              fontSize: titleSize,
                               fontWeight: FontWeight.w800,
                               height: 1.2,
                               letterSpacing: -0.4,
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: height * 0.06),
-                          Text(
-                            'Find genuine new and quality used spare parts at the best prices.',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: (width * 0.022).clamp(12.0, 14.0),
-                              fontWeight: FontWeight.w500,
-                              height: 1.0,
-                              color: Colors.white.withValues(alpha: 0.78),
+                          if (showSubtitle) ...[
+                            SizedBox(height: height * 0.05),
+                            Text(
+                              'Genuine new & used parts at the best prices.',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: subtitleSize,
+                                fontWeight: FontWeight.w500,
+                                height: 1.25,
+                                color: Colors.white.withValues(alpha: 0.78),
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                       Material(
@@ -101,13 +112,13 @@ class MarketplaceHeroBanner extends StatelessWidget {
                               ],
                             ),
                             padding: EdgeInsets.symmetric(
-                              horizontal: width * 0.04,
-                              vertical: height * 0.07,
+                              horizontal: width * 0.045,
+                              vertical: height * 0.065,
                             ),
                             child: Text(
                               'Explore Parts',
                               style: GoogleFonts.plusJakartaSans(
-                                fontSize: (width * 0.034).clamp(13.0, 15.0),
+                                fontSize: (width * 0.036).clamp(12.5, 14.5),
                                 fontWeight: FontWeight.w700,
                                 color: const Color(0xFF0A0A0A),
                                 letterSpacing: -0.1,
@@ -139,7 +150,7 @@ class MarketplaceHeroBannerImage extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final height = width / 2.05;
+        final height = (width / 2.05).clamp(168.0, 200.0);
 
         return ClipRRect(
           borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
@@ -150,7 +161,6 @@ class MarketplaceHeroBannerImage extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-               
                 Positioned.fill(
                   child: Material(
                     color: Colors.transparent,

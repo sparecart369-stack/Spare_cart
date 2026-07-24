@@ -60,8 +60,37 @@ class ListingsRepository {
     chassis_number,
     part_number,
     status,
+    is_available,
     is_admin_listing,
-    seller_rating,
+    created_at,
+    seller:profiles!seller_id (
+      name,
+      seller_avg_rating,
+      seller_rating_count
+    ),
+    listing_images (url, sort_order),
+    listing_compatibility (vehicle_label)
+  ''';
+
+  static const _listingSelectBase = '''
+    id,
+    seller_id,
+    name,
+    category,
+    make,
+    model,
+    year,
+    condition,
+    price,
+    location,
+    description,
+    fulfillment,
+    pickup_address,
+    chassis_number,
+    part_number,
+    status,
+    is_available,
+    is_admin_listing,
     created_at,
     seller:profiles!seller_id (name),
     listing_images (url, sort_order),
@@ -70,32 +99,125 @@ class ListingsRepository {
 
   String? get currentUserId => _client.auth.currentUser?.id;
 
-  Future<List<Part>> fetchActiveListings() async {
-    final rows = await _client
-        .from('listings')
-        .select(_listingSelect)
-        .eq('status', 'active')
-        .order('created_at', ascending: false);
-
-    return _mapRows(rows);
+  Future<dynamic> _queryListingRows({
+    required Future<dynamic> Function(String select) buildQuery,
+  }) async {
+    try {
+      return await buildQuery(_listingSelect);
+    } on PostgrestException catch (e) {
+      if (!_isMissingSellerRatingColumnError(e)) rethrow;
+      return await buildQuery(_listingSelectBase);
+    }
   }
 
-  Future<List<Part>> fetchSellerListings(String sellerId) async {
-    final rows = await _client
-        .from('listings')
-        .select(_listingSelect)
-        .eq('seller_id', sellerId)
-        .order('created_at', ascending: false);
+  bool _isMissingSellerRatingColumnError(PostgrestException e) {
+    final message = '${e.message} ${e.details} ${e.hint}'.toLowerCase();
+    return e.code == '42703' ||
+        e.code == 'PGRST204' ||
+        message.contains('seller_avg_rating') ||
+        message.contains('seller_rating_count');
+  }
 
-    return _mapRows(rows);
+  bool _isMissingAvailabilityColumnError(PostgrestException e) {
+    final message = '${e.message} ${e.details} ${e.hint}'.toLowerCase();
+    return e.code == '42703' ||
+        e.code == 'PGRST204' ||
+        message.contains('is_available');
+  }
+
+  Future<List<Part>> fetchActiveListings() async {
+    try {
+      final rows = await _queryListingRows(
+        buildQuery: (select) => _client
+            .from('listings')
+            .select(select)
+            .eq('status', 'active')
+            .eq('is_available', true)
+            .order('created_at', ascending: false),
+      );
+      return _mapRows(rows);
+    } on PostgrestException catch (e) {
+      if (!_isMissingAvailabilityColumnError(e)) rethrow;
+      final rows = await _queryListingRows(
+        buildQuery: (select) => _client
+            .from('listings')
+            .select(select)
+            .eq('status', 'active')
+            .order('created_at', ascending: false),
+      );
+      return _mapRows(rows);
+    }
+  }
+
+  Future<Part?> fetchListingById(String listingId) async {
+    try {
+      final row = await _client
+          .from('listings')
+          .select(_listingSelect)
+          .eq('id', listingId)
+          .maybeSingle();
+      if (row == null) return null;
+      return _mapRow(row);
+    } on PostgrestException catch (e) {
+      if (!_isMissingSellerRatingColumnError(e)) rethrow;
+      final row = await _client
+          .from('listings')
+          .select(_listingSelectBase)
+          .eq('id', listingId)
+          .maybeSingle();
+      if (row == null) return null;
+      return _mapRow(row);
+    }
+  }
+
+  Future<List<Part>> fetchSellerListings(
+    String sellerId, {
+    bool activeOnly = false,
+  }) async {
+    try {
+      final rows = await _queryListingRows(
+        buildQuery: (select) {
+          var query = _client
+              .from('listings')
+              .select(select)
+              .eq('seller_id', sellerId);
+          if (activeOnly) {
+            query = query.eq('status', 'active').eq('is_available', true);
+          }
+          return query.order('created_at', ascending: false);
+        },
+      );
+      return _mapRows(rows);
+    } on PostgrestException catch (e) {
+      if (!activeOnly || !_isMissingAvailabilityColumnError(e)) rethrow;
+      final rows = await _queryListingRows(
+        buildQuery: (select) => _client
+            .from('listings')
+            .select(select)
+            .eq('seller_id', sellerId)
+            .eq('status', 'active')
+            .order('created_at', ascending: false),
+      );
+      return _mapRows(rows);
+    }
   }
 
   Future<List<Part>> fetchSavedListings(String userId) async {
-    final rows = await _client
-        .from('saved_listings')
-        .select('listings ($_listingSelect)')
-        .eq('user_id', userId)
-        .order('created_at', ascending: false);
+    dynamic rows;
+    try {
+      rows = await _client
+          .from('saved_listings')
+          .select('listings ($_listingSelect)')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+    } on PostgrestException catch (e) {
+      if (!_isMissingSellerRatingColumnError(e)) rethrow;
+      rows = await _client
+          .from('saved_listings')
+          .select('listings ($_listingSelectBase)')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+    }
 
     return rows
         .whereType<Map<String, dynamic>>()
@@ -213,6 +335,27 @@ class ListingsRepository {
     return _mapRow(listingRow);
   }
 
+  Future<void> updateListingAvailability({
+    required String listingId,
+    required bool isAvailable,
+  }) async {
+    await _client
+        .from('listings')
+        .update({'is_available': isAvailable})
+        .eq('id', listingId);
+  }
+
+  Future<void> refreshSellerRatingStats(String sellerId) async {
+    try {
+      await _client.rpc(
+        'refresh_seller_rating_stats',
+        params: {'p_seller_id': sellerId},
+      );
+    } catch (_) {
+      // Optional until migration is applied.
+    }
+  }
+
   Future<String> _uploadListingImage({
     required String sellerId,
     required String listingId,
@@ -254,7 +397,12 @@ class ListingsRepository {
     final compatibility = _compatibilityLabels(row['listing_compatibility']);
 
     final price = row['price'];
-    final rating = row['seller_rating'];
+    final sellerRatingCount = seller is Map<String, dynamic>
+        ? (seller['seller_rating_count'] as num?)?.toInt() ?? 0
+        : 0;
+    final sellerAvgRating = seller is Map<String, dynamic>
+        ? (seller['seller_avg_rating'] as num?)?.toDouble() ?? 0.0
+        : 0.0;
 
     return Part(
       id: row['id'] as String,
@@ -268,7 +416,8 @@ class ListingsRepository {
       location: row['location'] as String? ?? '',
       sellerId: row['seller_id'] as String,
       sellerName: sellerName,
-      sellerRating: rating is num ? rating.toDouble() : 4.8,
+      sellerRating: sellerRatingCount > 0 ? sellerAvgRating : 0.0,
+      sellerRatingCount: sellerRatingCount,
       imageUrl: images.isNotEmpty
           ? images.first
           : 'https://picsum.photos/seed/${row['id']}/400/300',
@@ -279,6 +428,7 @@ class ListingsRepository {
       fulfillment: _fulfillmentFromDb(row['fulfillment'] as String),
       chassisNumber: row['chassis_number'] as String?,
       partNumber: row['part_number'] as String?,
+      isAvailable: row['is_available'] as bool? ?? true,
     );
   }
 

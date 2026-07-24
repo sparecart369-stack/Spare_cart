@@ -161,12 +161,27 @@ class ChatSession {
       }
     }
 
+    final inferred = ChatFlow.inferHandoverStepFromMessages(
+      messages: messages,
+      buyerId: buyerId,
+      sellerId: sellerId,
+    );
+    if (inferred != null) {
+      flowStep = inferred;
+      deliveryChoiceMade = true;
+      return;
+    }
+
     if (ChatFlow.isDeliveryFlowComplete(
       messages: messages,
       buyerId: buyerId,
       sellerId: sellerId,
     )) {
-      flowStep = ChatFlowStep.freeChat;
+      if (ChatFlow.isHandoverFlowStep(flowStep) || flowStep == ChatFlowStep.completed) {
+        deliveryChoiceMade = true;
+        return;
+      }
+      flowStep = ChatFlowStep.awaitingSellerHandoff;
       deliveryChoiceMade = true;
     }
   }

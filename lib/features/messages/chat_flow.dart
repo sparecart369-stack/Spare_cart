@@ -1,3 +1,4 @@
+import 'package:spare_kart/data/models/chat_transaction.dart';
 import 'package:spare_kart/data/models/models.dart';
 
 enum ChatFlowStep {
@@ -15,6 +16,11 @@ enum ChatFlowStep {
   awaitingSellerReplyForDelivery,
   awaitingBuyerLocationForDelivery,
   awaitingDeliveryChoice,
+  awaitingSellerHandoff,
+  awaitingBuyerReceipt,
+  awaitingSellerConfirm,
+  awaitingDeliveryPartnerRating,
+  disputeOpen,
   freeChat,
   completed,
 }
@@ -108,6 +114,8 @@ abstract final class ChatFlow {
     double? listPrice,
     int? lastReductionAsk,
     String? buyerDeliveryAsk,
+    ChatFulfillmentMode fulfillmentMode = ChatFulfillmentMode.doorstep,
+    double? agreedPrice,
   }) {
     switch (step) {
       case ChatFlowStep.awaitingAvailability:
@@ -173,6 +181,55 @@ abstract final class ChatFlow {
           ),
         );
         return options;
+      case ChatFlowStep.awaitingSellerHandoff:
+        if (fulfillmentMode == ChatFulfillmentMode.pickup) {
+          return const [
+            ChatFlowOption(
+              id: 'ready_pickup',
+              label: 'Item is ready for pickup',
+              message: sellerReadyPickupMessage,
+              nextStep: ChatFlowStep.awaitingBuyerReceipt,
+            ),
+          ];
+        }
+        return const [
+          ChatFlowOption(
+            id: 'dispatched',
+            label: 'Item dispatched for delivery',
+            message: '',
+            nextStep: ChatFlowStep.awaitingBuyerReceipt,
+          ),
+        ];
+      case ChatFlowStep.awaitingSellerConfirm:
+        return fulfillmentMode == ChatFulfillmentMode.pickup
+            ? const [
+                ChatFlowOption(
+                  id: 'confirm_pickup',
+                  label: 'Pickup and payment confirmed',
+                  message: sellerConfirmPickupMessage,
+                  nextStep: ChatFlowStep.awaitingDeliveryPartnerRating,
+                ),
+                ChatFlowOption(
+                  id: 'seller_dispute',
+                  label: 'Payment not received — raise dispute',
+                  message: sellerDisputeMessage,
+                  nextStep: ChatFlowStep.disputeOpen,
+                ),
+              ]
+            : const [
+                ChatFlowOption(
+                  id: 'confirm_doorstep',
+                  label: 'Delivery and payment confirmed',
+                  message: sellerConfirmDoorstepMessage,
+                  nextStep: ChatFlowStep.awaitingDeliveryPartnerRating,
+                ),
+                ChatFlowOption(
+                  id: 'seller_dispute',
+                  label: 'Payment not received — raise dispute',
+                  message: sellerDisputeMessage,
+                  nextStep: ChatFlowStep.disputeOpen,
+                ),
+              ];
       case ChatFlowStep.awaitingSellerReplyForDelivery:
         switch (buyerDeliveryAsk) {
           case 'ask_doorstep':
@@ -239,6 +296,7 @@ abstract final class ChatFlow {
     double? listPrice,
     String? sellerDeliveryOffer,
     String? buyerDeliveryAsk,
+    ChatFulfillmentMode fulfillmentMode = ChatFulfillmentMode.doorstep,
   }) {
     switch (step) {
       case ChatFlowStep.awaitingWhenAvailableAsk:
@@ -324,13 +382,64 @@ abstract final class ChatFlow {
             id: 'share_current_location',
             label: 'Use my current location',
             message: '',
-            nextStep: ChatFlowStep.freeChat,
+            nextStep: ChatFlowStep.awaitingSellerHandoff,
           ),
           ChatFlowOption(
             id: 'enter_delivery_address',
             label: 'Enter address manually',
             message: '',
-            nextStep: ChatFlowStep.freeChat,
+            nextStep: ChatFlowStep.awaitingSellerHandoff,
+          ),
+        ];
+      case ChatFlowStep.awaitingBuyerReceipt:
+        final price = agreedPrice ?? listPrice ?? 0;
+        final remaining = remainingAmount(price);
+        if (fulfillmentMode == ChatFulfillmentMode.pickup) {
+          return [
+            ChatFlowOption(
+              id: 'confirm_pickup_paid',
+              label: 'I picked up and paid ${formatPrice(remaining)}',
+              message: buyerReceivedPaidPickupMessage(remaining),
+              nextStep: ChatFlowStep.awaitingSellerConfirm,
+            ),
+            const ChatFlowOption(
+              id: 'report_issue',
+              label: 'Item has a problem — request return',
+              message: buyerReportIssueMessage,
+              nextStep: ChatFlowStep.disputeOpen,
+            ),
+          ];
+        }
+        return [
+          ChatFlowOption(
+            id: 'confirm_doorstep_paid',
+            label: 'I received and paid ${formatPrice(remaining)} to delivery',
+            message: buyerReceivedPaidDoorstepMessage(remaining),
+            nextStep: ChatFlowStep.awaitingSellerConfirm,
+          ),
+          const ChatFlowOption(
+            id: 'report_issue',
+            label: 'Item has a problem — request return',
+            message: buyerReportIssueMessage,
+            nextStep: ChatFlowStep.disputeOpen,
+          ),
+        ];
+      case ChatFlowStep.awaitingDeliveryPartnerRating:
+        final rateLabel = fulfillmentMode == ChatFulfillmentMode.pickup
+            ? 'Rate seller'
+            : 'Rate delivery partner';
+        return [
+          ChatFlowOption(
+            id: 'rate_delivery_partner',
+            label: rateLabel,
+            message: '',
+            nextStep: ChatFlowStep.completed,
+          ),
+          const ChatFlowOption(
+            id: 'skip_delivery_rating',
+            label: 'Skip for now',
+            message: '',
+            nextStep: ChatFlowStep.completed,
           ),
         ];
       default:
@@ -396,9 +505,32 @@ abstract final class ChatFlow {
     return ChatFlowStep.started;
   }
 
+  static bool isHandoverFlowStep(ChatFlowStep step) => switch (step) {
+        ChatFlowStep.awaitingSellerHandoff ||
+        ChatFlowStep.awaitingBuyerReceipt ||
+        ChatFlowStep.awaitingSellerConfirm ||
+        ChatFlowStep.awaitingDeliveryPartnerRating ||
+        ChatFlowStep.disputeOpen =>
+          true,
+        _ => false,
+      };
+
+  /// Handover steps where both parties can still chat freely before the
+  /// seller confirms delivery/payment.
+  static bool isPreConfirmationHandoverStep(ChatFlowStep step) => switch (step) {
+        ChatFlowStep.awaitingSellerHandoff ||
+        ChatFlowStep.awaitingBuyerReceipt ||
+        ChatFlowStep.awaitingSellerConfirm ||
+        ChatFlowStep.disputeOpen =>
+          true,
+        _ => false,
+      };
+
   static bool canTypeFreely(ChatFlowStep step, {required bool isSeller, required bool isGuided}) {
     if (!isGuided) return true;
-    if (step == ChatFlowStep.freeChat || step == ChatFlowStep.completed) return true;
+    if (step == ChatFlowStep.freeChat || isPreConfirmationHandoverStep(step)) {
+      return true;
+    }
     return false;
   }
 
@@ -462,7 +594,149 @@ abstract final class ChatFlow {
   }
 
   static const doorstepPaymentWarning =
-      'For doorstep delivery, pay the remaining amount only after you receive the item and confirm it works.';
+      'Pay the remaining amount to the delivery person in cash or UPI only after you receive and check the item. SpareKart does not handle this payment — the seller arranges delivery at their risk.';
+
+  static const pickupPaymentWarning =
+      'Meet the seller at the pickup location. Pay the remaining amount directly to the seller after you inspect the item.';
+
+  static double remainingAmount(double agreedPrice) {
+    final token = tokenAmount(agreedPrice);
+    return (agreedPrice - token).clamp(0, agreedPrice);
+  }
+
+  static String sellerDispatchedMessage({String? deliveryPartnerName}) {
+    if (deliveryPartnerName != null && deliveryPartnerName.trim().isNotEmpty) {
+      return 'Item dispatched for delivery via ${deliveryPartnerName.trim()}.';
+    }
+    return 'Item dispatched for delivery.';
+  }
+
+  static const sellerReadyPickupMessage = 'Item is ready for pickup.';
+
+  static String buyerReceivedPaidDoorstepMessage(double remainingAmount) =>
+      'I received the item and paid ${formatPrice(remainingAmount)} to the delivery person.';
+
+  static String buyerReceivedPaidPickupMessage(double remainingAmount) =>
+      'I picked up the item and paid ${formatPrice(remainingAmount)} to the seller.';
+
+  static const buyerReportIssueMessage =
+      'Item has a problem — I would like to request a return.';
+
+  static const sellerConfirmDoorstepMessage = 'Delivery and payment confirmed.';
+
+  static const sellerConfirmPickupMessage = 'Pickup and payment confirmed.';
+
+  static const sellerDisputeMessage = 'Payment not received — I am raising a dispute.';
+
+  static bool isHandoverMessage(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('item dispatched for delivery') ||
+        lower.contains('item is ready for pickup') ||
+        lower.contains('received the item and paid') ||
+        lower.contains('picked up the item and paid') ||
+        lower.contains('item has a problem') ||
+        lower.contains('delivery and payment confirmed') ||
+        lower.contains('pickup and payment confirmed') ||
+        lower.contains('payment not received');
+  }
+
+  static bool hasSellerHandoverConfirmation({
+    required List<ChatMessage> messages,
+    required String? sellerId,
+  }) {
+    if (sellerId == null) return false;
+    return messages.any((msg) {
+      if (msg.senderId != sellerId) return false;
+      final lower = msg.text.toLowerCase();
+      return lower.contains('delivery and payment confirmed') ||
+          lower.contains('pickup and payment confirmed');
+    });
+  }
+
+  /// Derives the current handover step from chat messages so both parties
+  /// stay in sync via realtime without restarting the app.
+  static ChatFlowStep? inferHandoverStepFromMessages({
+    required List<ChatMessage> messages,
+    required String? buyerId,
+    required String? sellerId,
+  }) {
+    if (buyerId == null || sellerId == null) return null;
+
+    if (hasSellerHandoverConfirmation(messages: messages, sellerId: sellerId)) {
+      return ChatFlowStep.awaitingDeliveryPartnerRating;
+    }
+
+    if (!isDeliveryFlowComplete(
+      messages: messages,
+      buyerId: buyerId,
+      sellerId: sellerId,
+    )) {
+      return null;
+    }
+
+    var step = ChatFlowStep.awaitingSellerHandoff;
+
+    for (final msg in messages) {
+      final lower = msg.text.toLowerCase();
+      if (msg.senderId == sellerId) {
+        if (lower.contains('item dispatched for delivery') ||
+            lower.contains('item is ready for pickup')) {
+          step = ChatFlowStep.awaitingBuyerReceipt;
+        } else if (lower.contains('delivery and payment confirmed') ||
+            lower.contains('pickup and payment confirmed')) {
+          step = ChatFlowStep.awaitingDeliveryPartnerRating;
+        } else if (lower.contains('payment not received')) {
+          step = ChatFlowStep.disputeOpen;
+        }
+      } else if (msg.senderId == buyerId) {
+        if (lower.contains('received the item and paid') ||
+            lower.contains('picked up the item and paid')) {
+          step = ChatFlowStep.awaitingSellerConfirm;
+        } else if (lower.contains('item has a problem')) {
+          step = ChatFlowStep.disputeOpen;
+        }
+      }
+    }
+
+    return step;
+  }
+
+  static ChatFulfillmentMode resolveFulfillmentMode({
+    required List<ChatMessage> messages,
+    required String? buyerId,
+    String? sellerDeliveryOffer,
+  }) {
+    if (buyerId != null) {
+      final buyerChosePickup = messages.any((msg) {
+        if (msg.senderId != buyerId) return false;
+        final lower = msg.text.toLowerCase();
+        return lower.contains("i'd like to pick up the item");
+      });
+      if (buyerChosePickup) return ChatFulfillmentMode.pickup;
+
+      final buyerChoseDoorstep = messages.any((msg) {
+        if (msg.senderId != buyerId) return false;
+        final lower = msg.text.toLowerCase();
+        return lower.contains("i'd like doorstep delivery") ||
+            lower.contains('both pickup and doorstep');
+      });
+      if (buyerChoseDoorstep) return ChatFulfillmentMode.doorstep;
+    }
+
+    if (sellerDeliveryOffer == 'pickup_only' || sellerDeliveryOffer == 'pickup_yes') {
+      return ChatFulfillmentMode.pickup;
+    }
+
+    if (messages.any((msg) => msg.text.startsWith('Delivery location:'))) {
+      return ChatFulfillmentMode.doorstep;
+    }
+
+    if (messages.any((msg) => msg.text.startsWith('Pickup location:'))) {
+      return ChatFulfillmentMode.pickup;
+    }
+
+    return ChatFulfillmentMode.doorstep;
+  }
 
   static bool isDoorstepDeliveryActive({
     required List<ChatMessage> messages,

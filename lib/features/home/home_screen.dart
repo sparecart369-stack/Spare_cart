@@ -135,11 +135,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 20),
                         PremiumSearchBar(
                           onTap: () => _openFilters(goToSearchOnApply: true),
                         ),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 20),
                         Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
@@ -149,7 +149,19 @@ class _HomeScreenState extends State<HomeScreen> {
                             onExplore: () => _openFilters(goToSearchOnApply: true),
                           ),
                         ),
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 20),
+                        SectionHeader(
+                          title: 'Popular Categories',
+                          subtitle: 'Browse by part type',
+                          action: 'See All',
+                          onActionTap: _openFilters,
+                          dense: true,
+                        ),
+                        _PopularCategoriesGrid(
+                          onCategoryTap: _applyCategoryAndGoToSearch,
+                          iconFromName: _iconFromName,
+                        ),
+                        const SizedBox(height: 8),
                         SectionHeader(
                           title: 'Search by Vehicle',
                           subtitle: 'Find exact-fit parts faster',
@@ -177,17 +189,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               );
                             }
                           },
-                        ),
-                        const SizedBox(height: 8),
-                        SectionHeader(
-                          title: 'Popular Categories',
-                          subtitle: 'Browse by part type',
-                          action: 'See All',
-                          onActionTap: _openFilters,
-                        ),
-                        _PopularCategoriesGrid(
-                          onCategoryTap: _applyCategoryAndGoToSearch,
-                          iconFromName: _iconFromName,
                         ),
                         SectionHeader(
                           title: 'Featured Parts',
@@ -322,21 +323,32 @@ class _PopularCategoriesGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final r = Responsive(context);
     final visible = categories.take(_visibleCount).toList();
+    const gap = 6.0;
+    const rowGap = 4.0;
+    final contentWidth = r.width - r.horizontalPadding() * 2;
+    final cellWidth = (contentWidth - gap * (_columns - 1)) / _columns;
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         for (var row = 0; row < visible.length / _columns; row++) ...[
-          if (row > 0) const SizedBox(height: 12),
+          if (row > 0) const SizedBox(height: rowGap),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               for (var col = 0; col < _columns; col++) ...[
-                if (col > 0) const SizedBox(width: 8),
-                Expanded(
+                if (col > 0) const SizedBox(width: gap),
+                SizedBox(
+                  width: cellWidth,
                   child: _CategoryChip(
                     name: visible[row * _columns + col].$1,
                     icon: iconFromName(visible[row * _columns + col].$2),
                     imageAsset: AppAssets.categoryImageFor(visible[row * _columns + col].$1),
                     index: row * _columns + col,
+                    iconSize: cellWidth,
+                    labelSize: 11.0,
                     onTap: () => onCategoryTap(visible[row * _columns + col].$1),
                   ),
                 ),
@@ -355,6 +367,8 @@ class _CategoryChip extends StatelessWidget {
     required this.icon,
     this.imageAsset,
     required this.index,
+    required this.iconSize,
+    required this.labelSize,
     required this.onTap,
   });
 
@@ -362,6 +376,8 @@ class _CategoryChip extends StatelessWidget {
   final IconData icon;
   final String? imageAsset;
   final int index;
+  final double iconSize;
+  final double labelSize;
   final VoidCallback onTap;
 
   static const _gradients = [
@@ -392,44 +408,49 @@ class _CategoryChip extends StatelessWidget {
     final c = _iconColors[index % _iconColors.length];
     final hasImage = imageAsset != null;
 
+    final radius = iconSize * 0.28;
+
     return GestureDetector(
       onTap: onTap,
       child: Column(
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: g),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: AppDecorations.shadowSm,
-                border: Border.all(color: Colors.white, width: 1.5),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: hasImage
-                  ? Padding(
-                      padding: const EdgeInsets.all(2),
-                      child: Image.asset(
-                        imageAsset!,
-                        fit: BoxFit.contain,
-                        alignment: Alignment.center,
-                      ),
-                    )
-                  : Icon(icon, color: c, size: 28),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: iconSize,
+            height: iconSize,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: g),
+              borderRadius: BorderRadius.circular(radius),
+              boxShadow: AppDecorations.shadowSm,
+              border: Border.all(color: Colors.white, width: 1.5),
             ),
-            const SizedBox(height: 8),
-            Text(
-              name,
-              textAlign: TextAlign.center,
-              style: AppTypography.textTheme.labelSmall?.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-              ),
-              maxLines: 2,
+            clipBehavior: Clip.antiAlias,
+            child: hasImage
+                ? Padding(
+                    padding: EdgeInsets.all(iconSize * 0.04),
+                    child: Image.asset(
+                      imageAsset!,
+                      fit: BoxFit.contain,
+                      alignment: Alignment.center,
+                    ),
+                  )
+                : Icon(icon, color: c, size: iconSize * 0.44),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            style: AppTypography.textTheme.labelSmall?.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+              fontSize: labelSize,
+              height: 1.15,
             ),
-          ],
-        ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -461,50 +482,52 @@ class _VehicleDropdowns extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: AppDecorations.elevatedCard(radius: AppDecorations.radiusLg),
-      child: Column(
+      child: Row(
         children: [
-          VehiclePickerField(
-            hint: 'Make',
-            value: make,
-            items: catalog.makes,
-            icon: Icons.directions_car_rounded,
-            onChanged: onMakeChanged,
+          Expanded(
+            child: VehiclePickerField(
+              hint: 'Make',
+              value: make,
+              items: catalog.makes,
+              icon: Icons.directions_car_rounded,
+              compact: true,
+              showIcon: false,
+              onChanged: onMakeChanged,
+            ),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: VehiclePickerField(
-                  hint: 'Model',
-                  value: modelLabel,
-                  items: modelOptions,
-                  icon: Icons.apps_rounded,
-                  enabled: make != null,
-                  onChanged: make == null
-                      ? null
-                      : (v) {
-                          if (v == null) return;
-                          onModelChanged(
-                            catalog.modelValueFromPicker(make: make!, pickerLabel: v),
-                          );
-                        },
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                flex: 2,
-                child: _dropdown<int>(
-                  hint: 'Year',
-                  value: year,
-                  items: years,
-                  onChanged: model == null ? null : onYearChanged,
-                  icon: Icons.calendar_month_rounded,
-                  enabled: model != null,
-                  display: (v) => '$v',
-                ),
-              ),
-            ],
+          const SizedBox(width: 10),
+          Expanded(
+            child: VehiclePickerField(
+              hint: 'Model',
+              value: modelLabel,
+              items: modelOptions,
+              icon: Icons.apps_rounded,
+              compact: true,
+              showIcon: false,
+              enabled: make != null,
+              onChanged: make == null
+                  ? null
+                  : (v) {
+                      if (v == null) return;
+                      onModelChanged(
+                        catalog.modelValueFromPicker(make: make!, pickerLabel: v),
+                      );
+                    },
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _dropdown<int>(
+              hint: 'Year',
+              value: year,
+              items: years,
+              onChanged: model == null ? null : onYearChanged,
+              icon: Icons.calendar_month_rounded,
+              enabled: model != null,
+              compact: true,
+              showIcon: false,
+              display: (v) => '$v',
+            ),
           ),
         ],
       ),
@@ -519,27 +542,34 @@ class _VehicleDropdowns extends StatelessWidget {
     required IconData icon,
     String Function(T)? display,
     bool enabled = true,
+    bool compact = false,
+    bool showIcon = true,
   }) {
     final hasValue = value != null;
+    final verticalPadding = compact ? 11.0 : 13.0;
+    final textStyle = compact
+        ? AppTypography.textTheme.bodySmall
+        : AppTypography.textTheme.bodyMedium;
+
     return DropdownButtonFormField<T>(
       key: ValueKey('$hint-$value-${enabled ? 'on' : 'off'}'),
       initialValue: value,
       isExpanded: true,
       hint: Text(
         hint,
-        style: AppTypography.textTheme.bodyMedium?.copyWith(
+        style: textStyle?.copyWith(
           color: enabled ? AppColors.textTertiary : AppColors.textTertiary.withValues(alpha: 0.45),
           fontWeight: FontWeight.w500,
         ),
         overflow: TextOverflow.ellipsis,
       ),
-      style: AppTypography.textTheme.bodyMedium?.copyWith(
+      style: textStyle?.copyWith(
         color: AppColors.textPrimary,
         fontWeight: FontWeight.w600,
       ),
       icon: Icon(
         Icons.keyboard_arrow_down_rounded,
-        size: 22,
+        size: compact ? 20 : 22,
         color: enabled ? AppColors.textTertiary : AppColors.textTertiary.withValues(alpha: 0.4),
       ),
       dropdownColor: AppColors.surface,
@@ -547,17 +577,27 @@ class _VehicleDropdowns extends StatelessWidget {
       decoration: InputDecoration(
         filled: true,
         fillColor: enabled ? AppColors.surfaceElevated : AppColors.chipBg,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        prefixIcon: Icon(
-          icon,
-          size: 20,
-          color: hasValue
-              ? AppColors.primary
-              : enabled
-                  ? AppColors.textTertiary
-                  : AppColors.textTertiary.withValues(alpha: 0.4),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: showIcon ? (compact ? 10 : 14) : 12,
+          vertical: verticalPadding,
         ),
-        prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+        prefixIcon: showIcon
+            ? Icon(
+                icon,
+                size: compact ? 18 : 20,
+                color: hasValue
+                    ? AppColors.primary
+                    : enabled
+                        ? AppColors.textTertiary
+                        : AppColors.textTertiary.withValues(alpha: 0.4),
+              )
+            : null,
+        prefixIconConstraints: showIcon
+            ? BoxConstraints(
+                minWidth: compact ? 36 : 44,
+                minHeight: compact ? 36 : 44,
+              )
+            : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
           borderSide: const BorderSide(color: AppColors.border),

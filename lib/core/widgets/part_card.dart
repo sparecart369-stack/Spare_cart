@@ -39,7 +39,14 @@ class PartCard extends StatelessWidget {
                         style: AppTypography.textTheme.titleSmall,
                       ),
                       const SizedBox(height: 6),
-                      ConditionChip(label: part.conditionLabel),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          ConditionChip(label: part.conditionLabel),
+                          if (!part.isAvailable) const OutOfStockChip(),
+                        ],
+                      ),
                       const SizedBox(height: 8),
                       const BlurredPrice(),
                       const SizedBox(height: 4),
@@ -78,32 +85,12 @@ class PartCard extends StatelessWidget {
                       left: 10,
                       child: ConditionChip(label: part.conditionLabel),
                     ),
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: AppDecorations.shadowSm,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.star_rounded, size: 14, color: AppColors.accent),
-                            const SizedBox(width: 3),
-                            Text(
-                              part.sellerRating.toStringAsFixed(1),
-                              style: AppTypography.textTheme.labelSmall?.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
+                    if (part.hasSellerRatings)
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: SellerRatingBadge(part: part),
                       ),
-                    ),
                   ],
                 ),
               ),

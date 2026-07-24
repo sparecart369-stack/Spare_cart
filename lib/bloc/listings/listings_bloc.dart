@@ -60,6 +60,19 @@ class ListingFilterCleared extends ListingsEvent {
   List<Object?> get props => [field, value];
 }
 
+class ListingAvailabilityChanged extends ListingsEvent {
+  ListingAvailabilityChanged({
+    required this.listingId,
+    required this.isAvailable,
+  });
+
+  final String listingId;
+  final bool isAvailable;
+
+  @override
+  List<Object?> get props => [listingId, isAvailable];
+}
+
 class ActiveFilterChip extends Equatable {
   const ActiveFilterChip({
     required this.label,
@@ -312,6 +325,7 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
     on<ListingSearchChanged>(_onSearch);
     on<ListingFiltersApplied>(_onFilters);
     on<ListingFilterCleared>(_onFilterCleared);
+    on<ListingAvailabilityChanged>(_onAvailabilityChanged);
   }
 
   final ListingsRepository _repository;
@@ -425,6 +439,36 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
     emit(state.copyWith(
       filters: filters,
       filteredParts: _applyFilters(state.allParts, state.searchQuery, filters),
+    ));
+  }
+
+  void _onAvailabilityChanged(
+    ListingAvailabilityChanged event,
+    Emitter<ListingsState> emit,
+  ) {
+    Part updatePart(Part part) =>
+        part.id == event.listingId ? part.copyWith(isAvailable: event.isAvailable) : part;
+
+    final adminParts = state.adminParts.map(updatePart).toList();
+    final List<Part> allParts;
+
+    if (event.isAvailable) {
+      final alreadyListed = state.allParts.any((part) => part.id == event.listingId);
+      if (alreadyListed) {
+        allParts = state.allParts.map(updatePart).toList();
+      } else {
+        final restoredIndex = adminParts.indexWhere((part) => part.id == event.listingId);
+        final restored = restoredIndex == -1 ? null : adminParts[restoredIndex];
+        allParts = restored == null ? state.allParts : [restored, ...state.allParts];
+      }
+    } else {
+      allParts = state.allParts.where((part) => part.id != event.listingId).toList();
+    }
+
+    emit(state.copyWith(
+      allParts: allParts,
+      adminParts: adminParts,
+      filteredParts: _applyFilters(allParts, state.searchQuery, state.filters),
     ));
   }
 

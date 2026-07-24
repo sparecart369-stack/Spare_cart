@@ -59,6 +59,12 @@ class MessagesRepository {
           table: 'message_threads',
           callback: (_) => onChanged(),
         )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'chat_transactions',
+          callback: (_) => onChanged(),
+        )
         .subscribe();
   }
 

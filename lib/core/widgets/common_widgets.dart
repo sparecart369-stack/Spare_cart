@@ -6,6 +6,7 @@ import 'package:spare_kart/core/constants/app_assets.dart';
 import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
+import 'package:spare_kart/data/models/models.dart';
 
 class AppLogo extends StatelessWidget {
   const AppLogo({super.key, this.size = 80, this.showText = true, this.light = true});
@@ -193,6 +194,94 @@ class ConditionChip extends StatelessWidget {
   }
 }
 
+class OutOfStockChip extends StatelessWidget {
+  const OutOfStockChip({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.errorSoft,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        'Out of Stock',
+        style: AppTypography.textTheme.labelSmall?.copyWith(
+          color: AppColors.error,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}
+
+enum SellerRatingBadgeStyle { card, detail }
+
+class SellerRatingBadge extends StatelessWidget {
+  const SellerRatingBadge({
+    super.key,
+    required this.part,
+    this.style = SellerRatingBadgeStyle.card,
+    this.showCount = false,
+  });
+
+  final Part part;
+  final SellerRatingBadgeStyle style;
+  final bool showCount;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!part.hasSellerRatings) return const SizedBox.shrink();
+
+    final ratingText = part.sellerRating.toStringAsFixed(1);
+    final countLabel = showCount
+        ? ' (${part.sellerRatingCount} ${part.sellerRatingCount == 1 ? 'rating' : 'ratings'})'
+        : '';
+
+    final decoration = switch (style) {
+      SellerRatingBadgeStyle.card => BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: AppDecorations.shadowSm,
+        ),
+      SellerRatingBadgeStyle.detail => BoxDecoration(
+          color: AppColors.accentSoft,
+          borderRadius: BorderRadius.circular(10),
+        ),
+    };
+
+    final textStyle = switch (style) {
+      SellerRatingBadgeStyle.card => AppTypography.textTheme.labelSmall?.copyWith(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w700,
+        ),
+      SellerRatingBadgeStyle.detail => AppTypography.textTheme.labelMedium?.copyWith(
+          color: AppColors.warning,
+        ),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: decoration,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.star_rounded,
+            size: style == SellerRatingBadgeStyle.card ? 14 : 16,
+            color: AppColors.accent,
+          ),
+          const SizedBox(width: 3),
+          Text('$ratingText$countLabel', style: textStyle),
+        ],
+      ),
+    );
+  }
+}
+
 class LocationChip extends StatelessWidget {
   const LocationChip({super.key, required this.label});
 
@@ -307,17 +396,19 @@ class SectionHeader extends StatelessWidget {
     this.subtitle,
     this.action,
     this.onActionTap,
+    this.dense = false,
   });
 
   final String title;
   final String? subtitle;
   final String? action;
   final VoidCallback? onActionTap;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: EdgeInsets.symmetric(vertical: dense ? 4 : 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [

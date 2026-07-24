@@ -28,7 +28,8 @@ class Part extends Equatable {
     required this.location,
     required this.sellerId,
     required this.sellerName,
-    required this.sellerRating,
+    this.sellerRating = 0,
+    this.sellerRatingCount = 0,
     required this.imageUrl,
     required this.description,
     this.imageUrls = const [],
@@ -37,6 +38,7 @@ class Part extends Equatable {
     this.fulfillment = ListingFulfillment.doorstepDelivery,
     this.chassisNumber,
     this.partNumber,
+    this.isAvailable = true,
   });
 
   final String id;
@@ -51,6 +53,7 @@ class Part extends Equatable {
   final String sellerId;
   final String sellerName;
   final double sellerRating;
+  final int sellerRatingCount;
   final String imageUrl;
   final String description;
   final List<String> imageUrls;
@@ -59,6 +62,7 @@ class Part extends Equatable {
   final ListingFulfillment fulfillment;
   final String? chassisNumber;
   final String? partNumber;
+  final bool isAvailable;
 
   List<String> get displayImages => imageUrls.isNotEmpty ? imageUrls : [imageUrl];
 
@@ -103,6 +107,8 @@ class Part extends Equatable {
 
   String get fullTitle => '$name $make $model $year';
 
+  bool get hasSellerRatings => sellerRatingCount > 0;
+
   String get conditionLabel {
     switch (condition) {
       case PartCondition.used:
@@ -127,6 +133,7 @@ class Part extends Equatable {
     String? sellerId,
     String? sellerName,
     double? sellerRating,
+    int? sellerRatingCount,
     String? imageUrl,
     String? description,
     List<String>? imageUrls,
@@ -135,6 +142,7 @@ class Part extends Equatable {
     ListingFulfillment? fulfillment,
     String? chassisNumber,
     String? partNumber,
+    bool? isAvailable,
   }) {
     return Part(
       id: id ?? this.id,
@@ -149,6 +157,7 @@ class Part extends Equatable {
       sellerId: sellerId ?? this.sellerId,
       sellerName: sellerName ?? this.sellerName,
       sellerRating: sellerRating ?? this.sellerRating,
+      sellerRatingCount: sellerRatingCount ?? this.sellerRatingCount,
       imageUrl: imageUrl ?? this.imageUrl,
       description: description ?? this.description,
       imageUrls: imageUrls ?? this.imageUrls,
@@ -157,6 +166,7 @@ class Part extends Equatable {
       fulfillment: fulfillment ?? this.fulfillment,
       chassisNumber: chassisNumber ?? this.chassisNumber,
       partNumber: partNumber ?? this.partNumber,
+      isAvailable: isAvailable ?? this.isAvailable,
     );
   }
 
