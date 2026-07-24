@@ -72,7 +72,9 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/sub/
     - assets/data/vehicle_catalog.json
+    - assets/data/parts_catalog.json
     - assets/data/india_locations.json
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -20,6 +20,7 @@ class Part extends Equatable {
     required this.id,
     required this.name,
     required this.category,
+    this.subcategory,
     required this.make,
     required this.model,
     required this.year,
@@ -44,6 +45,7 @@ class Part extends Equatable {
   final String id;
   final String name;
   final String category;
+  final String? subcategory;
   final String make;
   final String model;
   final int year;
@@ -120,10 +122,16 @@ class Part extends Equatable {
     }
   }
 
+  String? get subcategoryLabel {
+    if (subcategory == null || subcategory!.isEmpty) return null;
+    return subcategory;
+  }
+
   Part copyWith({
     String? id,
     String? name,
     String? category,
+    String? subcategory,
     String? make,
     String? model,
     int? year,
@@ -148,6 +156,7 @@ class Part extends Equatable {
       id: id ?? this.id,
       name: name ?? this.name,
       category: category ?? this.category,
+      subcategory: subcategory ?? this.subcategory,
       make: make ?? this.make,
       model: model ?? this.model,
       year: year ?? this.year,

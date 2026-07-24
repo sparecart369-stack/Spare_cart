@@ -21,6 +21,7 @@ import 'package:spare_kart/core/widgets/vehicle_picker_field.dart';
 import 'package:spare_kart/data/india_locations.dart';
 import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/data/models/models.dart';
+import 'package:spare_kart/data/parts_catalog.dart';
 import 'package:spare_kart/data/repositories/listings_repository.dart';
 import 'package:spare_kart/data/vehicle_catalog.dart';
 
@@ -41,6 +42,7 @@ class _SellScreenState extends State<SellScreen> {
   final _descController = TextEditingController();
   final _chassisController = TextEditingController();
   String? _category;
+  String? _subcategoryId;
   String? _make;
   String? _model;
   int? _year;
@@ -130,6 +132,13 @@ class _SellScreenState extends State<SellScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Please select a category')));
+      return false;
+    }
+    final subcategories = PartsCatalog.instance.subcategoriesForCategory(_category);
+    if (subcategories.isNotEmpty && _subcategoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a subcategory')),
+      );
       return false;
     }
     if (_make == null) {
@@ -500,8 +509,35 @@ class _SellScreenState extends State<SellScreen> {
           items: categories.map((c) => c.$1).toList(),
           icon: Icons.category_outlined,
           compact: compact,
-          onChanged: (v) => setState(() => _category = v),
+          onChanged: (v) => setState(() {
+            _category = v;
+            _subcategoryId = null;
+          }),
         ),
+        if (_category != null) ...[
+          SizedBox(height: gap),
+          Builder(
+            builder: (context) {
+              final catalog = PartsCatalog.instance.categoryForName(_category);
+              final subcategories = catalog?.subcategories ?? const [];
+              if (subcategories.isEmpty) return const SizedBox.shrink();
+
+              final sorted = subcategories.toList()
+                ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
+              return _DropdownField<String>(
+                hint: 'Subcategory',
+                value: _subcategoryId,
+                items: sorted.map((sub) => sub.id).toList(),
+                icon: Icons.apps_rounded,
+                compact: compact,
+                display: (id) =>
+                    catalog?.subcategoryById(id)?.name ?? id,
+                onChanged: (v) => setState(() => _subcategoryId = v),
+              );
+            },
+          ),
+        ],
         SizedBox(height: gap),
         Container(
           padding: EdgeInsets.all(compact ? 10 : 12),
@@ -927,12 +963,31 @@ class _SellScreenState extends State<SellScreen> {
               if (_category != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 6),
-                  child: Text(
-                    _category!.toUpperCase(),
-                    style: AppTypography.overline.copyWith(
-                      fontSize: compact ? 9 : 10,
-                      color: AppColors.primary.withValues(alpha: 0.7),
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _category!.toUpperCase(),
+                        style: AppTypography.overline.copyWith(
+                          fontSize: compact ? 9 : 10,
+                          color: AppColors.primary.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      if (_subcategoryId != null) ...[
+                        SizedBox(height: compact ? 2 : 4),
+                        Text(
+                          PartsCatalog.instance
+                                  .categoryForName(_category)
+                                  ?.subcategoryById(_subcategoryId)
+                                  ?.name ??
+                              _subcategoryId!,
+                          style: AppTypography.textTheme.labelSmall?.copyWith(
+                            fontSize: compact ? 10 : 11,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               Container(
@@ -1120,6 +1175,10 @@ class _SellScreenState extends State<SellScreen> {
               ? 'My Part'
               : _nameController.text.trim(),
           category: _category ?? 'Engine',
+          subcategory: PartsCatalog.instance
+              .categoryForName(_category)
+              ?.subcategoryById(_subcategoryId)
+              ?.name,
           make: make,
           model: model,
           year: year,
@@ -1155,6 +1214,7 @@ class _SellScreenState extends State<SellScreen> {
       _descController.clear();
       _chassisController.clear();
       _category = null;
+      _subcategoryId = null;
       _make = null;
       _model = null;
       _year = null;
@@ -1175,46 +1235,60 @@ class _SellScreenState extends State<SellScreen> {
   void _showPublishedDialog() {
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
         ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.successSoft,
-                shape: BoxShape.circle,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.successSoft,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.success.withValues(alpha: 0.2),
+                    width: 2,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: AppColors.success,
+                  size: 36,
+                ),
               ),
-              child: const Icon(
-                Icons.check_rounded,
-                color: AppColors.success,
-                size: 22,
+              const SizedBox(height: 20),
+              Text(
+                'Listing Published',
+                style: AppTypography.textTheme.titleLarge?.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(child: Text('Listing Published')),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Your part is now live on SpareKart. Pricing will be set after review.',
-              style: AppTypography.textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
+              const SizedBox(height: 8),
+              Text(
+                'Your part is now live on SpareKart. Buyers can discover it in search and reach out to you.',
+                style: AppTypography.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Done'),
+              const SizedBox(height: 28),
+              PrimaryButton(
+                label: 'Done',
+                height: 48,
+                onPressed: () => Navigator.pop(ctx),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

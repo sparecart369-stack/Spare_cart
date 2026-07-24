@@ -41,95 +41,104 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          BlocBuilder<ListingsBloc, ListingsState>(
-            builder: (context, state) {
-              final chips = state.filters.activeChips;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      r.horizontalPadding(),
-                      0,
-                      r.horizontalPadding(),
-                      chips.isEmpty ? 16 : 10,
-                    ),
-                    child: TextField(
-                      controller: _controller,
-                      onChanged: (q) => context.read<ListingsBloc>().add(ListingSearchChanged(q)),
-                      style: AppTypography.textTheme.bodyLarge,
-                      decoration: const InputDecoration(
-                        hintText: 'Search by name, chassis, part no...',
-                        prefixIcon: Icon(Icons.search_rounded),
-                      ),
-                    ),
-                  ),
-                  if (chips.isNotEmpty)
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 0, r.horizontalPadding(), 10),
-                      child: ActiveFilterChips(
-                        chips: chips,
-                        onClear: (field, {value}) =>
-                            context.read<ListingsBloc>().add(ListingFilterCleared(field, value: value)),
-                      ),
-                    ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: r.horizontalPadding()),
-                    child: Text(
-                      '${state.filteredParts.length} parts found',
-                      style: AppTypography.textTheme.labelMedium?.copyWith(color: AppColors.textTertiary),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: BlocBuilder<ListingsBloc, ListingsState>(
-              builder: (context, state) {
-                final parts = state.filteredParts;
-                final bloc = context.read<ListingsBloc>();
-                if (parts.isEmpty) {
-                  final isDemoEmpty = state.allParts.isEmpty && state.searchQuery.isEmpty;
-                  return RefreshIndicator(
-                    onRefresh: () => refreshListings(bloc),
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                      padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 0, r.horizontalPadding(), 100),
+      body: BlocBuilder<ListingsBloc, ListingsState>(
+        builder: (context, state) {
+          final chips = state.filters.activeChips;
+          final parts = state.filteredParts;
+          final bloc = context.read<ListingsBloc>();
+          final isDemoEmpty = state.allParts.isEmpty && state.searchQuery.isEmpty;
+          final horizontalPad = r.horizontalPadding();
+
+          return Stack(
+            children: [
+              CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                slivers: [
+                  ListingsRefreshControl(bloc: bloc),
+                  SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        EmptyState(
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            horizontalPad,
+                            0,
+                            horizontalPad,
+                            chips.isEmpty ? 16 : 10,
+                          ),
+                          child: TextField(
+                            controller: _controller,
+                            onChanged: (q) => context.read<ListingsBloc>().add(ListingSearchChanged(q)),
+                            style: AppTypography.textTheme.bodyLarge,
+                            decoration: const InputDecoration(
+                              hintText: 'Search by name, chassis, part no...',
+                              prefixIcon: Icon(Icons.search_rounded),
+                            ),
+                          ),
+                        ),
+                        if (chips.isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(horizontalPad, 0, horizontalPad, 10),
+                            child: ActiveFilterChips(
+                              chips: chips,
+                              onClear: (field, {value}) =>
+                                  context.read<ListingsBloc>().add(ListingFilterCleared(field, value: value)),
+                            ),
+                          ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: horizontalPad),
+                          child: Text(
+                            '${state.filteredParts.length} parts found',
+                            style: AppTypography.textTheme.labelMedium?.copyWith(color: AppColors.textTertiary),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  ),
+                  if (parts.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: horizontalPad),
+                        child: EmptyState(
                           icon: Icons.search_off_rounded,
                           title: isDemoEmpty ? 'No listings yet' : 'No parts found',
                           subtitle: isDemoEmpty
                               ? 'Use the Sell tab to add your first part'
                               : 'Try adjusting your search or filters',
                         ),
-                      ],
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: EdgeInsets.fromLTRB(horizontalPad, 0, horizontalPad, 100),
+                      sliver: SliverList.separated(
+                        itemCount: parts.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        itemBuilder: (context, i) => PartCard(
+                          part: parts[i],
+                          compact: true,
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            AppRoutes.productDetail,
+                            arguments: parts[i],
+                          ),
+                        ),
+                      ),
                     ),
-                  );
-                }
-                return RefreshIndicator(
-                  onRefresh: () => refreshListings(bloc),
-                  child: ListView.separated(
-                    physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                    padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 0, r.horizontalPadding(), 100),
-                    itemCount: parts.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (context, i) => PartCard(
-                      part: parts[i],
-                      compact: true,
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.productDetail, arguments: parts[i]),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+                ],
+              ),
+              if (state.isLoading && !state.isLoaded)
+                const Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: ListingsTopLoader(),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

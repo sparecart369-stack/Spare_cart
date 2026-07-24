@@ -1,0 +1,2562 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-25",
+  "categories": [
+    {
+      "id": "engine",
+      "name": "Engine",
+      "subcategories": [
+        {
+          "id": "engine_block",
+          "name": "Engine Block",
+          "group": "Engine Block Components"
+        },
+        {
+          "id": "cylinder_head",
+          "name": "Cylinder Head",
+          "group": "Engine Block Components"
+        },
+        {
+          "id": "head_gasket",
+          "name": "Head Gasket",
+          "group": "Engine Block Components"
+        },
+        {
+          "id": "oil_pan_sump",
+          "name": "Oil Pan (Sump)",
+          "group": "Engine Block Components"
+        },
+        {
+          "id": "engine_mount",
+          "name": "Engine Mount",
+          "group": "Engine Block Components"
+        },
+        {
+          "id": "engine_cover",
+          "name": "Engine Cover",
+          "group": "Engine Block Components"
+        },
+        {
+          "id": "crankshaft",
+          "name": "Crankshaft",
+          "group": "Crankshaft Assembly"
+        },
+        {
+          "id": "main_bearings",
+          "name": "Main Bearings",
+          "group": "Crankshaft Assembly"
+        },
+        {
+          "id": "connecting_rod",
+          "name": "Connecting Rod",
+          "group": "Crankshaft Assembly"
+        },
+        {
+          "id": "connecting_rod_bearings",
+          "name": "Connecting Rod Bearings",
+          "group": "Crankshaft Assembly"
+        },
+        {
+          "id": "pistons",
+          "name": "Pistons",
+          "group": "Crankshaft Assembly"
+        },
+        {
+          "id": "piston_rings",
+          "name": "Piston Rings",
+          "group": "Crankshaft Assembly"
+        },
+        {
+          "id": "piston_pin",
+          "name": "Piston Pin",
+          "group": "Crankshaft Assembly"
+        },
+        {
+          "id": "flywheel__flexplate",
+          "name": "Flywheel / Flexplate",
+          "group": "Crankshaft Assembly"
+        },
+        {
+          "id": "harmonic_balancer",
+          "name": "Harmonic Balancer",
+          "group": "Crankshaft Assembly"
+        },
+        {
+          "id": "camshaft",
+          "name": "Camshaft",
+          "group": "Valve Train"
+        },
+        {
+          "id": "cam_gear",
+          "name": "Cam Gear",
+          "group": "Valve Train"
+        },
+        {
+          "id": "rocker_arm",
+          "name": "Rocker Arm",
+          "group": "Valve Train"
+        },
+        {
+          "id": "valve",
+          "name": "Valve",
+          "group": "Valve Train"
+        },
+        {
+          "id": "valve_spring",
+          "name": "Valve Spring",
+          "group": "Valve Train"
+        },
+        {
+          "id": "valve_guide",
+          "name": "Valve Guide",
+          "group": "Valve Train"
+        },
+        {
+          "id": "valve_seat",
+          "name": "Valve Seat",
+          "group": "Valve Train"
+        },
+        {
+          "id": "hydraulic_lifter__tappet",
+          "name": "Hydraulic Lifter / Tappet",
+          "group": "Valve Train"
+        },
+        {
+          "id": "push_rod",
+          "name": "Push Rod",
+          "group": "Valve Train"
+        },
+        {
+          "id": "timing_chain",
+          "name": "Timing Chain",
+          "group": "Timing System"
+        },
+        {
+          "id": "timing_belt",
+          "name": "Timing Belt",
+          "group": "Timing System"
+        },
+        {
+          "id": "timing_gears",
+          "name": "Timing Gears",
+          "group": "Timing System"
+        },
+        {
+          "id": "timing_tensioner",
+          "name": "Timing Tensioner",
+          "group": "Timing System"
+        },
+        {
+          "id": "timing_guide",
+          "name": "Timing Guide",
+          "group": "Timing System"
+        },
+        {
+          "id": "idler_pulley",
+          "name": "Idler Pulley",
+          "group": "Timing System"
+        },
+        {
+          "id": "oil_pump",
+          "name": "Oil Pump",
+          "group": "Lubrication System"
+        },
+        {
+          "id": "oil_pickup",
+          "name": "Oil Pickup",
+          "group": "Lubrication System"
+        },
+        {
+          "id": "oil_filter_housing",
+          "name": "Oil Filter Housing",
+          "group": "Lubrication System"
+        },
+        {
+          "id": "oil_cooler",
+          "name": "Oil Cooler",
+          "group": "Lubrication System"
+        },
+        {
+          "id": "oil_pressure_sensor",
+          "name": "Oil Pressure Sensor",
+          "group": "Lubrication System"
+        },
+        {
+          "id": "dipstick",
+          "name": "Dipstick",
+          "group": "Lubrication System"
+        },
+        {
+          "id": "pcv_valve",
+          "name": "PCV Valve",
+          "group": "Lubrication System"
+        },
+        {
+          "id": "oil_filter",
+          "name": "Oil Filter",
+          "group": "Lubrication System"
+        },
+        {
+          "id": "water_pump",
+          "name": "Water Pump",
+          "group": "Cooling System"
+        },
+        {
+          "id": "thermostat",
+          "name": "Thermostat",
+          "group": "Cooling System"
+        },
+        {
+          "id": "radiator",
+          "name": "Radiator",
+          "group": "Cooling System"
+        },
+        {
+          "id": "cooling_fan",
+          "name": "Cooling Fan",
+          "group": "Cooling System"
+        },
+        {
+          "id": "fan_clutch",
+          "name": "Fan Clutch",
+          "group": "Cooling System"
+        },
+        {
+          "id": "expansion_tank",
+          "name": "Expansion Tank",
+          "group": "Cooling System"
+        },
+        {
+          "id": "coolant_pipes_and_hoses",
+          "name": "Coolant Pipes & Hoses",
+          "group": "Cooling System"
+        },
+        {
+          "id": "air_filter",
+          "name": "Air Filter",
+          "group": "Air Intake System"
+        },
+        {
+          "id": "air_filter_box",
+          "name": "Air Filter Box",
+          "group": "Air Intake System"
+        },
+        {
+          "id": "intake_manifold",
+          "name": "Intake Manifold",
+          "group": "Air Intake System"
+        },
+        {
+          "id": "throttle_body_petrol",
+          "name": "Throttle Body (Petrol)",
+          "group": "Air Intake System"
+        },
+        {
+          "id": "intercooler_turbo",
+          "name": "Intercooler (Turbo)",
+          "group": "Air Intake System"
+        },
+        {
+          "id": "turbo_hose",
+          "name": "Turbo Hose",
+          "group": "Air Intake System"
+        },
+        {
+          "id": "fuel_pump",
+          "name": "Fuel Pump",
+          "group": "Fuel System (Petrol)"
+        },
+        {
+          "id": "fuel_filter",
+          "name": "Fuel Filter",
+          "group": "Fuel System (Petrol)"
+        },
+        {
+          "id": "fuel_rail",
+          "name": "Fuel Rail",
+          "group": "Fuel System (Petrol)"
+        },
+        {
+          "id": "petrol_injectors",
+          "name": "Petrol Injectors",
+          "group": "Fuel System (Petrol)"
+        },
+        {
+          "id": "pressure_regulator",
+          "name": "Pressure Regulator",
+          "group": "Fuel System (Petrol)"
+        },
+        {
+          "id": "evap_canister",
+          "name": "EVAP Canister",
+          "group": "Fuel System (Petrol)"
+        },
+        {
+          "id": "purge_valve",
+          "name": "Purge Valve",
+          "group": "Fuel System (Petrol)"
+        },
+        {
+          "id": "high_pressure_pump",
+          "name": "High Pressure Pump",
+          "group": "Fuel System (Diesel)"
+        },
+        {
+          "id": "common_rail",
+          "name": "Common Rail",
+          "group": "Fuel System (Diesel)"
+        },
+        {
+          "id": "diesel_injectors",
+          "name": "Diesel Injectors",
+          "group": "Fuel System (Diesel)"
+        },
+        {
+          "id": "scv_valve",
+          "name": "SCV Valve",
+          "group": "Fuel System (Diesel)"
+        },
+        {
+          "id": "drv_valve",
+          "name": "DRV Valve",
+          "group": "Fuel System (Diesel)"
+        },
+        {
+          "id": "fuel_filter",
+          "name": "Fuel Filter",
+          "group": "Fuel System (Diesel)"
+        },
+        {
+          "id": "primer_pump",
+          "name": "Primer Pump",
+          "group": "Fuel System (Diesel)"
+        },
+        {
+          "id": "water_separator",
+          "name": "Water Separator",
+          "group": "Fuel System (Diesel)"
+        },
+        {
+          "id": "spark_plug",
+          "name": "Spark Plug",
+          "group": "Ignition System (Petrol)"
+        },
+        {
+          "id": "ignition_coil",
+          "name": "Ignition Coil",
+          "group": "Ignition System (Petrol)"
+        },
+        {
+          "id": "ht_lead",
+          "name": "HT Lead",
+          "group": "Ignition System (Petrol)"
+        },
+        {
+          "id": "distributor_old_models",
+          "name": "Distributor (Old Models)",
+          "group": "Ignition System (Petrol)"
+        },
+        {
+          "id": "glow_plug",
+          "name": "Glow Plug",
+          "group": "Diesel Combustion"
+        },
+        {
+          "id": "glow_plug_relay",
+          "name": "Glow Plug Relay",
+          "group": "Diesel Combustion"
+        },
+        {
+          "id": "turbocharger",
+          "name": "Turbocharger",
+          "group": "Turbo System"
+        },
+        {
+          "id": "wastegate",
+          "name": "Wastegate",
+          "group": "Turbo System"
+        },
+        {
+          "id": "vgt_actuator",
+          "name": "VGT Actuator",
+          "group": "Turbo System"
+        },
+        {
+          "id": "boost_pipe",
+          "name": "Boost Pipe",
+          "group": "Turbo System"
+        },
+        {
+          "id": "intercooler",
+          "name": "Intercooler",
+          "group": "Turbo System"
+        },
+        {
+          "id": "turbo_hose",
+          "name": "Turbo Hose",
+          "group": "Turbo System"
+        },
+        {
+          "id": "exhaust_manifold",
+          "name": "Exhaust Manifold",
+          "group": "Exhaust & Emission"
+        },
+        {
+          "id": "catalytic_converter",
+          "name": "Catalytic Converter",
+          "group": "Exhaust & Emission"
+        },
+        {
+          "id": "dpf_diesel_particulate_filter",
+          "name": "DPF (Diesel Particulate Filter)",
+          "group": "Exhaust & Emission"
+        },
+        {
+          "id": "egr_valve",
+          "name": "EGR Valve",
+          "group": "Exhaust & Emission"
+        },
+        {
+          "id": "egr_cooler",
+          "name": "EGR Cooler",
+          "group": "Exhaust & Emission"
+        },
+        {
+          "id": "scr_selective_catalytic_reduction",
+          "name": "SCR (Selective Catalytic Reduction)",
+          "group": "Exhaust & Emission"
+        },
+        {
+          "id": "adblue_injector",
+          "name": "AdBlue Injector",
+          "group": "Exhaust & Emission"
+        },
+        {
+          "id": "oxygen_sensor",
+          "name": "Oxygen Sensor",
+          "group": "Exhaust & Emission"
+        },
+        {
+          "id": "nox_sensor",
+          "name": "NOx Sensor",
+          "group": "Exhaust & Emission"
+        },
+        {
+          "id": "crankshaft_position_sensor",
+          "name": "Crankshaft Position Sensor",
+          "group": "Engine Sensors"
+        },
+        {
+          "id": "camshaft_position_sensor",
+          "name": "Camshaft Position Sensor",
+          "group": "Engine Sensors"
+        },
+        {
+          "id": "map_sensor",
+          "name": "MAP Sensor",
+          "group": "Engine Sensors"
+        },
+        {
+          "id": "maf_sensor",
+          "name": "MAF Sensor",
+          "group": "Engine Sensors"
+        },
+        {
+          "id": "knock_sensor",
+          "name": "Knock Sensor",
+          "group": "Engine Sensors"
+        },
+        {
+          "id": "coolant_temp_sensor",
+          "name": "Coolant Temp. Sensor",
+          "group": "Engine Sensors"
+        },
+        {
+          "id": "intake_air_temp_sensor",
+          "name": "Intake Air Temp. Sensor",
+          "group": "Engine Sensors"
+        },
+        {
+          "id": "oil_pressure_sensor",
+          "name": "Oil Pressure Sensor",
+          "group": "Engine Sensors"
+        },
+        {
+          "id": "oil_level_sensor",
+          "name": "Oil Level Sensor",
+          "group": "Engine Sensors"
+        },
+        {
+          "id": "fuel_rail_pressure_sensor",
+          "name": "Fuel Rail Pressure Sensor",
+          "group": "Engine Sensors"
+        },
+        {
+          "id": "boost_pressure_sensor",
+          "name": "Boost Pressure Sensor",
+          "group": "Engine Sensors"
+        },
+        {
+          "id": "exhaust_temp_sensor",
+          "name": "Exhaust Temp. Sensor",
+          "group": "Engine Sensors"
+        },
+        {
+          "id": "ecu_engine_control_unit",
+          "name": "ECU (Engine Control Unit)",
+          "group": "Engine Electrical"
+        },
+        {
+          "id": "engine_wiring_harness",
+          "name": "Engine Wiring Harness",
+          "group": "Engine Electrical"
+        },
+        {
+          "id": "relays",
+          "name": "Relays",
+          "group": "Engine Electrical"
+        },
+        {
+          "id": "fuses",
+          "name": "Fuses",
+          "group": "Engine Electrical"
+        },
+        {
+          "id": "connectors",
+          "name": "Connectors",
+          "group": "Engine Electrical"
+        },
+        {
+          "id": "full_gasket_kit",
+          "name": "Full Gasket Kit",
+          "group": "Gaskets & Seals"
+        },
+        {
+          "id": "oil_seals",
+          "name": "Oil Seals",
+          "group": "Gaskets & Seals"
+        },
+        {
+          "id": "o_rings",
+          "name": "O-Rings",
+          "group": "Gaskets & Seals"
+        },
+        {
+          "id": "crankshaft_seal",
+          "name": "Crankshaft Seal",
+          "group": "Gaskets & Seals"
+        },
+        {
+          "id": "camshaft_seal",
+          "name": "Camshaft Seal",
+          "group": "Gaskets & Seals"
+        },
+        {
+          "id": "valve_cover_gasket",
+          "name": "Valve Cover Gasket",
+          "group": "Gaskets & Seals"
+        },
+        {
+          "id": "intake_gasket",
+          "name": "Intake Gasket",
+          "group": "Gaskets & Seals"
+        },
+        {
+          "id": "exhaust_gasket",
+          "name": "Exhaust Gasket",
+          "group": "Gaskets & Seals"
+        },
+        {
+          "id": "engine_overhaul_kit",
+          "name": "Engine Overhaul Kit",
+          "group": "Repair Kits"
+        },
+        {
+          "id": "engine_rebuild_kit",
+          "name": "Engine Rebuild Kit",
+          "group": "Repair Kits"
+        },
+        {
+          "id": "bearing_kit",
+          "name": "Bearing Kit",
+          "group": "Repair Kits"
+        },
+        {
+          "id": "piston_kit",
+          "name": "Piston Kit",
+          "group": "Repair Kits"
+        },
+        {
+          "id": "timing_kit",
+          "name": "Timing Kit",
+          "group": "Repair Kits"
+        },
+        {
+          "id": "seal_kit",
+          "name": "Seal Kit",
+          "group": "Repair Kits"
+        }
+      ]
+    },
+    {
+      "id": "transmission",
+      "name": "Transmission",
+      "subcategories": [
+        {
+          "id": "clutch_kit",
+          "name": "Clutch Kit",
+          "group": "Manual Transmission (MT)"
+        },
+        {
+          "id": "flywheel",
+          "name": "Flywheel",
+          "group": "Manual Transmission (MT)"
+        },
+        {
+          "id": "gearbox_housing",
+          "name": "Gearbox Housing",
+          "group": "Manual Transmission (MT)"
+        },
+        {
+          "id": "input_shaft",
+          "name": "Input Shaft",
+          "group": "Manual Transmission (MT)"
+        },
+        {
+          "id": "output_shaft",
+          "name": "Output Shaft",
+          "group": "Manual Transmission (MT)"
+        },
+        {
+          "id": "counter_shaft",
+          "name": "Counter Shaft",
+          "group": "Manual Transmission (MT)"
+        },
+        {
+          "id": "gears",
+          "name": "Gears",
+          "group": "Manual Transmission (MT)"
+        },
+        {
+          "id": "synchronizer_assembly",
+          "name": "Synchronizer Assembly",
+          "group": "Manual Transmission (MT)"
+        },
+        {
+          "id": "shift_fork",
+          "name": "Shift Fork",
+          "group": "Manual Transmission (MT)"
+        },
+        {
+          "id": "shift_rail",
+          "name": "Shift Rail",
+          "group": "Manual Transmission (MT)"
+        },
+        {
+          "id": "gear_lever",
+          "name": "Gear Lever",
+          "group": "Manual Transmission (MT)"
+        },
+        {
+          "id": "extension_housing",
+          "name": "Extension Housing",
+          "group": "Manual Transmission (MT)"
+        },
+        {
+          "id": "torque_converter",
+          "name": "Torque Converter",
+          "group": "Automatic Transmission (AT)"
+        },
+        {
+          "id": "transmission_case",
+          "name": "Transmission Case",
+          "group": "Automatic Transmission (AT)"
+        },
+        {
+          "id": "planetary_gear_set",
+          "name": "Planetary Gear Set",
+          "group": "Automatic Transmission (AT)"
+        },
+        {
+          "id": "valve_body",
+          "name": "Valve Body",
+          "group": "Automatic Transmission (AT)"
+        },
+        {
+          "id": "solenoid_pack",
+          "name": "Solenoid Pack",
+          "group": "Automatic Transmission (AT)"
+        },
+        {
+          "id": "clutch_pack",
+          "name": "Clutch Pack",
+          "group": "Automatic Transmission (AT)"
+        },
+        {
+          "id": "brake_band",
+          "name": "Brake Band",
+          "group": "Automatic Transmission (AT)"
+        },
+        {
+          "id": "overrunning_clutch",
+          "name": "Overrunning Clutch",
+          "group": "Automatic Transmission (AT)"
+        },
+        {
+          "id": "transmission_filter",
+          "name": "Transmission Filter",
+          "group": "Automatic Transmission (AT)"
+        },
+        {
+          "id": "transmission_oil_pan",
+          "name": "Transmission Oil Pan",
+          "group": "Automatic Transmission (AT)"
+        },
+        {
+          "id": "transmission_cooler",
+          "name": "Transmission Cooler",
+          "group": "Automatic Transmission (AT)"
+        },
+        {
+          "id": "speed_sensor",
+          "name": "Speed Sensor",
+          "group": "Automatic Transmission (AT)"
+        },
+        {
+          "id": "dual_clutch_pack",
+          "name": "Dual Clutch Pack",
+          "group": "Dual Clutch Transmission (DCT)"
+        },
+        {
+          "id": "mechatronic_unit",
+          "name": "Mechatronic Unit",
+          "group": "Dual Clutch Transmission (DCT)"
+        },
+        {
+          "id": "dct_housing",
+          "name": "DCT Housing",
+          "group": "Dual Clutch Transmission (DCT)"
+        },
+        {
+          "id": "dct_actuator",
+          "name": "DCT Actuator",
+          "group": "Dual Clutch Transmission (DCT)"
+        },
+        {
+          "id": "dct_control_module",
+          "name": "DCT Control Module",
+          "group": "Dual Clutch Transmission (DCT)"
+        },
+        {
+          "id": "drive_pulley",
+          "name": "Drive Pulley",
+          "group": "Continuously Variable Transmission (CVT)"
+        },
+        {
+          "id": "driven_pulley",
+          "name": "Driven Pulley",
+          "group": "Continuously Variable Transmission (CVT)"
+        },
+        {
+          "id": "v_belt__chain",
+          "name": "V-Belt / Chain",
+          "group": "Continuously Variable Transmission (CVT)"
+        },
+        {
+          "id": "cvt_step_motor",
+          "name": "CVT Step Motor",
+          "group": "Continuously Variable Transmission (CVT)"
+        },
+        {
+          "id": "cvt_valve_body",
+          "name": "CVT Valve Body",
+          "group": "Continuously Variable Transmission (CVT)"
+        },
+        {
+          "id": "clutch_actuator",
+          "name": "Clutch Actuator",
+          "group": "Automated Manual Transmission (AMT)"
+        },
+        {
+          "id": "gear_actuator",
+          "name": "Gear Actuator",
+          "group": "Automated Manual Transmission (AMT)"
+        },
+        {
+          "id": "amt_control_module",
+          "name": "AMT Control Module",
+          "group": "Automated Manual Transmission (AMT)"
+        },
+        {
+          "id": "position_sensor",
+          "name": "Position Sensor",
+          "group": "Automated Manual Transmission (AMT)"
+        },
+        {
+          "id": "parallel_hybrid_transmission",
+          "name": "Parallel Hybrid Transmission",
+          "group": "Hybrid Transmissions",
+          "image": "assets/sub/transmission/parallel_hybrid_transmission.png"
+        },
+        {
+          "id": "series_hybrid_transmission",
+          "name": "Series Hybrid Transmission",
+          "group": "Hybrid Transmissions"
+        },
+        {
+          "id": "p2_hybrid_transmission",
+          "name": "P2 Hybrid Transmission",
+          "group": "Hybrid Transmissions",
+          "image": "assets/sub/transmission/p2_hybrid_transmission.png"
+        },
+        {
+          "id": "hybrid_dct_dual_clutch_hybrid",
+          "name": "Hybrid DCT (Dual-Clutch Hybrid)",
+          "group": "Hybrid Transmissions",
+          "image": "assets/sub/transmission/hybrid_dct.png"
+        },
+        {
+          "id": "hybrid_at",
+          "name": "Hybrid AT",
+          "group": "Hybrid Transmissions"
+        },
+        {
+          "id": "multi_mode_hybrid_transmission",
+          "name": "Multi-Mode Hybrid Transmission",
+          "group": "Hybrid Transmissions",
+          "image": "assets/sub/transmission/multi_mode_hybrid_transmission.png"
+        },
+        {
+          "id": "e_cvt_power_split_hybrid_transmission",
+          "name": "E-CVT (Power Split Hybrid Transmission)",
+          "group": "Hybrid Transmissions",
+          "image": "assets/sub/transmission/e_cvt_power_split_hybrid.png"
+        },
+        {
+          "id": "hybrid_transmission_e_cvt__power_split",
+          "name": "Hybrid Transmission (e-CVT / Power Split)",
+          "group": "Hybrid Transmissions"
+        },
+        {
+          "id": "single_speed_reduction_gear",
+          "name": "Single-Speed Reduction Gear",
+          "group": "Electric Vehicle Drive Systems",
+          "image": "assets/sub/transmission/single_speed_reduction_gear.png"
+        },
+        {
+          "id": "multi_speed_ev_transmission",
+          "name": "Multi-Speed EV Transmission",
+          "group": "Electric Vehicle Drive Systems",
+          "image": "assets/sub/transmission/multi_speed_ev_transmission.png"
+        },
+        {
+          "id": "two_speed_ev_transmission",
+          "name": "Two-Speed EV Transmission",
+          "group": "Electric Vehicle Drive Systems"
+        },
+        {
+          "id": "direct_drive_ev_transmission_gearless",
+          "name": "Direct Drive EV Transmission (Gearless)",
+          "group": "Electric Vehicle Drive Systems",
+          "image": "assets/sub/transmission/direct_drive_ev_transmission.png"
+        },
+        {
+          "id": "planetary_gear_ev_transmission",
+          "name": "Planetary Gear EV Transmission",
+          "group": "Electric Vehicle Drive Systems",
+          "image": "assets/sub/transmission/planetary_gear_ev_transmission.png"
+        },
+        {
+          "id": "integrated_e_axle_drive_unit",
+          "name": "Integrated e-Axle Drive Unit",
+          "group": "Electric Vehicle Drive Systems",
+          "image": "assets/sub/transmission/integrated_e_axle_drive_unit.png"
+        },
+        {
+          "id": "coaxial_e_axle",
+          "name": "Coaxial e-Axle",
+          "group": "Electric Vehicle Drive Systems"
+        },
+        {
+          "id": "parallel_axis_e_axle",
+          "name": "Parallel-Axis e-Axle",
+          "group": "Electric Vehicle Drive Systems",
+          "image": "assets/sub/transmission/parallel_axis_axle.png"
+        },
+        {
+          "id": "dual_motor_ev_transmission",
+          "name": "Dual Motor EV Transmission",
+          "group": "Electric Vehicle Drive Systems"
+        },
+        {
+          "id": "tri_motor_ev_transmission",
+          "name": "Tri-Motor EV Transmission",
+          "group": "Electric Vehicle Drive Systems",
+          "image": "assets/sub/transmission/tri_motor_ev_transmission.png"
+        },
+        {
+          "id": "quad_motor_ev_transmission",
+          "name": "Quad-Motor EV Transmission",
+          "group": "Electric Vehicle Drive Systems",
+          "image": "assets/sub/transmission/quad_motor_ev_transmission.png"
+        },
+        {
+          "id": "in_wheel_motor_drive",
+          "name": "In-Wheel Motor Drive",
+          "group": "Electric Vehicle Drive Systems",
+          "image": "assets/sub/transmission/in_wheel_motor_drive.png"
+        },
+        {
+          "id": "hub_motor_drive",
+          "name": "Hub Motor Drive",
+          "group": "Electric Vehicle Drive Systems",
+          "image": "assets/sub/transmission/hub_motor_drive.png"
+        },
+        {
+          "id": "power_split_ev_drive_system",
+          "name": "Power-Split EV Drive System",
+          "group": "Electric Vehicle Drive Systems",
+          "image": "assets/sub/transmission/power_split_ev_drive_system.png"
+        },
+        {
+          "id": "torque_vectoring_ev_drive_system",
+          "name": "Torque Vectoring EV Drive System",
+          "group": "Electric Vehicle Drive Systems",
+          "image": "assets/sub/transmission/torque_vectoring_ev_drive_system.png"
+        },
+        {
+          "id": "electric_drive_motor",
+          "name": "Electric Drive Motor",
+          "group": "Electric Vehicle Drive Systems"
+        },
+        {
+          "id": "reduction_gear_set",
+          "name": "Reduction Gear Set",
+          "group": "Electric Vehicle Drive Systems"
+        },
+        {
+          "id": "inverter",
+          "name": "Inverter",
+          "group": "Electric Vehicle Drive Systems"
+        },
+        {
+          "id": "differential_gear",
+          "name": "Differential Gear",
+          "group": "Electric Vehicle Drive Systems"
+        },
+        {
+          "id": "intelligent_variable_transmission_ivt",
+          "name": "Intelligent Variable Transmission (IVT)",
+          "group": "Other Transmission Types"
+        },
+        {
+          "id": "hydrostatic_transmission_hst",
+          "name": "Hydrostatic Transmission (HST)",
+          "group": "Other Transmission Types"
+        },
+        {
+          "id": "powershift_transmission_pst",
+          "name": "Powershift Transmission (PST)",
+          "group": "Other Transmission Types"
+        },
+        {
+          "id": "synchromesh_transmission",
+          "name": "Synchromesh Transmission",
+          "group": "Other Transmission Types"
+        },
+        {
+          "id": "dog_clutch_transmission",
+          "name": "Dog Clutch Transmission",
+          "group": "Other Transmission Types"
+        },
+        {
+          "id": "sequential_transmission_dog_box",
+          "name": "Sequential Transmission (Dog Box)",
+          "group": "Other Transmission Types"
+        },
+        {
+          "id": "direct_drive_transmission",
+          "name": "Direct Drive Transmission",
+          "group": "Other Transmission Types"
+        },
+        {
+          "id": "bearings",
+          "name": "Bearings",
+          "group": "Common Transmission Components"
+        },
+        {
+          "id": "bushings",
+          "name": "Bushings",
+          "group": "Common Transmission Components"
+        },
+        {
+          "id": "oil_pump",
+          "name": "Oil Pump",
+          "group": "Common Transmission Components"
+        },
+        {
+          "id": "oil_cooler",
+          "name": "Oil Cooler",
+          "group": "Common Transmission Components"
+        },
+        {
+          "id": "shafts",
+          "name": "Shafts",
+          "group": "Common Transmission Components"
+        },
+        {
+          "id": "seals_and_gaskets",
+          "name": "Seals & Gaskets",
+          "group": "Common Transmission Components"
+        },
+        {
+          "id": "transmission_mount",
+          "name": "Transmission Mount",
+          "group": "Common Transmission Components"
+        },
+        {
+          "id": "wiring_harness",
+          "name": "Wiring Harness",
+          "group": "Common Transmission Components"
+        },
+        {
+          "id": "control_module",
+          "name": "Control Module",
+          "group": "Common Transmission Components"
+        }
+      ]
+    },
+    {
+      "id": "ac_system",
+      "name": "AC System",
+      "subcategories": [
+        {
+          "id": "compressor",
+          "name": "Compressor",
+          "group": "Major A/C System Components"
+        },
+        {
+          "id": "condenser",
+          "name": "Condenser",
+          "group": "Major A/C System Components"
+        },
+        {
+          "id": "evaporator",
+          "name": "Evaporator",
+          "group": "Major A/C System Components"
+        },
+        {
+          "id": "receiver_drier__accumulator",
+          "name": "Receiver Drier / Accumulator",
+          "group": "Major A/C System Components"
+        },
+        {
+          "id": "expansion_valve_txv",
+          "name": "Expansion Valve (TXV)",
+          "group": "Major A/C System Components"
+        },
+        {
+          "id": "orifice_tube",
+          "name": "Orifice Tube",
+          "group": "Major A/C System Components"
+        },
+        {
+          "id": "a_c_hoses_and_pipes",
+          "name": "A/C Hoses & Pipes",
+          "group": "Major A/C System Components"
+        },
+        {
+          "id": "compressor_clutch",
+          "name": "Compressor Clutch",
+          "group": "Compressor Parts"
+        },
+        {
+          "id": "pulley",
+          "name": "Pulley",
+          "group": "Compressor Parts"
+        },
+        {
+          "id": "clutch_coil",
+          "name": "Clutch Coil",
+          "group": "Compressor Parts"
+        },
+        {
+          "id": "compressor_shaft",
+          "name": "Compressor Shaft",
+          "group": "Compressor Parts"
+        },
+        {
+          "id": "swash_plate",
+          "name": "Swash Plate",
+          "group": "Compressor Parts"
+        },
+        {
+          "id": "valve_plate",
+          "name": "Valve Plate",
+          "group": "Compressor Parts"
+        },
+        {
+          "id": "condenser_coil",
+          "name": "Condenser Coil",
+          "group": "Condenser Components"
+        },
+        {
+          "id": "condenser_fan",
+          "name": "Condenser Fan",
+          "group": "Condenser Components"
+        },
+        {
+          "id": "fan_motor",
+          "name": "Fan Motor",
+          "group": "Condenser Components"
+        },
+        {
+          "id": "condenser_bracket",
+          "name": "Condenser Bracket",
+          "group": "Condenser Components"
+        },
+        {
+          "id": "pressure_switch",
+          "name": "Pressure Switch",
+          "group": "Condenser Components"
+        },
+        {
+          "id": "evaporator_core",
+          "name": "Evaporator Core",
+          "group": "Evaporator Components"
+        },
+        {
+          "id": "evaporator_housing",
+          "name": "Evaporator Housing",
+          "group": "Evaporator Components"
+        },
+        {
+          "id": "blower_motor",
+          "name": "Blower Motor",
+          "group": "Evaporator Components"
+        },
+        {
+          "id": "blower_fan",
+          "name": "Blower Fan",
+          "group": "Evaporator Components"
+        },
+        {
+          "id": "blower_resistor__regulator",
+          "name": "Blower Resistor / Regulator",
+          "group": "Evaporator Components"
+        },
+        {
+          "id": "drain_pan",
+          "name": "Drain Pan",
+          "group": "Evaporator Components"
+        },
+        {
+          "id": "txv_thermal_expansion_valve",
+          "name": "TXV (Thermal Expansion Valve)",
+          "group": "Expansion Devices"
+        },
+        {
+          "id": "electronic_expansion_valve",
+          "name": "Electronic Expansion Valve",
+          "group": "Expansion Devices"
+        },
+        {
+          "id": "capillary_tube",
+          "name": "Capillary Tube",
+          "group": "Expansion Devices"
+        },
+        {
+          "id": "cabin_air_filter",
+          "name": "Cabin Air Filter",
+          "group": "Filters & Strainers"
+        },
+        {
+          "id": "suction_strainer",
+          "name": "Suction Strainer",
+          "group": "Filters & Strainers"
+        },
+        {
+          "id": "in_line_filter",
+          "name": "In-line Filter",
+          "group": "Filters & Strainers"
+        },
+        {
+          "id": "condenser_filter",
+          "name": "Condenser Filter",
+          "group": "Filters & Strainers"
+        },
+        {
+          "id": "high_pressure_switch",
+          "name": "High Pressure Switch",
+          "group": "Pressure & Temperature Controls"
+        },
+        {
+          "id": "low_pressure_switch",
+          "name": "Low Pressure Switch",
+          "group": "Pressure & Temperature Controls"
+        },
+        {
+          "id": "pressure_transducer",
+          "name": "Pressure Transducer",
+          "group": "Pressure & Temperature Controls"
+        },
+        {
+          "id": "temperature_sensor",
+          "name": "Temperature Sensor",
+          "group": "Pressure & Temperature Controls"
+        },
+        {
+          "id": "cycling_switch",
+          "name": "Cycling Switch",
+          "group": "Pressure & Temperature Controls"
+        },
+        {
+          "id": "dual_pressure_switch",
+          "name": "Dual Pressure Switch",
+          "group": "Pressure & Temperature Controls"
+        },
+        {
+          "id": "dashboard_vents",
+          "name": "Dashboard Vents",
+          "group": "Air Flow & Duct Components"
+        },
+        {
+          "id": "center_vents",
+          "name": "Center Vents",
+          "group": "Air Flow & Duct Components"
+        },
+        {
+          "id": "side_vents",
+          "name": "Side Vents",
+          "group": "Air Flow & Duct Components"
+        },
+        {
+          "id": "air_ducts",
+          "name": "Air Ducts",
+          "group": "Air Flow & Duct Components"
+        },
+        {
+          "id": "vent_grilles",
+          "name": "Vent Grilles",
+          "group": "Air Flow & Duct Components"
+        },
+        {
+          "id": "mode_actuator",
+          "name": "Mode Actuator",
+          "group": "Air Flow & Duct Components"
+        },
+        {
+          "id": "blend_door_actuator",
+          "name": "Blend Door Actuator",
+          "group": "Air Flow & Duct Components"
+        },
+        {
+          "id": "a_c_control_panel",
+          "name": "A/C Control Panel",
+          "group": "A/C Electrical Components"
+        },
+        {
+          "id": "a_c_control_module",
+          "name": "A/C Control Module",
+          "group": "A/C Electrical Components"
+        },
+        {
+          "id": "a_c_switch",
+          "name": "A/C Switch",
+          "group": "A/C Electrical Components"
+        },
+        {
+          "id": "temperature_control_unit",
+          "name": "Temperature Control Unit",
+          "group": "A/C Electrical Components"
+        },
+        {
+          "id": "a_c_relay",
+          "name": "A/C Relay",
+          "group": "A/C Electrical Components"
+        },
+        {
+          "id": "a_c_wiring_harness",
+          "name": "A/C Wiring Harness",
+          "group": "A/C Electrical Components"
+        },
+        {
+          "id": "rear_a_c_system",
+          "name": "Rear A/C System",
+          "group": "Specialized A/C Systems"
+        },
+        {
+          "id": "roof_top_a_c_system",
+          "name": "Roof Top A/C System",
+          "group": "Specialized A/C Systems"
+        },
+        {
+          "id": "standby__parking_a_c",
+          "name": "Standby / Parking A/C",
+          "group": "Specialized A/C Systems"
+        },
+        {
+          "id": "automatic_climate_control",
+          "name": "Automatic Climate Control",
+          "group": "Specialized A/C Systems"
+        },
+        {
+          "id": "dual__tri_zone_a_c",
+          "name": "Dual / Tri Zone A/C",
+          "group": "Specialized A/C Systems"
+        },
+        {
+          "id": "electric_a_c_compressor",
+          "name": "Electric A/C Compressor",
+          "group": "Specialized A/C Systems"
+        },
+        {
+          "id": "heat_pump_system",
+          "name": "Heat Pump System",
+          "group": "Specialized A/C Systems"
+        }
+      ]
+    },
+    {
+      "id": "body_parts",
+      "name": "Body Parts",
+      "subcategories": [
+        {
+          "id": "bonnet__hood",
+          "name": "Bonnet / Hood",
+          "group": "Front Body"
+        },
+        {
+          "id": "front_bumper",
+          "name": "Front Bumper",
+          "group": "Front Body"
+        },
+        {
+          "id": "grille",
+          "name": "Grille",
+          "group": "Front Body"
+        },
+        {
+          "id": "headlight",
+          "name": "Headlight",
+          "group": "Front Body"
+        },
+        {
+          "id": "bumper_reinforcement",
+          "name": "Bumper Reinforcement",
+          "group": "Front Body"
+        },
+        {
+          "id": "bumper_bracket",
+          "name": "Bumper Bracket",
+          "group": "Front Body"
+        },
+        {
+          "id": "slam_panel",
+          "name": "Slam Panel",
+          "group": "Front Body"
+        },
+        {
+          "id": "tow_hook_cover",
+          "name": "Tow Hook Cover",
+          "group": "Front Body"
+        },
+        {
+          "id": "radiator_support_panel",
+          "name": "Radiator Support Panel",
+          "group": "Front Body"
+        },
+        {
+          "id": "front_lip",
+          "name": "Front Lip",
+          "group": "Front Body"
+        },
+        {
+          "id": "front_air_dam",
+          "name": "Front Air Dam",
+          "group": "Front Body"
+        },
+        {
+          "id": "washer_nozzle",
+          "name": "Washer Nozzle",
+          "group": "Front Body"
+        },
+        {
+          "id": "rear_bumper",
+          "name": "Rear Bumper",
+          "group": "Rear Body"
+        },
+        {
+          "id": "tailgate__boot_lid",
+          "name": "Tailgate / Boot Lid",
+          "group": "Rear Body"
+        },
+        {
+          "id": "tail_lamp",
+          "name": "Tail Lamp",
+          "group": "Rear Body"
+        },
+        {
+          "id": "rear_bumper_reinforcement",
+          "name": "Rear Bumper Reinforcement",
+          "group": "Rear Body"
+        },
+        {
+          "id": "spoiler",
+          "name": "Spoiler",
+          "group": "Rear Body"
+        },
+        {
+          "id": "rear_garnish",
+          "name": "Rear Garnish",
+          "group": "Rear Body"
+        },
+        {
+          "id": "number_plate_garnish",
+          "name": "Number Plate Garnish",
+          "group": "Rear Body"
+        },
+        {
+          "id": "rear_diffuser",
+          "name": "Rear Diffuser",
+          "group": "Rear Body"
+        },
+        {
+          "id": "high_mount_stop_lamp",
+          "name": "High Mount Stop Lamp",
+          "group": "Rear Body"
+        },
+        {
+          "id": "boot_lock",
+          "name": "Boot Lock",
+          "group": "Rear Body"
+        },
+        {
+          "id": "boot_hinge",
+          "name": "Boot Hinge",
+          "group": "Rear Body"
+        },
+        {
+          "id": "reflector",
+          "name": "Reflector",
+          "group": "Rear Body"
+        },
+        {
+          "id": "front_door",
+          "name": "Front Door",
+          "group": "Side Body"
+        },
+        {
+          "id": "rear_door",
+          "name": "Rear Door",
+          "group": "Side Body"
+        },
+        {
+          "id": "fender",
+          "name": "Fender",
+          "group": "Side Body"
+        },
+        {
+          "id": "quarter_panel",
+          "name": "Quarter Panel",
+          "group": "Side Body"
+        },
+        {
+          "id": "door_shell",
+          "name": "Door Shell",
+          "group": "Side Body"
+        },
+        {
+          "id": "door_hinges",
+          "name": "Door Hinges",
+          "group": "Side Body"
+        },
+        {
+          "id": "door_check_strap",
+          "name": "Door Check Strap",
+          "group": "Side Body"
+        },
+        {
+          "id": "side_mirror_orvm",
+          "name": "Side Mirror (ORVM)",
+          "group": "Side Body"
+        },
+        {
+          "id": "side_skirt",
+          "name": "Side Skirt",
+          "group": "Side Body"
+        },
+        {
+          "id": "rocker_panel",
+          "name": "Rocker Panel",
+          "group": "Side Body"
+        },
+        {
+          "id": "wheel_arch",
+          "name": "Wheel Arch",
+          "group": "Side Body"
+        },
+        {
+          "id": "body_side_moulding",
+          "name": "Body Side Moulding",
+          "group": "Side Body"
+        },
+        {
+          "id": "windshield",
+          "name": "Windshield",
+          "group": "Glass & Mirrors"
+        },
+        {
+          "id": "rear_windshield",
+          "name": "Rear Windshield",
+          "group": "Glass & Mirrors"
+        },
+        {
+          "id": "front_door_glass",
+          "name": "Front Door Glass",
+          "group": "Glass & Mirrors"
+        },
+        {
+          "id": "rear_door_glass",
+          "name": "Rear Door Glass",
+          "group": "Glass & Mirrors"
+        },
+        {
+          "id": "quarter_glass",
+          "name": "Quarter Glass",
+          "group": "Glass & Mirrors"
+        },
+        {
+          "id": "sunroof_glass",
+          "name": "Sunroof Glass",
+          "group": "Glass & Mirrors"
+        },
+        {
+          "id": "mirror_cover",
+          "name": "Mirror Cover",
+          "group": "Glass & Mirrors"
+        },
+        {
+          "id": "mirror_glass",
+          "name": "Mirror Glass",
+          "group": "Glass & Mirrors"
+        },
+        {
+          "id": "mirror_indicator",
+          "name": "Mirror Indicator",
+          "group": "Glass & Mirrors"
+        },
+        {
+          "id": "mirror_base",
+          "name": "Mirror Base",
+          "group": "Glass & Mirrors"
+        },
+        {
+          "id": "glass_seal__moulding",
+          "name": "Glass Seal / Moulding",
+          "group": "Glass & Mirrors"
+        },
+        {
+          "id": "chrome_garnish",
+          "name": "Chrome Garnish",
+          "group": "Exterior Trim & Accessories"
+        },
+        {
+          "id": "body_cladding",
+          "name": "Body Cladding",
+          "group": "Exterior Trim & Accessories"
+        },
+        {
+          "id": "door_moulding",
+          "name": "Door Moulding",
+          "group": "Exterior Trim & Accessories"
+        },
+        {
+          "id": "fender_garnish",
+          "name": "Fender Garnish",
+          "group": "Exterior Trim & Accessories"
+        },
+        {
+          "id": "roof_rail",
+          "name": "Roof Rail",
+          "group": "Exterior Trim & Accessories"
+        },
+        {
+          "id": "rain_visor",
+          "name": "Rain Visor",
+          "group": "Exterior Trim & Accessories"
+        },
+        {
+          "id": "mud_flap",
+          "name": "Mud Flap",
+          "group": "Exterior Trim & Accessories"
+        },
+        {
+          "id": "emblem__badge",
+          "name": "Emblem / Badge",
+          "group": "Exterior Trim & Accessories"
+        },
+        {
+          "id": "decal__sticker",
+          "name": "Decal / Sticker",
+          "group": "Exterior Trim & Accessories"
+        },
+        {
+          "id": "fuel_lid_cover",
+          "name": "Fuel Lid Cover",
+          "group": "Exterior Trim & Accessories"
+        },
+        {
+          "id": "side_step",
+          "name": "Side Step",
+          "group": "Exterior Trim & Accessories"
+        },
+        {
+          "id": "antenna__shark_fin",
+          "name": "Antenna / Shark Fin",
+          "group": "Exterior Trim & Accessories"
+        },
+        {
+          "id": "wiper_arm",
+          "name": "Wiper Arm",
+          "group": "Wiper System"
+        },
+        {
+          "id": "wiper_blade",
+          "name": "Wiper Blade",
+          "group": "Wiper System"
+        },
+        {
+          "id": "wiper_linkage",
+          "name": "Wiper Linkage",
+          "group": "Wiper System"
+        },
+        {
+          "id": "washer_tank",
+          "name": "Washer Tank",
+          "group": "Wiper System"
+        },
+        {
+          "id": "washer_motor",
+          "name": "Washer Motor",
+          "group": "Wiper System"
+        },
+        {
+          "id": "washer_pump",
+          "name": "Washer Pump",
+          "group": "Wiper System"
+        },
+        {
+          "id": "rear_wiper_arm",
+          "name": "Rear Wiper Arm",
+          "group": "Wiper System"
+        },
+        {
+          "id": "door_handle",
+          "name": "Door Handle",
+          "group": "Lock & Handle"
+        },
+        {
+          "id": "tailgate_handle",
+          "name": "Tailgate Handle",
+          "group": "Lock & Handle"
+        },
+        {
+          "id": "bonnet_lock",
+          "name": "Bonnet Lock",
+          "group": "Lock & Handle"
+        },
+        {
+          "id": "door_lock",
+          "name": "Door Lock",
+          "group": "Lock & Handle"
+        },
+        {
+          "id": "lock_actuator",
+          "name": "Lock Actuator",
+          "group": "Lock & Handle"
+        },
+        {
+          "id": "central_locking_kit",
+          "name": "Central Locking Kit",
+          "group": "Lock & Handle"
+        },
+        {
+          "id": "key_cylinder",
+          "name": "Key Cylinder",
+          "group": "Lock & Handle"
+        },
+        {
+          "id": "fuel_lid",
+          "name": "Fuel Lid",
+          "group": "Lock & Handle"
+        },
+        {
+          "id": "dashboard",
+          "name": "Dashboard",
+          "group": "Interior Body Trim"
+        },
+        {
+          "id": "door_trim_panel",
+          "name": "Door Trim Panel",
+          "group": "Interior Body Trim"
+        },
+        {
+          "id": "pillar_trim",
+          "name": "Pillar Trim",
+          "group": "Interior Body Trim"
+        },
+        {
+          "id": "headliner",
+          "name": "Headliner",
+          "group": "Interior Body Trim"
+        },
+        {
+          "id": "carpet",
+          "name": "Carpet",
+          "group": "Interior Body Trim"
+        },
+        {
+          "id": "sun_visor",
+          "name": "Sun Visor",
+          "group": "Interior Body Trim"
+        },
+        {
+          "id": "interior_garnish",
+          "name": "Interior Garnish",
+          "group": "Interior Body Trim"
+        },
+        {
+          "id": "boot__trunk_trim",
+          "name": "Boot / Trunk Trim",
+          "group": "Interior Body Trim"
+        },
+        {
+          "id": "chassis_cross_member",
+          "name": "Chassis Cross Member",
+          "group": "Under Body Parts"
+        },
+        {
+          "id": "floor_panel",
+          "name": "Floor Panel",
+          "group": "Under Body Parts"
+        },
+        {
+          "id": "engine_splash_shield",
+          "name": "Engine Splash Shield",
+          "group": "Under Body Parts"
+        },
+        {
+          "id": "wheel_well_liner",
+          "name": "Wheel Well Liner",
+          "group": "Under Body Parts"
+        },
+        {
+          "id": "under_cover",
+          "name": "Under Cover",
+          "group": "Under Body Parts"
+        },
+        {
+          "id": "side_under_cover",
+          "name": "Side Under Cover",
+          "group": "Under Body Parts"
+        },
+        {
+          "id": "fuel_tank_shield",
+          "name": "Fuel Tank Shield",
+          "group": "Under Body Parts"
+        },
+        {
+          "id": "heat_shield",
+          "name": "Heat Shield",
+          "group": "Under Body Parts"
+        },
+        {
+          "id": "door_rubber_beading",
+          "name": "Door Rubber Beading",
+          "group": "Weather Seals"
+        },
+        {
+          "id": "windshield_seal",
+          "name": "Windshield Seal",
+          "group": "Weather Seals"
+        },
+        {
+          "id": "boot_seal",
+          "name": "Boot Seal",
+          "group": "Weather Seals"
+        },
+        {
+          "id": "sunroof_seal",
+          "name": "Sunroof Seal",
+          "group": "Weather Seals"
+        },
+        {
+          "id": "glass_run_channel",
+          "name": "Glass Run Channel",
+          "group": "Weather Seals"
+        },
+        {
+          "id": "belt_weather_strip",
+          "name": "Belt Weather Strip",
+          "group": "Weather Seals"
+        },
+        {
+          "id": "corner_seal",
+          "name": "Corner Seal",
+          "group": "Weather Seals"
+        },
+        {
+          "id": "duster_seal",
+          "name": "Duster Seal",
+          "group": "Weather Seals"
+        },
+        {
+          "id": "clips",
+          "name": "Clips",
+          "group": "Mounting & Fasteners"
+        },
+        {
+          "id": "retainers",
+          "name": "Retainers",
+          "group": "Mounting & Fasteners"
+        },
+        {
+          "id": "fasteners",
+          "name": "Fasteners",
+          "group": "Mounting & Fasteners"
+        },
+        {
+          "id": "brackets",
+          "name": "Brackets",
+          "group": "Mounting & Fasteners"
+        },
+        {
+          "id": "body_bolts",
+          "name": "Body Bolts",
+          "group": "Mounting & Fasteners"
+        },
+        {
+          "id": "plastic_rivets",
+          "name": "Plastic Rivets",
+          "group": "Mounting & Fasteners"
+        },
+        {
+          "id": "screws",
+          "name": "Screws",
+          "group": "Mounting & Fasteners"
+        },
+        {
+          "id": "nuts_and_washers",
+          "name": "Nuts & Washers",
+          "group": "Mounting & Fasteners"
+        }
+      ]
+    },
+    {
+      "id": "suspension",
+      "name": "Suspension",
+      "subcategories": [
+        {
+          "id": "shock_absorber",
+          "name": "Shock Absorber",
+          "group": "Front Suspension"
+        },
+        {
+          "id": "strut_assembly",
+          "name": "Strut Assembly",
+          "group": "Front Suspension"
+        },
+        {
+          "id": "coil_spring",
+          "name": "Coil Spring",
+          "group": "Front Suspension"
+        },
+        {
+          "id": "control_arm",
+          "name": "Control Arm",
+          "group": "Front Suspension"
+        },
+        {
+          "id": "ball_joint",
+          "name": "Ball Joint",
+          "group": "Front Suspension"
+        },
+        {
+          "id": "stabilizer_link",
+          "name": "Stabilizer Link",
+          "group": "Front Suspension"
+        },
+        {
+          "id": "sway_bar",
+          "name": "Sway Bar",
+          "group": "Front Suspension"
+        },
+        {
+          "id": "strut_mount",
+          "name": "Strut Mount",
+          "group": "Front Suspension"
+        },
+        {
+          "id": "rear_shock_absorber",
+          "name": "Rear Shock Absorber",
+          "group": "Rear Suspension"
+        },
+        {
+          "id": "leaf_spring",
+          "name": "Leaf Spring",
+          "group": "Rear Suspension"
+        },
+        {
+          "id": "trailing_arm",
+          "name": "Trailing Arm",
+          "group": "Rear Suspension"
+        },
+        {
+          "id": "panhard_rod",
+          "name": "Panhard Rod",
+          "group": "Rear Suspension"
+        },
+        {
+          "id": "rear_coil_spring",
+          "name": "Rear Coil Spring",
+          "group": "Rear Suspension"
+        },
+        {
+          "id": "tie_rod_end",
+          "name": "Tie Rod End",
+          "group": "Steering & Alignment"
+        },
+        {
+          "id": "rack_and_pinion",
+          "name": "Rack & Pinion",
+          "group": "Steering & Alignment"
+        },
+        {
+          "id": "steering_knuckle",
+          "name": "Steering Knuckle",
+          "group": "Steering & Alignment"
+        },
+        {
+          "id": "wheel_hub",
+          "name": "Wheel Hub",
+          "group": "Steering & Alignment"
+        },
+        {
+          "id": "wheel_bearing",
+          "name": "Wheel Bearing",
+          "group": "Steering & Alignment"
+        }
+      ]
+    },
+    {
+      "id": "brakes",
+      "name": "Brakes",
+      "subcategories": [
+        {
+          "id": "brake_pad",
+          "name": "Brake Pad",
+          "group": "Brake Components"
+        },
+        {
+          "id": "brake_disc__rotor",
+          "name": "Brake Disc / Rotor",
+          "group": "Brake Components"
+        },
+        {
+          "id": "brake_drum",
+          "name": "Brake Drum",
+          "group": "Brake Components"
+        },
+        {
+          "id": "brake_caliper",
+          "name": "Brake Caliper",
+          "group": "Brake Components"
+        },
+        {
+          "id": "brake_shoe",
+          "name": "Brake Shoe",
+          "group": "Brake Components"
+        },
+        {
+          "id": "brake_line",
+          "name": "Brake Line",
+          "group": "Brake Components"
+        },
+        {
+          "id": "master_cylinder",
+          "name": "Master Cylinder",
+          "group": "Brake Components"
+        },
+        {
+          "id": "brake_booster",
+          "name": "Brake Booster",
+          "group": "Brake Components"
+        },
+        {
+          "id": "abs_module",
+          "name": "ABS Module",
+          "group": "Brake Components"
+        },
+        {
+          "id": "wheel_speed_sensor",
+          "name": "Wheel Speed Sensor",
+          "group": "Brake Components"
+        },
+        {
+          "id": "handbrake_cable",
+          "name": "Handbrake Cable",
+          "group": "Parking Brake"
+        },
+        {
+          "id": "handbrake_lever",
+          "name": "Handbrake Lever",
+          "group": "Parking Brake"
+        },
+        {
+          "id": "parking_brake_shoes",
+          "name": "Parking Brake Shoes",
+          "group": "Parking Brake"
+        }
+      ]
+    },
+    {
+      "id": "electrical",
+      "name": "Electrical",
+      "subcategories": [
+        {
+          "id": "alternator",
+          "name": "Alternator",
+          "group": "Starting & Charging"
+        },
+        {
+          "id": "starter_motor",
+          "name": "Starter Motor",
+          "group": "Starting & Charging"
+        },
+        {
+          "id": "battery",
+          "name": "Battery",
+          "group": "Starting & Charging"
+        },
+        {
+          "id": "voltage_regulator",
+          "name": "Voltage Regulator",
+          "group": "Starting & Charging"
+        },
+        {
+          "id": "main_wiring_harness",
+          "name": "Main Wiring Harness",
+          "group": "Wiring & Connectors"
+        },
+        {
+          "id": "fuse_box",
+          "name": "Fuse Box",
+          "group": "Wiring & Connectors"
+        },
+        {
+          "id": "relay_box",
+          "name": "Relay Box",
+          "group": "Wiring & Connectors"
+        },
+        {
+          "id": "connectors_and_terminals",
+          "name": "Connectors & Terminals",
+          "group": "Wiring & Connectors"
+        },
+        {
+          "id": "ignition_switch",
+          "name": "Ignition Switch",
+          "group": "Switches & Controls"
+        },
+        {
+          "id": "window_switch",
+          "name": "Window Switch",
+          "group": "Switches & Controls"
+        },
+        {
+          "id": "combination_switch",
+          "name": "Combination Switch",
+          "group": "Switches & Controls"
+        },
+        {
+          "id": "horn",
+          "name": "Horn",
+          "group": "Switches & Controls"
+        }
+      ]
+    },
+    {
+      "id": "accessories",
+      "name": "Accessories",
+      "subcategories": [
+        {
+          "id": "roof_box",
+          "name": "Roof Box",
+          "group": "Exterior Accessories"
+        },
+        {
+          "id": "bike_rack",
+          "name": "Bike Rack",
+          "group": "Exterior Accessories"
+        },
+        {
+          "id": "tow_bar",
+          "name": "Tow Bar",
+          "group": "Exterior Accessories"
+        },
+        {
+          "id": "bull_bar",
+          "name": "Bull Bar",
+          "group": "Exterior Accessories"
+        },
+        {
+          "id": "car_cover",
+          "name": "Car Cover",
+          "group": "Exterior Accessories"
+        },
+        {
+          "id": "floor_mat",
+          "name": "Floor Mat",
+          "group": "Interior Accessories"
+        },
+        {
+          "id": "seat_cover",
+          "name": "Seat Cover",
+          "group": "Interior Accessories"
+        },
+        {
+          "id": "steering_cover",
+          "name": "Steering Cover",
+          "group": "Interior Accessories"
+        },
+        {
+          "id": "phone_mount",
+          "name": "Phone Mount",
+          "group": "Interior Accessories"
+        },
+        {
+          "id": "dash_cam",
+          "name": "Dash Cam",
+          "group": "Interior Accessories"
+        },
+        {
+          "id": "infotainment_system",
+          "name": "Infotainment System",
+          "group": "Electronics & Gadgets"
+        },
+        {
+          "id": "reverse_camera",
+          "name": "Reverse Camera",
+          "group": "Electronics & Gadgets"
+        },
+        {
+          "id": "parking_sensor_kit",
+          "name": "Parking Sensor Kit",
+          "group": "Electronics & Gadgets"
+        },
+        {
+          "id": "tpms_kit",
+          "name": "TPMS Kit",
+          "group": "Electronics & Gadgets"
+        }
+      ]
+    },
+    {
+      "id": "sensors_and_modules",
+      "name": "Sensors & Modules",
+      "subcategories": [
+        {
+          "id": "ecu__ecm",
+          "name": "ECU / ECM",
+          "group": "Control Modules"
+        },
+        {
+          "id": "tcu_transmission_control_unit",
+          "name": "TCU (Transmission Control Unit)",
+          "group": "Control Modules"
+        },
+        {
+          "id": "bcm_body_control_module",
+          "name": "BCM (Body Control Module)",
+          "group": "Control Modules"
+        },
+        {
+          "id": "abs_control_module",
+          "name": "ABS Control Module",
+          "group": "Control Modules"
+        },
+        {
+          "id": "airbag_control_module",
+          "name": "Airbag Control Module",
+          "group": "Control Modules"
+        },
+        {
+          "id": "oxygen_sensor",
+          "name": "Oxygen Sensor",
+          "group": "Sensors"
+        },
+        {
+          "id": "mass_air_flow_sensor",
+          "name": "Mass Air Flow Sensor",
+          "group": "Sensors"
+        },
+        {
+          "id": "crankshaft_position_sensor",
+          "name": "Crankshaft Position Sensor",
+          "group": "Sensors"
+        },
+        {
+          "id": "camshaft_position_sensor",
+          "name": "Camshaft Position Sensor",
+          "group": "Sensors"
+        },
+        {
+          "id": "parking_sensor",
+          "name": "Parking Sensor",
+          "group": "Sensors"
+        },
+        {
+          "id": "rain_sensor",
+          "name": "Rain Sensor",
+          "group": "Sensors"
+        },
+        {
+          "id": "tyre_pressure_sensor",
+          "name": "Tyre Pressure Sensor",
+          "group": "Sensors"
+        }
+      ]
+    },
+    {
+      "id": "interior",
+      "name": "Interior",
+      "subcategories": [
+        {
+          "id": "front_seat",
+          "name": "Front Seat",
+          "group": "Seats & Upholstery"
+        },
+        {
+          "id": "rear_seat",
+          "name": "Rear Seat",
+          "group": "Seats & Upholstery"
+        },
+        {
+          "id": "seat_belt",
+          "name": "Seat Belt",
+          "group": "Seats & Upholstery"
+        },
+        {
+          "id": "seat_motor",
+          "name": "Seat Motor",
+          "group": "Seats & Upholstery"
+        },
+        {
+          "id": "seat_frame",
+          "name": "Seat Frame",
+          "group": "Seats & Upholstery"
+        },
+        {
+          "id": "center_console",
+          "name": "Center Console",
+          "group": "Console & Storage"
+        },
+        {
+          "id": "glove_box",
+          "name": "Glove Box",
+          "group": "Console & Storage"
+        },
+        {
+          "id": "armrest",
+          "name": "Armrest",
+          "group": "Console & Storage"
+        },
+        {
+          "id": "cup_holder",
+          "name": "Cup Holder",
+          "group": "Console & Storage"
+        },
+        {
+          "id": "heater_core",
+          "name": "Heater Core",
+          "group": "Climate & Comfort"
+        },
+        {
+          "id": "blower_motor",
+          "name": "Blower Motor",
+          "group": "Climate & Comfort"
+        },
+        {
+          "id": "sunroof_mechanism",
+          "name": "Sunroof Mechanism",
+          "group": "Climate & Comfort"
+        }
+      ]
+    },
+    {
+      "id": "wheels",
+      "name": "Wheels",
+      "subcategories": [
+        {
+          "id": "alloy_wheel",
+          "name": "Alloy Wheel",
+          "group": "Wheels & Tyres"
+        },
+        {
+          "id": "steel_wheel",
+          "name": "Steel Wheel",
+          "group": "Wheels & Tyres"
+        },
+        {
+          "id": "spare_wheel",
+          "name": "Spare Wheel",
+          "group": "Wheels & Tyres"
+        },
+        {
+          "id": "tyre",
+          "name": "Tyre",
+          "group": "Wheels & Tyres"
+        },
+        {
+          "id": "wheel_cap",
+          "name": "Wheel Cap",
+          "group": "Wheels & Tyres"
+        },
+        {
+          "id": "lug_nut__bolt",
+          "name": "Lug Nut / Bolt",
+          "group": "Wheels & Tyres"
+        },
+        {
+          "id": "tpms_sensor",
+          "name": "TPMS Sensor",
+          "group": "TPMS & Accessories"
+        },
+        {
+          "id": "wheel_spacer",
+          "name": "Wheel Spacer",
+          "group": "TPMS & Accessories"
+        },
+        {
+          "id": "wheel_hub",
+          "name": "Wheel Hub",
+          "group": "TPMS & Accessories"
+        }
+      ]
+    },
+    {
+      "id": "lighting",
+      "name": "Lighting",
+      "subcategories": [
+        {
+          "id": "headlamp",
+          "name": "Headlamp",
+          "group": "Exterior Lighting"
+        },
+        {
+          "id": "tail_lamp",
+          "name": "Tail Lamp",
+          "group": "Exterior Lighting"
+        },
+        {
+          "id": "fog_lamp",
+          "name": "Fog Lamp",
+          "group": "Exterior Lighting"
+        },
+        {
+          "id": "drl__day_light",
+          "name": "DRL / Day Light",
+          "group": "Exterior Lighting"
+        },
+        {
+          "id": "indicator_lamp",
+          "name": "Indicator Lamp",
+          "group": "Exterior Lighting"
+        },
+        {
+          "id": "reverse_lamp",
+          "name": "Reverse Lamp",
+          "group": "Exterior Lighting"
+        },
+        {
+          "id": "number_plate_lamp",
+          "name": "Number Plate Lamp",
+          "group": "Exterior Lighting"
+        },
+        {
+          "id": "cornering_lamp",
+          "name": "Cornering Lamp",
+          "group": "Exterior Lighting"
+        },
+        {
+          "id": "interior_lamp",
+          "name": "Interior Lamp",
+          "group": "Interior Lighting"
+        },
+        {
+          "id": "welcome_light",
+          "name": "Welcome Light",
+          "group": "Interior Lighting"
+        },
+        {
+          "id": "map_light",
+          "name": "Map Light",
+          "group": "Interior Lighting"
+        },
+        {
+          "id": "boot_light",
+          "name": "Boot Light",
+          "group": "Interior Lighting"
+        },
+        {
+          "id": "halogen_bulb",
+          "name": "Halogen Bulb",
+          "group": "Bulbs & Ballasts"
+        },
+        {
+          "id": "led_bulb",
+          "name": "LED Bulb",
+          "group": "Bulbs & Ballasts"
+        },
+        {
+          "id": "xenon_bulb",
+          "name": "Xenon Bulb",
+          "group": "Bulbs & Ballasts"
+        },
+        {
+          "id": "ballast",
+          "name": "Ballast",
+          "group": "Bulbs & Ballasts"
+        }
+      ]
+    },
+    {
+      "id": "bearing",
+      "name": "Bearing",
+      "subcategories": [
+        {
+          "id": "wheel_bearing",
+          "name": "Wheel Bearing",
+          "group": "Bearings"
+        },
+        {
+          "id": "hub_bearing",
+          "name": "Hub Bearing",
+          "group": "Bearings"
+        },
+        {
+          "id": "clutch_release_bearing",
+          "name": "Clutch Release Bearing",
+          "group": "Bearings"
+        },
+        {
+          "id": "pilot_bearing",
+          "name": "Pilot Bearing",
+          "group": "Bearings"
+        },
+        {
+          "id": "taper_roller_bearing",
+          "name": "Taper Roller Bearing",
+          "group": "Bearings"
+        },
+        {
+          "id": "ball_bearing",
+          "name": "Ball Bearing",
+          "group": "Bearings"
+        },
+        {
+          "id": "needle_bearing",
+          "name": "Needle Bearing",
+          "group": "Bearings"
+        }
+      ]
+    },
+    {
+      "id": "fuel_system",
+      "name": "Fuel System",
+      "subcategories": [
+        {
+          "id": "fuel_pump",
+          "name": "Fuel Pump",
+          "group": "Petrol Fuel System"
+        },
+        {
+          "id": "fuel_filter",
+          "name": "Fuel Filter",
+          "group": "Petrol Fuel System"
+        },
+        {
+          "id": "fuel_rail",
+          "name": "Fuel Rail",
+          "group": "Petrol Fuel System"
+        },
+        {
+          "id": "fuel_injector",
+          "name": "Fuel Injector",
+          "group": "Petrol Fuel System"
+        },
+        {
+          "id": "fuel_tank",
+          "name": "Fuel Tank",
+          "group": "Petrol Fuel System"
+        },
+        {
+          "id": "fuel_cap",
+          "name": "Fuel Cap",
+          "group": "Petrol Fuel System"
+        },
+        {
+          "id": "fuel_line",
+          "name": "Fuel Line",
+          "group": "Petrol Fuel System"
+        },
+        {
+          "id": "high_pressure_pump",
+          "name": "High Pressure Pump",
+          "group": "Diesel Fuel System"
+        },
+        {
+          "id": "common_rail",
+          "name": "Common Rail",
+          "group": "Diesel Fuel System"
+        },
+        {
+          "id": "diesel_injector",
+          "name": "Diesel Injector",
+          "group": "Diesel Fuel System"
+        },
+        {
+          "id": "water_separator",
+          "name": "Water Separator",
+          "group": "Diesel Fuel System"
+        },
+        {
+          "id": "primer_pump",
+          "name": "Primer Pump",
+          "group": "Diesel Fuel System"
+        },
+        {
+          "id": "high_voltage_battery",
+          "name": "High Voltage Battery",
+          "group": "EV Charging & Storage"
+        },
+        {
+          "id": "battery_management_system",
+          "name": "Battery Management System",
+          "group": "EV Charging & Storage"
+        },
+        {
+          "id": "onboard_charger",
+          "name": "Onboard Charger",
+          "group": "EV Charging & Storage"
+        },
+        {
+          "id": "dc_dc_converter",
+          "name": "DC-DC Converter",
+          "group": "EV Charging & Storage"
+        }
+      ]
+    }
+  ]
+}

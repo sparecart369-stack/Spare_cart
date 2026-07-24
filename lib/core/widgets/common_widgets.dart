@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:spare_kart/bloc/listings/listings_bloc.dart';
 import 'package:spare_kart/core/constants/app_assets.dart';
@@ -593,6 +594,36 @@ class PremiumSearchBar extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Pull-to-refresh control for listing feeds. Uses a sliver so the loader
+/// is not clipped behind headers (unlike wrapping [CustomScrollView] in
+/// [RefreshIndicator]).
+class ListingsRefreshControl extends StatelessWidget {
+  const ListingsRefreshControl({super.key, required this.bloc});
+
+  final ListingsBloc bloc;
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoSliverRefreshControl(
+      onRefresh: () => refreshListings(bloc),
+    );
+  }
+}
+
+/// Thin progress bar shown at the top of listing feeds while data loads.
+class ListingsTopLoader extends StatelessWidget {
+  const ListingsTopLoader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const LinearProgressIndicator(
+      minHeight: 3,
+      backgroundColor: AppColors.border,
+      color: AppColors.primary,
     );
   }
 }

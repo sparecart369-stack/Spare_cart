@@ -17,6 +17,7 @@ abstract final class AppAssets {
   static const categoryBearing = 'assets/images/category_bearing.png';
   static const categoryFuelSystem = 'assets/images/category_fuel_system.png';
   static const vehicleCatalog = 'assets/data/vehicle_catalog.json';
+  static const partsCatalog = 'assets/data/parts_catalog.json';
   static const indiaLocations = 'assets/data/india_locations.json';
 
   static String? categoryImageFor(String name) => switch (name) {
@@ -36,4 +37,11 @@ abstract final class AppAssets {
         'Fuel System' => categoryFuelSystem,
         _ => null,
       };
+
+  /// Convention-based path for subcategory images added later without JSON updates.
+  static String subcategoryImagePath({
+    required String categoryId,
+    required String subcategoryId,
+  }) =>
+      'assets/sub/$categoryId/$subcategoryId.png';
 }

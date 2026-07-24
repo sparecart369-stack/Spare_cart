@@ -86,162 +86,172 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, state) {
           final featured = state.allParts.take(6).toList();
           final bloc = context.read<ListingsBloc>();
-          return RefreshIndicator(
-            onRefresh: () => refreshListings(bloc),
-            child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-            slivers: [
-              SliverToBoxAdapter(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Color(0xFFEEF2FF), AppColors.background],
-                      stops: [0.0, 0.45],
-                    ),
-                  ),
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 12, r.horizontalPadding(), 0),
-                      child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Good day 👋', style: AppTypography.greeting),
-                                  const SizedBox(height: 2),
-                                  Text(firstName, style: AppTypography.userName),
-                                ],
-                              ),
-                            ),
-                            _AdminModeButton(),
-                            const SizedBox(width: 8),
-                            PremiumIconButton(
-                              icon: Icons.notifications_none_rounded,
-                              onPressed: () => Navigator.pushNamed(context, AppRoutes.notifications),
-                            ),
-                            const SizedBox(width: 8),
-                            PremiumIconButton(
-                              icon: Icons.favorite_border_rounded,
-                              onPressed: () => Navigator.pushNamed(context, AppRoutes.savedItems),
-                              badge: favouritesCount > 0 ? '$favouritesCount' : null,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        PremiumSearchBar(
-                          onTap: () => _openFilters(goToSearchOnApply: true),
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
-                            boxShadow: AppDecorations.shadowLg,
-                          ),
-                          child: MarketplaceHeroBanner(
-                            onExplore: () => _openFilters(goToSearchOnApply: true),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        SectionHeader(
-                          title: 'Popular Categories',
-                          subtitle: 'Browse by part type',
-                          action: 'See All',
-                          onActionTap: _openFilters,
-                          dense: true,
-                        ),
-                        _PopularCategoriesGrid(
-                          onCategoryTap: _applyCategoryAndGoToSearch,
-                          iconFromName: _iconFromName,
-                        ),
-                        const SizedBox(height: 8),
-                        SectionHeader(
-                          title: 'Search by Vehicle',
-                          subtitle: 'Find exact-fit parts faster',
-                        ),
-                        _VehicleDropdowns(
-                          make: _selectedMake,
-                          model: _selectedModel,
-                          year: _selectedYear,
-                          onMakeChanged: (v) => setState(() {
-                            _selectedMake = v;
-                            _selectedModel = VehicleCatalog.instance.defaultModelFor(v);
-                            _selectedYear = null;
-                          }),
-                          onModelChanged: (v) => setState(() {
-                            _selectedModel = v;
-                            _selectedYear = null;
-                          }),
-                          onYearChanged: (v) {
-                            setState(() => _selectedYear = v);
-                            if (v != null && _selectedMake != null && _selectedModel != null) {
-                              _applyVehicleFiltersAndGoToSearch(
-                                make: _selectedMake!,
-                                model: _selectedModel!,
-                                year: v,
-                              );
-                            }
-                          },
-                        ),
-                        SectionHeader(
-                          title: 'Featured Parts',
-                          subtitle: 'Hand-picked quality listings',
-                          action: 'See All',
-                          onActionTap: _showAllListingsAndGoToSearch,
-                        ),
-                      ],
-                    ),
-                    ),
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(
-                  r.horizontalPadding(),
-                  0,
-                  r.horizontalPadding(),
-                  r.stickyFooterBottomPadding(),
-                ),
-                sliver: featured.isEmpty
-                    ? SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: EmptyState(
-                            icon: Icons.inventory_2_outlined,
-                            title: 'No listings yet',
-                            subtitle: 'Use the Sell tab to add your first part',
-                          ),
-                        ),
-                      )
-                    : SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: r.gridColumns(mobile: 2, tablet: 3),
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          childAspectRatio: 0.68,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, i) => PartCard(
-                            part: featured[i],
-                            onTap: () => Navigator.pushNamed(
-                              context,
-                              AppRoutes.productDetail,
-                              arguments: featured[i],
-                            ),
-                          ),
-                          childCount: featured.length,
+          final topInset = MediaQuery.viewPaddingOf(context).top;
+          return Stack(
+            children: [
+              CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                slivers: [
+                  ListingsRefreshControl(bloc: bloc),
+                  SliverToBoxAdapter(
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0xFFEEF2FF), AppColors.background],
+                          stops: [0.0, 0.45],
                         ),
                       ),
+                      child: SafeArea(
+                        bottom: false,
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(r.horizontalPadding(), 12, r.horizontalPadding(), 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Good day 👋', style: AppTypography.greeting),
+                                        const SizedBox(height: 2),
+                                        Text(firstName, style: AppTypography.userName),
+                                      ],
+                                    ),
+                                  ),
+                                  _AdminModeButton(),
+                                  const SizedBox(width: 8),
+                                  PremiumIconButton(
+                                    icon: Icons.notifications_none_rounded,
+                                    onPressed: () => Navigator.pushNamed(context, AppRoutes.notifications),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  PremiumIconButton(
+                                    icon: Icons.favorite_border_rounded,
+                                    onPressed: () => Navigator.pushNamed(context, AppRoutes.savedItems),
+                                    badge: favouritesCount > 0 ? '$favouritesCount' : null,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              PremiumSearchBar(
+                                onTap: () => _openFilters(goToSearchOnApply: true),
+                              ),
+                              const SizedBox(height: 20),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(AppDecorations.radiusXl),
+                                  boxShadow: AppDecorations.shadowLg,
+                                ),
+                                child: MarketplaceHeroBanner(
+                                  onExplore: () => _openFilters(goToSearchOnApply: true),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              SectionHeader(
+                                title: 'Popular Categories',
+                                subtitle: 'Browse by part type',
+                                action: 'See All',
+                                onActionTap: _openFilters,
+                                dense: true,
+                              ),
+                              _PopularCategoriesGrid(
+                                onCategoryTap: _applyCategoryAndGoToSearch,
+                                iconFromName: _iconFromName,
+                              ),
+                              const SizedBox(height: 8),
+                              SectionHeader(
+                                title: 'Search by Vehicle',
+                                subtitle: 'Find exact-fit parts faster',
+                              ),
+                              _VehicleDropdowns(
+                                make: _selectedMake,
+                                model: _selectedModel,
+                                year: _selectedYear,
+                                onMakeChanged: (v) => setState(() {
+                                  _selectedMake = v;
+                                  _selectedModel = VehicleCatalog.instance.defaultModelFor(v);
+                                  _selectedYear = null;
+                                }),
+                                onModelChanged: (v) => setState(() {
+                                  _selectedModel = v;
+                                  _selectedYear = null;
+                                }),
+                                onYearChanged: (v) {
+                                  setState(() => _selectedYear = v);
+                                  if (v != null && _selectedMake != null && _selectedModel != null) {
+                                    _applyVehicleFiltersAndGoToSearch(
+                                      make: _selectedMake!,
+                                      model: _selectedModel!,
+                                      year: v,
+                                    );
+                                  }
+                                },
+                              ),
+                              SectionHeader(
+                                title: 'Featured Parts',
+                                subtitle: 'Hand-picked quality listings',
+                                action: 'See All',
+                                onActionTap: _showAllListingsAndGoToSearch,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      r.horizontalPadding(),
+                      0,
+                      r.horizontalPadding(),
+                      r.stickyFooterBottomPadding(),
+                    ),
+                    sliver: featured.isEmpty
+                        ? SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 24),
+                              child: EmptyState(
+                                icon: Icons.inventory_2_outlined,
+                                title: 'No listings yet',
+                                subtitle: 'Use the Sell tab to add your first part',
+                              ),
+                            ),
+                          )
+                        : SliverGrid(
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: r.gridColumns(mobile: 2, tablet: 3),
+                              mainAxisSpacing: 16,
+                              crossAxisSpacing: 16,
+                              childAspectRatio: 0.68,
+                            ),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, i) => PartCard(
+                                part: featured[i],
+                                onTap: () => Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.productDetail,
+                                  arguments: featured[i],
+                                ),
+                              ),
+                              childCount: featured.length,
+                            ),
+                          ),
+                  ),
+                ],
               ),
+              if (state.isLoading && !state.isLoaded)
+                Positioned(
+                  top: topInset,
+                  left: 0,
+                  right: 0,
+                  child: const ListingsTopLoader(),
+                ),
             ],
-          ),
           );
         },
       ),

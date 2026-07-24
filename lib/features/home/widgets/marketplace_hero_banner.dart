@@ -25,11 +25,15 @@ class MarketplaceHeroBanner extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        // Width-based aspect keeps the banner ~18–22% of typical phone viewports.
-        final height = (width / 2.05).clamp(168.0, 200.0);
-        final titleSize = (width * 0.048).clamp(16.0, 20.0);
-        final subtitleSize = (width * 0.032).clamp(11.5, 13.0);
-        final showSubtitle = height >= 176;
+        // Width-based aspect keeps the banner compact on narrow screens.
+        final height = (width / 2.2).clamp(152.0, 184.0);
+        final titleSize = (width * 0.046).clamp(15.5, 19.0);
+        final subtitleSize = (width * 0.031).clamp(11.0, 12.5);
+        final showSubtitle = height >= 160;
+        final horizontalPad = width * 0.055;
+        final topPad = height * 0.1;
+        final bottomPad = height * 0.12;
+        final ctaGap = height * 0.055;
 
         return SizedBox(
           height: height,
@@ -58,42 +62,38 @@ class MarketplaceHeroBanner extends StatelessWidget {
                 ),
                 Padding(
                   padding: EdgeInsets.fromLTRB(
-                    width * 0.055,
-                    height * 0.14,
+                    horizontalPad,
+                    topPad,
                     width * 0.42,
-                    height * 0.14,
+                    bottomPad,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Global Marketplace for\nNew & Used Auto Parts',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: titleSize,
-                              fontWeight: FontWeight.w800,
-                              height: 1.2,
-                              letterSpacing: -0.4,
-                              color: Colors.white,
-                            ),
-                          ),
-                          if (showSubtitle) ...[
-                            SizedBox(height: height * 0.05),
-                            Text(
-                              'Genuine new & used parts at the best prices.',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: subtitleSize,
-                                fontWeight: FontWeight.w500,
-                                height: 1.25,
-                                color: Colors.white.withValues(alpha: 0.78),
-                              ),
-                            ),
-                          ],
-                        ],
+                      Text(
+                        'Global Marketplace for\nNew & Used Auto Parts',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: titleSize,
+                          fontWeight: FontWeight.w800,
+                          height: 1.2,
+                          letterSpacing: -0.4,
+                          color: Colors.white,
+                        ),
                       ),
+                      if (showSubtitle) ...[
+                        SizedBox(height: height * 0.035),
+                        Text(
+                          'Genuine new & used parts at the best prices.',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: subtitleSize,
+                            fontWeight: FontWeight.w500,
+                            height: 1.25,
+                            color: Colors.white.withValues(alpha: 0.78),
+                          ),
+                        ),
+                      ],
+                      SizedBox(height: ctaGap),
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
@@ -112,8 +112,8 @@ class MarketplaceHeroBanner extends StatelessWidget {
                               ],
                             ),
                             padding: EdgeInsets.symmetric(
-                              horizontal: width * 0.045,
-                              vertical: height * 0.065,
+                              horizontal: width * 0.042,
+                              vertical: (height * 0.048).clamp(8.0, 11.0),
                             ),
                             child: Text(
                               'Explore Parts',
@@ -150,7 +150,7 @@ class MarketplaceHeroBannerImage extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final height = (width / 2.05).clamp(168.0, 200.0);
+        final height = (width / 2.2).clamp(152.0, 184.0);
 
         return ClipRRect(
           borderRadius: BorderRadius.circular(AppDecorations.radiusXl),

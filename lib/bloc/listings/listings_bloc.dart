@@ -12,8 +12,16 @@ sealed class ListingsEvent extends Equatable {
 class ListingsLoaded extends ListingsEvent {}
 
 Future<void> refreshListings(ListingsBloc bloc) async {
+  if (bloc.state.isLoading) {
+    await bloc.stream.firstWhere((state) => !state.isLoading);
+    return;
+  }
+
+  final loadingStarted = bloc.stream.where((state) => state.isLoading).first;
+  final loadingFinished = bloc.stream.where((state) => !state.isLoading).first;
   bloc.add(ListingsLoaded());
-  await bloc.stream.firstWhere((state) => !state.isLoading);
+  await loadingStarted;
+  await loadingFinished;
 }
 
 class ListingPublishRequested extends ListingsEvent {
@@ -38,6 +46,7 @@ class ListingFiltersApplied extends ListingsEvent {
 
 enum FilterChipField {
   category,
+  subcategory,
   make,
   model,
   year,
@@ -160,6 +169,7 @@ class ListingsState extends Equatable {
 class PartFilters extends Equatable {
   const PartFilters({
     this.category,
+    this.subcategory,
     this.make,
     this.model,
     this.year,
@@ -174,6 +184,7 @@ class PartFilters extends Equatable {
   });
 
   final String? category;
+  final String? subcategory;
   final String? make;
   final String? model;
   final int? year;
@@ -188,6 +199,7 @@ class PartFilters extends Equatable {
 
   PartFilters copyWith({
     String? category,
+    String? subcategory,
     String? make,
     String? model,
     int? year,
@@ -200,6 +212,7 @@ class PartFilters extends Equatable {
     double? maxPrice,
     SortOption? sortBy,
     bool clearCategory = false,
+    bool clearSubcategory = false,
     bool clearMake = false,
     bool clearModel = false,
     bool clearYear = false,
@@ -211,6 +224,7 @@ class PartFilters extends Equatable {
   }) {
     return PartFilters(
       category: clearCategory ? null : (category ?? this.category),
+      subcategory: clearSubcategory ? null : (subcategory ?? this.subcategory),
       make: clearMake ? null : (make ?? this.make),
       model: clearModel ? null : (model ?? this.model),
       year: clearYear ? null : (year ?? this.year),
@@ -228,6 +242,7 @@ class PartFilters extends Equatable {
   @override
   List<Object?> get props => [
         category,
+        subcategory,
         make,
         model,
         year,
@@ -245,6 +260,9 @@ class PartFilters extends Equatable {
     final chips = <ActiveFilterChip>[];
     if (category != null) {
       chips.add(ActiveFilterChip(label: category!, field: FilterChipField.category));
+    }
+    if (subcategory != null) {
+      chips.add(ActiveFilterChip(label: subcategory!, field: FilterChipField.subcategory));
     }
     if (make != null) {
       chips.add(ActiveFilterChip(label: make!, field: FilterChipField.make));
@@ -409,7 +427,11 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
 
   void _onFilterCleared(ListingFilterCleared event, Emitter<ListingsState> emit) {
     final filters = switch (event.field) {
-      FilterChipField.category => state.filters.copyWith(clearCategory: true),
+      FilterChipField.category => state.filters.copyWith(
+          clearCategory: true,
+          clearSubcategory: true,
+        ),
+      FilterChipField.subcategory => state.filters.copyWith(clearSubcategory: true),
       FilterChipField.make => state.filters.copyWith(
           clearMake: true,
           clearModel: true,
@@ -478,6 +500,10 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
         return false;
       }
       if (filters.category != null && part.category != filters.category) return false;
+      if (filters.subcategory != null) {
+        final partSub = part.subcategory?.toLowerCase() ?? '';
+        if (partSub != filters.subcategory!.toLowerCase()) return false;
+      }
       if (filters.make != null && part.make != filters.make) return false;
       if (filters.model != null && part.model != filters.model) return false;
       if (filters.year != null && part.year != filters.year) return false;
@@ -521,6 +547,7 @@ class ListingsBloc extends Bloc<ListingsEvent, ListingsState> {
 
     return part.fullTitle.toLowerCase().contains(q) ||
         part.category.toLowerCase().contains(q) ||
+        (part.subcategory?.toLowerCase().contains(q) ?? false) ||
         part.location.toLowerCase().contains(q) ||
         part.description.toLowerCase().contains(q) ||
         part.make.toLowerCase().contains(q) ||

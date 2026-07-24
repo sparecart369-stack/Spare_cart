@@ -1,27 +1,265 @@
 {
   "source": "https://en.wikipedia.org/wiki/Category:Lists_of_cars",
   "version": 1,
-  "generatedAt": "2026-07-05",
+  "generatedAt": "2026-07-25",
   "makes": [
     {
       "name": "9ff",
-      "models": []
+      "models": [
+        "Artega",
+        "Autoblog",
+        "Gumpert",
+        "Lola",
+        "Nardo Ring",
+        "Porsche 997 GT3 RS",
+        "Public"
+      ]
     },
     {
       "name": "Abarth",
-      "models": []
+      "models": [
+        "500",
+        "595",
+        "695",
+        "Grande Punto",
+        "Punto",
+        "Punto Evo",
+        "Ritmo",
+        "Seicento"
+      ]
     },
     {
       "name": "ABT Sportsline",
-      "models": []
+      "models": [
+        "2020–21 season",
+        "2022–23 season",
+        "2023–24 season",
+        "2024–25 season",
+        "[[2021 Extreme E Championship",
+        "[[2022 Extreme E Championship",
+        "[[2023 Extreme E Championship",
+        "A4",
+        "Abt",
+        "ADR",
+        "ARC",
+        "Audi Sport",
+        "BEI",
+        "BER",
+        "bi-turbo",
+        "BRN",
+        "BUE",
+        "CAP",
+        "Continental",
+        "COP",
+        "COP1",
+        "COP2",
+        "Cupra",
+        "DES",
+        "DES1",
+        "DES2",
+        "DIR",
+        "DRH",
+        "DTM",
+        "ENE",
+        "Envision Racing",
+        "FIA Formula E Championship",
+        "FIA Formula E World Championship",
+        "Formula E Gen3 Evo",
+        "HKG",
+        "HYD",
+        "HYD1",
+        "HYD2",
+        "ISL",
+        "ISL1",
+        "ISL1 R1",
+        "ISL1 R2",
+        "ISL2",
+        "ISL2 R1",
+        "ISL2 R2",
+        "JAK",
+        "JED",
+        "JUR",
+        "Kempten im Allgäu",
+        "LBH",
+        "LDN",
+        "Lola",
+        "MAD",
+        "Mahindra",
+        "McLaren",
+        "MCO",
+        "MEX",
+        "MIA",
+        "MIS",
+        "MRK",
+        "MSC",
+        "MTL",
+        "NYC",
+        "OCE",
+        "PAR",
+        "PDE",
+        "POR",
+        "PUE",
+        "PUT",
+        "R8",
+        "RME",
+        "SAN",
+        "SAP",
+        "SCL",
+        "SHA",
+        "Spark",
+        "spec",
+        "SRT01-e",
+        "SRT05e",
+        "SYX",
+        "TKO",
+        "V6",
+        "V8",
+        "VLC",
+        "Yamaha",
+        "ZUR",
+        "Škoda"
+      ]
     },
     {
       "name": "AC Cars",
-      "models": []
+      "models": [
+        "1 Car",
+        "1 Chassis",
+        "1 FIA, 1 289",
+        "101 full production cars",
+        "12 Cars",
+        "12&nbsp;hp",
+        "14 Cars",
+        "1964 Le Mans",
+        "2 Cars",
+        "2 cars",
+        "2-Litre",
+        "289 Sports",
+        "3 cars",
+        "5 Cars",
+        "618 1932 to 1940",
+        "[[AC 2-Litre]]",
+        "[[AC 3000ME]]",
+        "[[AC 428]]",
+        "[[AC Ace]]",
+        "[[AC Aceca]]",
+        "[[AC Brooklands Ace]]",
+        "[[AC Greyhound]]",
+        "[[AC Ten]]",
+        "About 100",
+        "About 1500",
+        "Ace V8",
+        "Aceca",
+        "Approx 4000",
+        "Approx 850 including six-cylinder models to 1929",
+        "ash",
+        "Auto-Carrier",
+        "Autocarrier",
+        "balloon",
+        "Brighton & Hove Herald",
+        "Chevette",
+        "Cobra 260/289",
+        "Cobra 427/428",
+        "coil",
+        "Crystal Palace",
+        "Cubitt",
+        "Diablo",
+        "dickey",
+        "Earls Court",
+        "FE series",
+        "Ford Essex V6 engine",
+        "Frua",
+        "fuses",
+        "Greyhound",
+        "haulage",
+        "Le Mans 24 Hours race",
+        "March",
+        "MK II ClassicBrookland Motor Company flyer",
+        "Monteverdi",
+        "Montlhéry",
+        "Napier",
+        "Perana Z-One",
+        "Petite",
+        "Possibly 1800",
+        "pre-war",
+        "Private",
+        "railbuses",
+        "receivership",
+        "saloon",
+        "Sammy Davis",
+        "shells",
+        "Six",
+        "six-cylinder",
+        "Standard",
+        "stroked",
+        "suspension",
+        "transversely",
+        "two-seater",
+        "V6 engine",
+        "Vauxhall",
+        "Villiers",
+        "William Boddy",
+        "~17 Cars"
+      ]
     },
     {
       "name": "Acadian",
-      "models": []
+      "models": [
+        "Amite",
+        "Anglophone",
+        "assimilate",
+        "Cajun",
+        "Chéticamp",
+        "Clare",
+        "Dartmouth",
+        "Diaspora",
+        "diaspora",
+        "Duke William",
+        "English",
+        "fall of Quebec",
+        "flag of the Acadians",
+        "Fort Beausejour",
+        "French",
+        "French colony of Canada",
+        "French families were established in Acadia",
+        "French-Canadians",
+        "Georges Island",
+        "Georgia",
+        "Halifax",
+        "Iberville",
+        "Isle Madame",
+        "Jacques Grasset de Saint-Sauveur",
+        "Jacques LeBlanc",
+        "Jobb, Dean",
+        "Johnny Burke",
+        "Le Congrès Mondial Acadien",
+        "Lieutenant Governor Lawrence",
+        "Louisiana Creole",
+        "Loyalists",
+        "Luisiana",
+        "Lunenburg",
+        "Maritime provinces",
+        "Mary",
+        "Memramcook",
+        "Mi'kmaq",
+        "Modern Acadian flag adopted in 1884",
+        "Natchez",
+        "national feast day",
+        "parishes",
+        "Port-Royal",
+        "Pubnico",
+        "Queen Elizabeth II, Queen of Canada",
+        "region of Acadia",
+        "Royal Proclamation",
+        "Saint Pierre and Miquelon, France",
+        "Samuel Scott",
+        "servitude",
+        "Spanish",
+        "St. Martinville",
+        "Star of the Sea",
+        "Thomas Davies",
+        "tricolour"
+      ]
     },
     {
       "name": "Acura",
@@ -41,7 +279,19 @@
     },
     {
       "name": "Adam Motor Company",
-      "models": []
+      "models": [
+        "CNG",
+        "Disc",
+        "Drum",
+        "Front-engine, front-wheel-drive",
+        "height = {{convert",
+        "I4",
+        "length = {{convert",
+        "manual",
+        "OHC",
+        "wheelbase = {{convert",
+        "width = {{convert"
+      ]
     },
     {
       "name": "ADK",
@@ -53,19 +303,52 @@
     },
     {
       "name": "Afeela",
-      "models": []
+      "models": [
+        "Akasaka",
+        "automotive company",
+        "CES",
+        "CES 2020",
+        "CES 2022",
+        "CES 2023",
+        "CES 2025",
+        "CES 2026",
+        "COO",
+        "directly to consumers",
+        "Elektrobit Automotive",
+        "founded = {{Start date and age",
+        "Honda Motor Co., Ltd.",
+        "Honda Motor Company",
+        "Level 3",
+        "President",
+        "retroactively renamed",
+        "Snapdragon",
+        "SoC",
+        "Sony Group Corporation"
+      ]
     },
     {
       "name": "Agrale",
-      "models": []
+      "models": [
+        "(water pumps",
+        "4x4",
+        "International 4700",
+        "lawn mowers",
+        "Lombardini",
+        "Marruá",
+        "MWM"
+      ]
     },
     {
       "name": "AIL",
-      "models": []
+      "models": [
+        "Ail"
+      ]
     },
     {
       "name": "Aion",
-      "models": []
+      "models": [
+        "Aion"
+      ]
     },
     {
       "name": "AITO",
@@ -73,31 +356,256 @@
     },
     {
       "name": "Aiways",
-      "models": []
+      "models": [
+        "A.T.U",
+        "Advanced Driver Assistance Systems",
+        "Benteler Automotive",
+        "Blind Spot Detection",
+        "CATL",
+        "Chinese",
+        "COVID-19 virus pandemic",
+        "CUV",
+        "Durr",
+        "Eisenmann",
+        "electric drive",
+        "Emergency Brake Assist",
+        "extreme price competition",
+        "founded = {{start date and age",
+        "Geneva, Switzerland",
+        "Georg Fischer",
+        "Gumpert",
+        "Haima",
+        "Industry 4.0",
+        "Kuka",
+        "Lane Keeping Assist",
+        "methanol fueled",
+        "Robert Bosch",
+        "SPAC",
+        "SUV Coupe",
+        "U5",
+        "U6"
+      ]
     },
     {
       "name": "Aixam",
-      "models": []
+      "models": [
+        "Arola",
+        "Axa Private Equity",
+        "City",
+        "City GTO",
+        "Crossline",
+        "e-City",
+        "e-Coupé",
+        "e-Crossover",
+        "electric",
+        "founded = {{start date and age",
+        "industrial engine",
+        "Kubota",
+        "Lombardini",
+        "Mega City",
+        "Mega Club",
+        "Mega Ranch",
+        "Private",
+        "quadricycle",
+        "Smart"
+      ]
     },
     {
       "name": "Ajax",
-      "models": []
+      "models": [
+        "\"Ajax\"",
+        "Ajax",
+        "Genshin Impact",
+        "Narcissus",
+        "one of the Eternals",
+        "Pantheon"
+      ]
     },
     {
       "name": "Alatac",
-      "models": []
+      "models": [
+        "Rue de Tenbosch",
+        "side-valve"
+      ]
     },
     {
       "name": "Albion",
-      "models": []
+      "models": [
+        "Albina",
+        "Alpes",
+        "Alpheus",
+        "Anglicised",
+        "Argos",
+        "augustus",
+        "Codex Vatopedinus",
+        "Corneus",
+        "Cornish",
+        "De Mundo",
+        "Diana",
+        "Galatian",
+        "Gaulish",
+        "genitive",
+        "Geography",
+        "Gogmagog",
+        "Goëmagot",
+        "Historie of England",
+        "History of the Kings of Britain/Book 1, 15",
+        "History of the Kings of Britain/Book 1, 16",
+        "History of the Kings of Britain/Books 1, 11",
+        "Holinshed",
+        "Ierne",
+        "incubi",
+        "Irish",
+        "Latinised",
+        "Manx",
+        "names of Canada",
+        "narrowest crossing point",
+        "Natural History",
+        "Naturalis Historia",
+        "octosyllabic",
+        "Pliny",
+        "Prose Merlin",
+        "Proto-Indo-European",
+        "Pseudo-Aristotelian",
+        "Ptolemy's map",
+        "toponym",
+        "Trojans",
+        "Welsh",
+        "year of the creation of the world"
+      ]
     },
     {
       "name": "Alesbury",
-      "models": []
+      "models": [
+        "hp",
+        "solid tires"
+      ]
     },
     {
       "name": "Alfa Romeo",
-      "models": []
+      "models": [
+        "12 HP",
+        "12C",
+        "12C 36",
+        "12C 37",
+        "147 GTA Cup",
+        "15 HP",
+        "15 HP Corsa",
+        "155 GTA",
+        "155 V6 TI",
+        "156 D2",
+        "156 GTA Super 2000",
+        "156 Super 2000",
+        "16C Bimotore",
+        "1750 GT Veloce",
+        "1750/2000 Berlina",
+        "1950–1958 [[Alfa Romeo 1900",
+        "1962–1968 [[Alfa Romeo 2600",
+        "20–30 HP",
+        "24 HP",
+        "2600 Sprint GT",
+        "33 Stradale",
+        "33SC12",
+        "33TT12",
+        "40–60 HP",
+        "40–60 HP Corsa",
+        "4C",
+        "4C Spider",
+        "6",
+        "6C 1500",
+        "6C 1500 MMS",
+        "6C 1750",
+        "6C 1750 Super Sport",
+        "6C 1900",
+        "6C 2300",
+        "6C 2300B Mille Miglia",
+        "6C 2500",
+        "6C 2500 Competizione",
+        "6C 2500 Super Sport Corsa",
+        "6C 3000 CM",
+        "8C",
+        "8C 2300",
+        "8C 2300 Monza",
+        "8C 2900",
+        "8C 2900A",
+        "8C 2900B Mille Miglia",
+        "8C 35",
+        "8C Competizione",
+        "8C Spider",
+        "A11/F11",
+        "A12/F12",
+        "Alfasud",
+        "Alfasud Sprint",
+        "Alfetta",
+        "Alfetta GT/GTV",
+        "Alfetta saloon",
+        "AR51",
+        "Arna",
+        "BAT",
+        "Bimotore",
+        "Brera",
+        "C38",
+        "C39",
+        "C41",
+        "C42",
+        "C43",
+        "Dauphine",
+        "Disco Volante",
+        "Flying Squad",
+        "G1",
+        "G2",
+        "Giulia",
+        "Giulia Saloon",
+        "Giulia Spider",
+        "Giulia Sprint",
+        "Giulia Sprint Speciale",
+        "Giulia Super",
+        "Giulia TZ",
+        "Giulietta",
+        "Giulietta SS",
+        "Giulietta SZ",
+        "Gran Sport",
+        "Gran Sport Quattroruote",
+        "Grand Prix",
+        "GT",
+        "GT 1300 Junior Z",
+        "GT Junior",
+        "GTA",
+        "GTV",
+        "GTV Cup",
+        "GTV/Spider",
+        "Italian police",
+        "Junior",
+        "Matta",
+        "Mercedes-Benz GLC",
+        "Mille",
+        "MiTo",
+        "Montreal",
+        "Naples ANM trolleybus system",
+        "Nuova Giulietta",
+        "P1",
+        "P2",
+        "P3",
+        "Polizia",
+        "RL",
+        "RL Super Sport",
+        "RL Targa Florio",
+        "RM",
+        "Romeo",
+        "Spider",
+        "Stelvio",
+        "style=\"vertical-align: top\"",
+        "SZ",
+        "SZ/RZ",
+        "TCR/WTCR/BTCC Giulietta QV",
+        "Tipo 33",
+        "Tipo 512",
+        "Tipo A",
+        "Tipo B",
+        "Tonale",
+        "TZ",
+        "TZ2"
+      ]
     },
     {
       "name": "Allard",
@@ -105,11 +613,40 @@
     },
     {
       "name": "Almac",
-      "models": []
+      "models": [
+        "Acquired",
+        "Beach Buggies",
+        "Ford Escort",
+        "founded = {{start date",
+        "Height",
+        "Length",
+        "length = {{cvt",
+        "Lexus V8 motor",
+        "Marcos car company",
+        "MGB",
+        "Track",
+        "Volkswagen",
+        "weight = {{cvt",
+        "Wheelbase",
+        "wheelbase = {{cvt",
+        "Width",
+        "width = {{cvt"
+      ]
     },
     {
       "name": "Alpha Motor Corporation",
-      "models": []
+      "models": [
+        "Ace",
+        "electric vehicle",
+        "founded = {{start date and age",
+        "Hinduja Tech",
+        "Hyundai",
+        "retro styling",
+        "SuperWolf",
+        "suspension",
+        "Wolf",
+        "Wolf+"
+      ]
     },
     {
       "name": "Alpha Sports",
@@ -117,47 +654,273 @@
     },
     {
       "name": "Alpina",
-      "models": []
+      "models": [
+        "6HP 26",
+        "7 Series",
+        "850CSi",
+        "ABT",
+        "Alpina",
+        "Autocar",
+        "B10 Bi-Turbo",
+        "B10 BiTurbo",
+        "B3 Bi-Turbo",
+        "B3 Bi-Turbo Allrad",
+        "B3 S",
+        "B4",
+        "B4 Gran Coupé",
+        "B4 GT Gran Coupé",
+        "B4 S",
+        "B4 S Edition 99",
+        "B5",
+        "B57",
+        "B57D30",
+        "B5S",
+        "B6",
+        "B7",
+        "Bilstein",
+        "BMW 5 Series E34",
+        "BMW 535i",
+        "BMW E31",
+        "BMW E36",
+        "BMW E9x",
+        "BMW N62",
+        "BMW Plant Dingolfing",
+        "BMW S70",
+        "C2",
+        "C2/1",
+        "C2/2",
+        "C2/3",
+        "centrifugal supercharger",
+        "centrifugal type supercharger",
+        "colspan=\"2\"",
+        "colspan=\"2\" align=\"center\"",
+        "D3",
+        "D4",
+        "D5 S",
+        "E12",
+        "E21",
+        "E24",
+        "E28",
+        "E30",
+        "E31",
+        "E32",
+        "E34",
+        "E36",
+        "E38",
+        "E39",
+        "E46",
+        "E52",
+        "E60/E61",
+        "E63/E64",
+        "E65",
+        "E65 7 Series",
+        "E65/E66",
+        "E85",
+        "E90/E91",
+        "E90/E91/E92",
+        "E90/E91/E92/E93",
+        "F06/F12/F13",
+        "F10 M5",
+        "F10/F11",
+        "F25",
+        "F30/F31",
+        "F32",
+        "F32/F33",
+        "F5",
+        "G01",
+        "G02",
+        "G07",
+        "G16",
+        "G26",
+        "G30",
+        "G30/G31",
+        "Garrett",
+        "Getrag 260/6",
+        "Inline six",
+        "Inline-six",
+        "Jaguar",
+        "KW",
+        "left-hand drive",
+        "Lister",
+        "M20B25",
+        "M3",
+        "M30-2.8-litre BMW engine",
+        "M5",
+        "M57D30",
+        "M62B46",
+        "M62TUB46",
+        "Mahle",
+        "manual",
+        "Ministry of Transport",
+        "N62",
+        "N62B44",
+        "N63 twin-turbo V8",
+        "rally",
+        "right-hand drive",
+        "Roadster S",
+        "S62",
+        "style=\"text-align:center\"",
+        "supercharged",
+        "Touring",
+        "tuning",
+        "V10",
+        "V12",
+        "V8",
+        "Vereinigte Motor-Verlage GmbH & Co. KG",
+        "vinyl wrap",
+        "Z1",
+        "ZF",
+        "{{Convert"
+      ]
     },
     {
       "name": "Alpine",
-      "models": []
+      "models": [
+        "A110",
+        "A310",
+        "A610",
+        "GTA"
+      ]
     },
     {
       "name": "Alta",
-      "models": []
+      "models": [
+        "Alta",
+        "Alta-class minesweeper",
+        "Amur Leopard and Tiger Alliance",
+        "MV Alta"
+      ]
     },
     {
       "name": "Alternative Cars",
-      "models": []
+      "models": [
+        "fibreglass",
+        "MG TF",
+        "Vauxhall Viva"
+      ]
     },
     {
       "name": "Alvis",
-      "models": []
+      "models": [
+        "Xenoblade Chronicles"
+      ]
     },
     {
       "name": "AM General",
-      "models": []
+      "models": [
+        "Studebaker facilities on Chippewa Avenue",
+        "US$"
+      ]
     },
     {
       "name": "Amati Cars",
-      "models": []
+      "models": [
+        "787B",
+        "a less severe recession",
+        "acting to protect",
+        "American Honda",
+        "came to the rescue",
+        "deflation",
+        "downsizing",
+        "Eunos",
+        "Eunos Cosmo",
+        "Face",
+        "French",
+        "gentlemen's agreement",
+        "K V6",
+        "Lexus SC400",
+        "liquidity",
+        "Lord, Dentsu & Partners",
+        "Lost Decade",
+        "M2",
+        "Mazda 929",
+        "Mazda factory",
+        "Mazda J V6",
+        "Mazda Miata",
+        "Mazda series B3",
+        "Miata",
+        "out to pasture",
+        "over saturated",
+        "President",
+        "president",
+        "second generation Mazda Sentia",
+        "Sterling",
+        "surprise success",
+        "the Japanese economy collapsed",
+        "V12",
+        "W12",
+        "Wheels"
+      ]
     },
     {
       "name": "Amazonas Motos Especiais",
-      "models": []
+      "models": [
+        "110",
+        "125",
+        "150",
+        "250",
+        "Auto Esporte",
+        "Brazilian",
+        "cc",
+        "cm3",
+        "Cruisers",
+        "defunct = {{start date and age",
+        "founded = {{start date and age",
+        "Loncin Corporation",
+        "Scooters",
+        "VW do Brasil"
+      ]
     },
     {
       "name": "AMC",
-      "models": []
+      "models": [
+        "18i/Sportwagon",
+        "Alliance",
+        "Ambassador",
+        "AMX",
+        "Classic",
+        "Concord",
+        "Crossover utility v.",
+        "Eagle",
+        "Eagle »",
+        "Encore",
+        "Fuego",
+        "Gremlin",
+        "GTA",
+        "Hornet",
+        "Italia",
+        "Javelin",
+        "Jet",
+        "LeCar",
+        "Marlin",
+        "Matador",
+        "Matador Coupe",
+        "Medallion",
+        "Metropolitan",
+        "Mighty Mite",
+        "Military vehicles",
+        "N-H",
+        "Pacer",
+        "Rambler",
+        "Rebel",
+        "see early timeline of Jeep models",
+        "see late timeline of Jeep models",
+        "Six",
+        "Six & V8",
+        "Spirit"
+      ]
     },
     {
       "name": "American Simplex",
-      "models": []
+      "models": [
+        "hp"
+      ]
     },
     {
       "name": "AMG",
-      "models": []
+      "models": [
+        "\"AMG\""
+      ]
     },
     {
       "name": "Amherst",
@@ -165,19 +928,41 @@
     },
     {
       "name": "AMI",
-      "models": []
+      "models": [
+        "Ami",
+        "Fire"
+      ]
     },
     {
       "name": "Amilcar",
-      "models": []
+      "models": [
+        "C8 bis"
+      ]
     },
     {
       "name": "Amphicar",
-      "models": []
+      "models": [
+        "cabriolet",
+        "Grand Lake St. Marys State Park, Ohio",
+        "Herald 1200",
+        "hp",
+        "KdF Schwimmwagen Type 166",
+        "knot",
+        "Main",
+        "manual",
+        "mild steel",
+        "Quandt Group",
+        "rpm",
+        "Time",
+        "Triumph",
+        "weight = {{convert"
+      ]
     },
     {
       "name": "Amplex",
-      "models": []
+      "models": [
+        "hp"
+      ]
     },
     {
       "name": "Anadol",
@@ -185,7 +970,11 @@
     },
     {
       "name": "Anasagasti",
-      "models": []
+      "models": [
+        "Ballot",
+        "National Aeronautics Museum",
+        "Picker"
+      ]
     },
     {
       "name": "Andino",
@@ -193,11 +982,28 @@
     },
     {
       "name": "Anglo-Dane",
-      "models": []
+      "models": [
+        "hp",
+        "Jan",
+        "Thrige",
+        "Triangel",
+        "twin-cylinder"
+      ]
     },
     {
       "name": "Anteros",
-      "models": []
+      "models": [
+        "Aelian",
+        "Christian Charity",
+        "Earl of Shaftesbury",
+        "Eros",
+        "Meles",
+        "Nerites",
+        "Pausanias",
+        "plumed",
+        "Porphyrius",
+        "requited love"
+      ]
     },
     {
       "name": "Anziel",
@@ -205,39 +1011,205 @@
     },
     {
       "name": "Apal",
-      "models": []
+      "models": [
+        "Belgian racetrack",
+        "buggy",
+        "DAF",
+        "GP Projects",
+        "mid-engined"
+      ]
     },
     {
       "name": "Arash",
-      "models": []
+      "models": [
+        "al-Tabari",
+        "Bal'ami",
+        "Eastern Iranian",
+        "Frawardin",
+        "Gardēzī",
+        "historical tradition",
+        "Ibn al-Athir",
+        "Iranian mythology",
+        "Iranians",
+        "Khordad",
+        "khwarrah",
+        "Middle Clime",
+        "Mojmal",
+        "Parthian",
+        "Parthian dynasty",
+        "Sari",
+        "Tir"
+      ]
     },
     {
       "name": "Arcfox",
-      "models": []
+      "models": [
+        "αS6",
+        "αT6"
+      ]
     },
     {
       "name": "Arcimoto",
-      "models": []
+      "models": [
+        "fuel economy",
+        "GVWR",
+        "MPGe",
+        "off-the-shelf",
+        "Turning Radius"
+      ]
     },
     {
       "name": "Ariel",
-      "models": []
+      "models": [
+        "\"Ariel\"",
+        "Alpha",
+        "Ariel",
+        "Ariel-class gunboat",
+        "Ariels",
+        "Bible Belt",
+        "episode of Space: 1999",
+        "HMS Ariel",
+        "ST Ariel",
+        "The Top",
+        "USS Ariel",
+        "Visual and ARIEL Deluxe"
+      ]
     },
     {
       "name": "Armstrong Siddeley",
-      "models": []
+      "models": [
+        "12 Plus & 14",
+        "1666 cc",
+        "18&nbsp;hp Whitleys",
+        "18/50 or 18 Mk.II",
+        "1852 cc",
+        "1900 cc",
+        "1991 cc",
+        "2-door fixed-head [[coupé]]",
+        "2290 cc",
+        "2309 cc",
+        "2380 cc",
+        "2394 cc",
+        "2872 cc",
+        "3435 cc",
+        "3670 cc",
+        "3990 cc",
+        "4-door fixed-head [[coupé]]",
+        "4-door saloon",
+        "4-door saloon & Limousine",
+        "4960 cc",
+        "[[Armstrong Siddeley Adder]]",
+        "[[Armstrong Siddeley ASX]]",
+        "[[Armstrong Siddeley Cheetah]]",
+        "[[Armstrong Siddeley Cougar]]",
+        "[[Armstrong Siddeley Deerhound]]",
+        "[[Armstrong Siddeley Double Mamba]]",
+        "[[Armstrong Siddeley Genet Major]]",
+        "[[Armstrong Siddeley Genet]]",
+        "[[Armstrong Siddeley Hyena]]",
+        "[[Armstrong Siddeley Jaguar]]",
+        "[[Armstrong Siddeley Leopard]]",
+        "[[Armstrong Siddeley Lynx]]",
+        "[[Armstrong Siddeley Mamba]]",
+        "[[Armstrong Siddeley Mongoose]]",
+        "[[Armstrong Siddeley Ounce]]",
+        "[[Armstrong Siddeley Panther]]",
+        "[[Armstrong Siddeley Python]]",
+        "[[Armstrong Siddeley Sapphire]]",
+        "[[Armstrong Siddeley Serval]]",
+        "[[Armstrong Siddeley Snarler]]",
+        "[[Armstrong Siddeley Tiger]]",
+        "[[Armstrong Siddeley Viper]]",
+        "[[Drophead coupé]]",
+        "Adder",
+        "Bristol Siddeley Engines Ltd",
+        "Civet",
+        "Coupe, saloon, sports saloon",
+        "cylinder",
+        "Double Mamba",
+        "Drophead coupé",
+        "Eighteen",
+        "Fifteen",
+        "four-cylinder",
+        "Four-Fourteen",
+        "Hawker Siddeley Group",
+        "Hiduminium aluminium alloy",
+        "Hurricane 16",
+        "Hurricane 18",
+        "Lancaster",
+        "Lancaster 16",
+        "Lancaster 18",
+        "Long 17",
+        "Mamba",
+        "Metrovick",
+        "ohv",
+        "Ounce",
+        "Puma",
+        "Python",
+        "reduction gearbox",
+        "rowspan=\"2\"",
+        "saloon",
+        "Saloon & Limousine",
+        "Saloon, Sports saloon",
+        "Saloon, tourer",
+        "Sapphire",
+        "Sapphire 234",
+        "Sapphire 236",
+        "Sapphire 346",
+        "Short 17",
+        "Short and Long chassis",
+        "Siddeley Special",
+        "Snarler",
+        "Star Sapphire",
+        "Star Sapphire Mk II",
+        "Stentor",
+        "target drone",
+        "Tempest",
+        "Thirty",
+        "Tourer, saloon",
+        "Tourer, saloon, limousine",
+        "Tourer, saloon, sports",
+        "Twelve",
+        "Twenty",
+        "Typhoon",
+        "Various",
+        "Viper",
+        "Whitley 18",
+        "Wilson"
+      ]
     },
     {
       "name": "ARO",
-      "models": []
+      "models": [
+        "Agricultural Research Organization",
+        "Aéropostale",
+        "Igbo mythology",
+        "tallest buildings in New York City",
+        "village in Morobe Province"
+      ]
     },
     {
       "name": "Arrinera",
-      "models": []
+      "models": [
+        "alternator",
+        "DMV",
+        "General Motors LS7",
+        "GT3",
+        "Hockenheim",
+        "Snetterton"
+      ]
     },
     {
       "name": "Arrival",
-      "models": []
+      "models": [
+        "\"Arrival\"",
+        "\"Arrivals\"",
+        "\"The Arrival\"",
+        "Arrival",
+        "Magic Kingdom",
+        "The Arrival",
+        "Tron: Legacy film soundtrack"
+      ]
     },
     {
       "name": "Artega",
@@ -245,23 +1217,169 @@
     },
     {
       "name": "ASA",
-      "models": []
+      "models": [
+        "Air services agreement",
+        "Assistant state's attorney",
+        "film speed"
+      ]
     },
     {
       "name": "Ascari",
-      "models": []
+      "models": [
+        "Ascari"
+      ]
     },
     {
       "name": "Ascort",
-      "models": []
+      "models": [
+        "bhp",
+        "flat-4",
+        "manual",
+        "Rear-engine, rear-wheel-drive",
+        "weight = {{cvt"
+      ]
     },
     {
       "name": "Ashok Leyland",
-      "models": []
+      "models": [
+        "C22 Vanette",
+        "STiLE",
+        "tipper lorry"
+      ]
     },
     {
       "name": "Asia",
-      "models": []
+      "models": [
+        "1st",
+        "5th",
+        "Alexander",
+        "alms",
+        "Ancient East Asians",
+        "Ancient Native Americans",
+        "Arab",
+        "Arabian",
+        "Area",
+        "area = {{convert",
+        "Aru Islands",
+        "Asia's 2nd largest",
+        "Asian",
+        "Asios",
+        "Austronesian",
+        "Bengali",
+        "Black",
+        "breakup of the Ottoman Empire",
+        "Buddhism",
+        "Buddhist monks",
+        "busiest container ports in the world",
+        "carving out",
+        "carving up China",
+        "Caspian",
+        "Christanity’s",
+        "Christianity",
+        "connections to the Pacific",
+        "conquered by British traders",
+        "contested and partitioned",
+        "democratic countries in Asia",
+        "diaspora",
+        "direct British rule",
+        "Druze",
+        "East Asia",
+        "East Eurasian",
+        "East Eurasians",
+        "East–West",
+        "economic liberalisation",
+        "effect named after him",
+        "Emba river",
+        "European",
+        "European culture",
+        "European part",
+        "expansion",
+        "Fars",
+        "fish",
+        "free themselves",
+        "further European influence",
+        "further split",
+        "GDP",
+        "GDP nominal",
+        "Georgia",
+        "Global Growth Generator",
+        "Great Flood",
+        "Greek",
+        "Hebrew Bible",
+        "Hebrew nation",
+        "Hecataeus",
+        "Himalayan",
+        "Hindu",
+        "Hinduism",
+        "historical and cultural construct",
+        "Histories",
+        "Hittite records",
+        "inhabitants",
+        "interbred",
+        "interim government",
+        "interventions",
+        "Islam",
+        "its conquests",
+        "its regions",
+        "Japanese wedding",
+        "Jerusalem",
+        "Karakum",
+        "Kura River",
+        "Köppen-Geiger climate classification",
+        "largest and most advanced economy",
+        "largest continental economy",
+        "largest economies in the world",
+        "largest economy",
+        "limited recognition",
+        "limited to no international recognition",
+        "List of languages",
+        "List of metropolitan areas",
+        "Lists of cities",
+        "Lydekker's Line",
+        "Manu",
+        "mounted hordes",
+        "national",
+        "National Geographic",
+        "Neolithic Iranian",
+        "New Holland",
+        "new shipping routes",
+        "No religion",
+        "observer state status",
+        "opium trade",
+        "Other",
+        "Ottoman",
+        "Out of Africa theory",
+        "p. 244",
+        "Persian",
+        "Pliny",
+        "Population",
+        "PPP",
+        "primary energy consumption",
+        "Roman",
+        "Sahul",
+        "severely suppressed",
+        "South Africa to Europe",
+        "South Asia",
+        "South Asians",
+        "Soviet Union",
+        "spread",
+        "steppe horsemen",
+        "Swaminarayan",
+        "Symbol",
+        "taken over",
+        "Tamil",
+        "Tanais",
+        "The Exile",
+        "the Middle East",
+        "The Mother",
+        "Titan",
+        "UN",
+        "Ural river",
+        "USD",
+        "V-Dem Electoral Democracy Index",
+        "Western Steppe Herder",
+        "world's 4th largest"
+      ]
     },
     {
       "name": "Aspa",
@@ -269,11 +1387,17 @@
     },
     {
       "name": "Aspark",
-      "models": []
+      "models": [
+        "Kita-ku",
+        "Osaka",
+        "US$"
+      ]
     },
     {
       "name": "Aspid",
-      "models": []
+      "models": [
+        "founded = {{Start date and age"
+      ]
     },
     {
       "name": "Aston Martin",
@@ -290,15 +1414,85 @@
     },
     {
       "name": "Asüna",
-      "models": []
+      "models": [
+        "Daewoo",
+        "discontinued = {{end date and age",
+        "Geo",
+        "GM Canada",
+        "GMC",
+        "GMC Tracker's",
+        "Isuzu Impulse",
+        "marque",
+        "Passport",
+        "Passport Optima",
+        "Pontiac",
+        "rebadged",
+        "Saab",
+        "Saturn",
+        "SE/GT",
+        "Sunfire",
+        "Sunrunner",
+        "Suzuki Escudo"
+      ]
     },
     {
       "name": "Atlas Honda",
-      "models": []
+      "models": [
+        "Honda CB125F",
+        "Honda CB150F",
+        "Honda CD70 Dream",
+        "Honda CG125S",
+        "Honda CG125S Gold",
+        "Honda ICON e"
+      ]
     },
     {
       "name": "Attica",
-      "models": []
+      "models": [
+        "Achaeans",
+        "Actaea",
+        "administrative region",
+        "agricultural societies",
+        "Alaric",
+        "Athena Ergane",
+        "Athenian Empire",
+        "Athens",
+        "Atthis",
+        "Attic",
+        "Attica",
+        "Autochthones",
+        "capital",
+        "Cecropia",
+        "Cecrops",
+        "Central Greece",
+        "classical period",
+        "Cora",
+        "Cythera",
+        "Daphne",
+        "demoi",
+        "heights",
+        "Isthmus",
+        "Kifisos",
+        "Lavrio",
+        "Marathon",
+        "Markopoulo",
+        "Mycenaean",
+        "Oenoe",
+        "Ottoman",
+        "Pan",
+        "Parnes",
+        "Pausanias",
+        "Peloponnesian",
+        "Penteliko",
+        "prehistory",
+        "Region",
+        "Rhamnus",
+        "Roman",
+        "Temple of Poseidon",
+        "Tetrapolis",
+        "Turks",
+        "Venetian"
+      ]
     },
     {
       "name": "Auburn",
@@ -455,7 +1649,29 @@
     },
     {
       "name": "Aurus Motors",
-      "models": []
+      "models": [
+        "armored",
+        "Arsenal",
+        "aura",
+        "founded = {{Start date and age",
+        "hydrogen vehicle",
+        "Komendant",
+        "luxury",
+        "Mercedes-Benz S 600 Pullman Guard",
+        "Merlon",
+        "NAMI",
+        "passenger van",
+        "Private",
+        "Rus",
+        "Russia Ministry of Industry and Trade",
+        "Russian",
+        "Russian presidential state car",
+        "Senat",
+        "Senat 900",
+        "Senat Limousine",
+        "Tawazun Holding",
+        "US$"
+      ]
     },
     {
       "name": "Austin",
@@ -630,59 +1846,336 @@
     },
     {
       "name": "Austin-Healey",
-      "models": []
+      "models": [
+        "3000 Mk III",
+        "Austin",
+        "big Healeys",
+        "Corvette",
+        "Healey",
+        "Le Mans",
+        "Mazda MX-5",
+        "MG TF",
+        "MG6",
+        "NAC's MG",
+        "Nanjing Automobile Group",
+        "Phoenix Consortium",
+        "render",
+        "retro-styled",
+        "Sebring"
+      ]
     },
     {
       "name": "Australian Six",
-      "models": []
+      "models": [
+        "Ashfield",
+        "Aurion",
+        "Ford Falcon",
+        "OHV",
+        "Rutenber",
+        "Sydney Harbour"
+      ]
     },
     {
       "name": "Australis",
-      "models": []
+      "models": [
+        "Australis",
+        "Dino Crisis 3",
+        "SS America"
+      ]
     },
     {
       "name": "Austro-Daimler",
-      "models": []
+      "models": [
+        "\"Sascha\"",
+        "aircraft factory",
+        "Archduke Franz Ferdinand",
+        "armoured car",
+        "Austrian Royal double-headed eagle",
+        "bhp",
+        "Bolshevik seizure of power",
+        "Concorso d’Eleganza Villa d’Este",
+        "Count Sascha Kolowrat-Krakowski",
+        "engineering factory",
+        "German",
+        "Heinrich",
+        "locomotive factory",
+        "Mercedes-AMG GT 4-Door Coupe",
+        "Public",
+        "rpm",
+        "six-cylinder engine",
+        "Skoda",
+        "Willibald Gatter"
+      ]
     },
     {
       "name": "Austro-Tatra",
-      "models": []
+      "models": [
+        "Carinthia",
+        "Gmünd",
+        "Tatra",
+        "Type 1",
+        "Type 18A"
+      ]
     },
     {
       "name": "Auto Avio Costruzioni",
-      "models": []
+      "models": [
+        "125 F1",
+        "125 S",
+        "126C2",
+        "156 F1",
+        "159 S",
+        "166 Inter",
+        "166 MM",
+        "166 S",
+        "195 Inter",
+        "1980 season",
+        "208 GT4",
+        "212 Inter",
+        "212 Inters",
+        "246 GT",
+        "246 SP",
+        "250 Europa",
+        "250 GT Coupé",
+        "250 GT SWB Breadvan",
+        "250 GTO",
+        "250 LM",
+        "250 series",
+        "250 Testa Rossa",
+        "250 Tour de France",
+        "275 GTB",
+        "275 P",
+        "275 series",
+        "308 GT4",
+        "312 F1",
+        "312T",
+        "330 P4",
+        "340 America",
+        "342 America",
+        "365 GT4 2+2, 400 and 412",
+        "365 GTB/4",
+        "365 GTC/4",
+        "365 series",
+        "375 F1",
+        "412 P",
+        "500 Mondial",
+        "500 Superfast",
+        "750 Monza",
+        "a new test track",
+        "Alfredo \"Dino\" Ferrari",
+        "Allied bombing campaigns",
+        "America",
+        "ate his own children",
+        "barchetta",
+        "Belgian Grands Prix",
+        "Berlinetta Boxer",
+        "Bertone",
+        "Bimotore",
+        "Boano",
+        "Breadvan",
+        "California Spyder",
+        "Colombo engine",
+        "Constructors' Championships",
+        "Dino",
+        "Dino 156 F2",
+        "Dino 308 GT4",
+        "Dino engine",
+        "Dino V6",
+        "F40",
+        "Ferrari",
+        "Fiat",
+        "fifteen were killed",
+        "Formula One World Championships",
+        "front-engine design",
+        "Ghia",
+        "ground effect",
+        "Group 4 Sports Car",
+        "Group 6 Prototype",
+        "GT Lusso",
+        "GT/E",
+        "GT40 Mk II",
+        "GTO",
+        "his own company",
+        "homologation",
+        "in 1967",
+        "in 1972",
+        "incremental revisions",
+        "killed nine spectators",
+        "Lampredi engine",
+        "LC2",
+        "lira",
+        "Lotus",
+        "Mondial",
+        "Motor Trend Classic",
+        "Norton",
+        "Peter Collins",
+        "pontoon",
+        "privateer",
+        "Racing-oriented 250s",
+        "Rudge",
+        "Saturn",
+        "Scaglietti",
+        "Sergio",
+        "Stratos",
+        "Testarossa",
+        "Testarossa Spider",
+        "The Kiss of Death",
+        "Tipo 001",
+        "Tipo 015",
+        "Tipo 33 Stradale",
+        "Tipo F102A",
+        "Touring",
+        "Type B",
+        "Tyrrell",
+        "V12 configuration",
+        "Vignale",
+        "was killed",
+        "Williams",
+        "world's fastest production car"
+      ]
     },
     {
       "name": "Auto Union",
-      "models": []
+      "models": [
+        "1000 Sp",
+        "all-wheel drive",
+        "Audi AG",
+        "Audi Dresden",
+        "Audi Imperator",
+        "Audi NSU Auto Union AG",
+        "Audi Zwickau",
+        "Audiwerke AG",
+        "Audiwerke AG Zwickau",
+        "August Horch Museum",
+        "Baur",
+        "Czechoslovak",
+        "DKW 3=6 'Sonderklasse",
+        "DKW Meisterklasse F 89 P",
+        "DKW Motorcycle factory",
+        "DKW RT&nbsp;125&nbsp;W",
+        "Donington",
+        "eight",
+        "European Champion",
+        "F103",
+        "German",
+        "Grand Prix",
+        "Hans Stuck Sr.",
+        "Hermann P. Müller",
+        "hill climb",
+        "Horchwerke AG Zwickau",
+        "inline-four",
+        "J. S. Rasmussen",
+        "K70",
+        "KdF car",
+        "Klaus, Baron von Oertzen",
+        "Mosel",
+        "Motor racing",
+        "namesake enterprise",
+        "new factory",
+        "NSU",
+        "Rheinmetall-Borsig",
+        "Rickenbacker",
+        "sedan/saloon",
+        "six",
+        "supercharged",
+        "Swiss",
+        "T80",
+        "Tropfenwagen",
+        "V8-",
+        "VEB",
+        "VEB Sachsenring",
+        "Volkswagenwerk AG",
+        "Wanderer",
+        "Yugoslavia Grand Prix"
+      ]
     },
     {
       "name": "Auto-Mixte",
-      "models": []
+      "models": [
+        "Pescatore"
+      ]
     },
     {
       "name": "Autobianchi",
-      "models": []
+      "models": [
+        "A112",
+        "Bianchi",
+        "Bianchi bicycles",
+        "Bianchina",
+        "British",
+        "defunct = {{end date and age",
+        "Fiat 600D's",
+        "innovative front-engine, front-drive layout",
+        "Lancia Y",
+        "landaulet",
+        "lira",
+        "OEM",
+        "passenger car",
+        "Primula",
+        "SAE",
+        "saloon",
+        "spider",
+        "supermini",
+        "Wayback Machine",
+        "Y10"
+      ]
     },
     {
       "name": "Autokinitoviomihania Ellados",
-      "models": []
+      "models": [
+        "Fissore",
+        "Italian",
+        "Namco"
+      ]
     },
     {
       "name": "Automeccanica",
-      "models": []
+      "models": [
+        "Fissore",
+        "Greek",
+        "Italian",
+        "Soviet"
+      ]
     },
     {
       "name": "Autozam",
-      "models": []
+      "models": [
+        "Atenza",
+        "Axela",
+        "AZ-Wagon",
+        "Bongo",
+        "Carol Spiano",
+        "compacts",
+        "Eunos",
+        "Familia",
+        "Familia Van",
+        "Ford",
+        "Lancia Y10",
+        "mid-engine",
+        "Premacy",
+        "rebadged",
+        "regulations",
+        "Revue",
+        "Scrum",
+        "second-generation Carol",
+        "Thema",
+        "Titan",
+        "Tribute",
+        "éfini RX-7"
+      ]
     },
     {
       "name": "Avatr Technology",
-      "models": []
+      "models": [
+        "NEV"
+      ]
     },
     {
       "name": "Avia",
-      "models": []
+      "models": [
+        "a Shortland Street character",
+        "aircraft manufacturer"
+      ]
     },
     {
       "name": "AzSamand",
@@ -690,11 +2183,26 @@
     },
     {
       "name": "Baby-Brousse",
-      "models": []
+      "models": [
+        "FAF concept",
+        "Namco",
+        "SAIPAC"
+      ]
     },
     {
       "name": "Bahman",
-      "models": []
+      "models": [
+        "Aquarius",
+        "Brooklyn Dodgers",
+        "Commonwealth",
+        "Dey",
+        "gains independence",
+        "Islamic Revolution Day",
+        "National League",
+        "Proto-Indo-European",
+        "the monarchy",
+        "Washington's Birthday and President's Day"
+      ]
     },
     {
       "name": "BAIC",
@@ -743,11 +2251,113 @@
     },
     {
       "name": "BAIC Group",
-      "models": []
+      "models": [
+        "81VJ",
+        "Beijing",
+        "Beijing Off-road",
+        "Beta S3",
+        "Beta T1",
+        "BJ20",
+        "BJ30",
+        "BJ40",
+        "BJ60/Titan 700",
+        "BJ80",
+        "BJ90",
+        "Chinese",
+        "D20",
+        "D50",
+        "D60/CC",
+        "D70",
+        "D80",
+        "EC3/EC",
+        "EC5/EX",
+        "EH",
+        "EU",
+        "EU5",
+        "EU7",
+        "EU8",
+        "EV",
+        "EX3",
+        "EX5",
+        "F40",
+        "Group",
+        "Kaola",
+        "List of HIMA vehicles.",
+        "Lite",
+        "Mofang",
+        "U5",
+        "U7",
+        "vehicles",
+        "Wendao V9",
+        "X25",
+        "X3",
+        "X35",
+        "X5",
+        "X55",
+        "X65",
+        "X7",
+        "Zhixing",
+        "αS5",
+        "αS6",
+        "αT5",
+        "αT6",
+        "αT7",
+        "北京81VJ",
+        "北京BJ20",
+        "北京BJ30",
+        "北京BJ40",
+        "北京BJ60/泰钽700",
+        "北京BJ80",
+        "北京BJ90",
+        "北京EU5",
+        "北京EU7",
+        "北京EU8",
+        "北京EX3",
+        "北京EX5",
+        "北京F40",
+        "北京U5",
+        "北京U7",
+        "北京X3",
+        "北京X5",
+        "北京X7",
+        "北汽新能源EC3/EC",
+        "北汽新能源EC5/EX",
+        "北汽新能源EH",
+        "北汽新能源EU",
+        "北汽新能源EV",
+        "极狐 阿尔法S5",
+        "极狐 阿尔法S6",
+        "极狐 阿尔法T5",
+        "极狐 阿尔法T6",
+        "极狐Lite",
+        "极狐贝塔S3",
+        "极狐贝塔T1",
+        "极狐问道V9",
+        "绅宝D20",
+        "绅宝D50",
+        "绅宝D60",
+        "绅宝D70",
+        "绅宝D80",
+        "绅宝X25",
+        "绅宝X35",
+        "绅宝X55",
+        "绅宝X65"
+      ]
     },
     {
       "name": "Bajaj Auto",
-      "models": []
+      "models": [
+        "auto rickshaws of any kind",
+        "auto-rickshaws",
+        "Avenger",
+        "CT 100",
+        "Discover",
+        "FY",
+        "Nissan Motor",
+        "Platina",
+        "Pulsar",
+        "quadricycle"
+      ]
     },
     {
       "name": "Balkania",
@@ -755,11 +2365,42 @@
     },
     {
       "name": "Ballot",
-      "models": []
+      "models": [
+        "2011 State Duma elections",
+        "2017 legislative election",
+        "2021 local election",
+        "Above the line",
+        "auditable paper ballot",
+        "Ballot",
+        "box",
+        "chad",
+        "closed",
+        "direct record voting system",
+        "Finnish presidential election",
+        "first-past-the-post",
+        "manually count",
+        "open",
+        "ostraca",
+        "Palm Beach County, Florida 2000 U.S. presidential election",
+        "party list proportional representation",
+        "party-list",
+        "pieces of broken pottery",
+        "political parties",
+        "punched card system",
+        "Rome",
+        "secrecy of the votes",
+        "Supreme Injustice: How the High Court Hijacked Election 2000"
+      ]
     },
     {
       "name": "Baojun",
-      "models": []
+      "models": [
+        "310W",
+        "330",
+        "610",
+        "RC-5W",
+        "Valli"
+      ]
     },
     {
       "name": "Baolong",
@@ -799,7 +2440,18 @@
     },
     {
       "name": "Bentley",
-      "models": []
+      "models": [
+        "Arnage",
+        "Azure",
+        "Bentayga",
+        "Brooklands",
+        "Continental",
+        "Continental Flying Spur",
+        "Continental GT",
+        "Flying Spur",
+        "Mulsanne",
+        "Turbo R"
+      ]
     },
     {
       "name": "Berkeley",
@@ -1147,7 +2799,14 @@
     },
     {
       "name": "Bugatti",
-      "models": []
+      "models": [
+        "Chiron",
+        "Divo",
+        "EB 110",
+        "Type 35",
+        "Type 57",
+        "Veyron"
+      ]
     },
     {
       "name": "Bugre",
@@ -2656,7 +4315,28 @@
     },
     {
       "name": "Datsun",
-      "models": []
+      "models": [
+        "1000",
+        "1200",
+        "1600",
+        "200B",
+        "240Z",
+        "260Z",
+        "280Z",
+        "280ZX",
+        "510",
+        "620",
+        "720",
+        "Bluebird",
+        "Go",
+        "Go+",
+        "Laurel",
+        "Mi-Do",
+        "on-DO",
+        "Stanza",
+        "Sunny",
+        "Urvan"
+      ]
     },
     {
       "name": "David Brown",
@@ -5364,7 +7044,18 @@
     },
     {
       "name": "Jaguar",
-      "models": []
+      "models": [
+        "E-Pace",
+        "F-Pace",
+        "F-Type",
+        "I-Pace",
+        "S-Type",
+        "X-Type",
+        "XE",
+        "XF",
+        "XJ",
+        "XK"
+      ]
     },
     {
       "name": "Jawa",
@@ -5376,7 +7067,19 @@
     },
     {
       "name": "Jeep",
-      "models": []
+      "models": [
+        "Cherokee",
+        "Commander",
+        "Compass",
+        "Gladiator",
+        "Grand Cherokee",
+        "Grand Wagoneer",
+        "Liberty",
+        "Patriot",
+        "Renegade",
+        "Wagoneer",
+        "Wrangler"
+      ]
     },
     {
       "name": "Jehle",
@@ -5884,7 +7587,21 @@
     },
     {
       "name": "Land Rover",
-      "models": []
+      "models": [
+        "Defender",
+        "Discovery",
+        "Discovery Sport",
+        "Freelander",
+        "Freelander 2",
+        "Range Rover",
+        "Range Rover Classic",
+        "Range Rover Evoque",
+        "Range Rover Sport",
+        "Range Rover Velar",
+        "Series I",
+        "Series II",
+        "Series III"
+      ]
     },
     {
       "name": "Landwind",
@@ -6224,7 +7941,16 @@
     },
     {
       "name": "Lotus",
-      "models": []
+      "models": [
+        "Elan",
+        "Elise",
+        "Emira",
+        "Esprit",
+        "Europa",
+        "Evija",
+        "Evora",
+        "Exige"
+      ]
     },
     {
       "name": "Lotus-Cortina",
@@ -6272,7 +7998,32 @@
     },
     {
       "name": "Mahindra & Mahindra",
-      "models": []
+      "models": [
+        "Alturas G4",
+        "BE 6",
+        "Bolero",
+        "Bolero Neo",
+        "KUV100",
+        "Marazzo",
+        "Quanto",
+        "Roxor",
+        "Scorpio",
+        "Scorpio Classic",
+        "Scorpio Getaway",
+        "Scorpio-N",
+        "Thar",
+        "Thar Roxx",
+        "TUV300",
+        "Verito",
+        "XEV 9e",
+        "XEV 9S",
+        "XUV 3XO",
+        "XUV 3XO EV",
+        "XUV 7XO",
+        "XUV300",
+        "XUV500",
+        "XUV700"
+      ]
     },
     {
       "name": "MAN",
@@ -6308,11 +8059,58 @@
     },
     {
       "name": "Maruti",
-      "models": []
+      "models": [
+        "Maruti prototype"
+      ]
     },
     {
       "name": "Maruti Suzuki",
-      "models": []
+      "models": [
+        "1000",
+        "800",
+        "A-Star",
+        "Alto",
+        "Alto 800",
+        "Alto K10",
+        "Baleno",
+        "Baleno Altura",
+        "Baleno RS",
+        "Brezza",
+        "Celerio",
+        "Ciaz",
+        "Dzire",
+        "e Vitara",
+        "Eeco",
+        "Ertiga",
+        "Esteem",
+        "Estilo",
+        "Fronx",
+        "Grand Vitara",
+        "Grand Vitara XL-7",
+        "Gypsy",
+        "Gypsy E",
+        "Gypsy King",
+        "Ignis",
+        "Invicto",
+        "Jimny",
+        "Kizashi",
+        "Omni",
+        "Ritz",
+        "S-Cross",
+        "S-Presso",
+        "Stingray",
+        "Super Carry",
+        "Swift",
+        "Swift Dzire",
+        "SX4",
+        "Versa",
+        "Victoris",
+        "Vitara Brezza",
+        "Wagon R",
+        "XL6",
+        "Zen",
+        "Zen Estilo"
+      ]
     },
     {
       "name": "Mascarello",
@@ -6701,7 +8499,25 @@
     },
     {
       "name": "McLaren",
-      "models": []
+      "models": [
+        "540C",
+        "570GT",
+        "570S",
+        "600LT",
+        "620R",
+        "650S",
+        "675LT",
+        "720S",
+        "765LT",
+        "Artura",
+        "Elva",
+        "F1",
+        "GT",
+        "MP4-12C",
+        "P1",
+        "Senna",
+        "Speedtail"
+      ]
     },
     {
       "name": "McLaughlin",
@@ -7219,7 +9035,15 @@
     },
     {
       "name": "Mini",
-      "models": []
+      "models": [
+        "Clubman",
+        "Convertible",
+        "Cooper",
+        "Countryman",
+        "Coupe",
+        "Paceman",
+        "Roadster"
+      ]
     },
     {
       "name": "Minsk Automobile Plant",
@@ -7976,7 +9800,21 @@
     },
     {
       "name": "Perodua",
-      "models": []
+      "models": [
+        "Alza",
+        "Aruz",
+        "Ativa",
+        "Axia",
+        "Bezza",
+        "Kancil",
+        "Kelisa",
+        "Kembara",
+        "Kenari",
+        "Myvi",
+        "Nautica",
+        "Rusa",
+        "Viva"
+      ]
     },
     {
       "name": "Peterbilt",
@@ -7984,7 +9822,42 @@
     },
     {
       "name": "Peugeot",
-      "models": []
+      "models": [
+        "104",
+        "106",
+        "107",
+        "108",
+        "2008",
+        "205",
+        "206",
+        "207",
+        "208",
+        "3008",
+        "301",
+        "306",
+        "307",
+        "308",
+        "309",
+        "4007",
+        "4008",
+        "405",
+        "406",
+        "407",
+        "408",
+        "5008",
+        "504",
+        "505",
+        "508",
+        "604",
+        "605",
+        "607",
+        "806",
+        "807",
+        "Partner",
+        "RCZ",
+        "Rifter",
+        "Traveller"
+      ]
     },
     {
       "name": "PGO",
@@ -8383,7 +10256,25 @@
     },
     {
       "name": "Proton",
-      "models": []
+      "models": [
+        "Arena",
+        "Exora",
+        "Gen-2",
+        "Inspira",
+        "Iriz",
+        "Perdana",
+        "Persona",
+        "Preve",
+        "Putra",
+        "Saga",
+        "Satria",
+        "Savvy",
+        "Tiara",
+        "Waja",
+        "Wira",
+        "X50",
+        "X70"
+      ]
     },
     {
       "name": "Puch",
@@ -8722,7 +10613,19 @@
     },
     {
       "name": "Rolls-Royce",
-      "models": []
+      "models": [
+        "Corniche",
+        "Cullinan",
+        "Dawn",
+        "Ghost",
+        "Phantom",
+        "Silver Cloud",
+        "Silver Shadow",
+        "Silver Spirit",
+        "Silver Spur",
+        "Spectre",
+        "Wraith"
+      ]
     },
     {
       "name": "Rosenbauer",
@@ -9260,7 +11163,11 @@
     },
     {
       "name": "Smart",
-      "models": []
+      "models": [
+        "Forfour",
+        "Fortwo",
+        "Roadster"
+      ]
     },
     {
       "name": "Sofia",
@@ -9725,7 +11632,41 @@
     },
     {
       "name": "Tata Motors",
-      "models": []
+      "models": [
+        "Altroz",
+        "Aria",
+        "Bolt",
+        "Curvv",
+        "Curvv.ev",
+        "Estate",
+        "Harrier",
+        "Harrier.ev",
+        "Hexa",
+        "Indica",
+        "Indigo",
+        "Indigo Marina",
+        "Manza",
+        "Nano",
+        "Nexon",
+        "Nexon.ev",
+        "Punch",
+        "Punch.ev",
+        "Safari",
+        "Sierra",
+        "Sierra.ev",
+        "Spacio",
+        "Sumo",
+        "Sumo Grande",
+        "Telcoline",
+        "Tiago",
+        "Tiago.ev",
+        "Tigor",
+        "Tigor.ev",
+        "Venture",
+        "Vista",
+        "Xenon",
+        "Zest"
+      ]
     },
     {
       "name": "Tatra",
@@ -9765,7 +11706,15 @@
     },
     {
       "name": "Tesla",
-      "models": []
+      "models": [
+        "Cybertruck",
+        "Model 3",
+        "Model S",
+        "Model X",
+        "Model Y",
+        "Roadster",
+        "Semi"
+      ]
     },
     {
       "name": "THACO",

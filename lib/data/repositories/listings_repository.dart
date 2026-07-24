@@ -7,6 +7,7 @@ class CreateListingInput {
   const CreateListingInput({
     required this.name,
     required this.category,
+    this.subcategory,
     required this.make,
     required this.model,
     required this.year,
@@ -23,6 +24,7 @@ class CreateListingInput {
 
   final String name;
   final String category;
+  final String? subcategory;
   final String make;
   final String model;
   final int year;
@@ -48,6 +50,7 @@ class ListingsRepository {
     seller_id,
     name,
     category,
+    subcategory,
     make,
     model,
     year,
@@ -77,6 +80,7 @@ class ListingsRepository {
     seller_id,
     name,
     category,
+    subcategory,
     make,
     model,
     year,
@@ -116,6 +120,13 @@ class ListingsRepository {
         e.code == 'PGRST204' ||
         message.contains('seller_avg_rating') ||
         message.contains('seller_rating_count');
+  }
+
+  bool _isMissingSubcategoryColumnError(PostgrestException e) {
+    final message = '${e.message} ${e.details} ${e.hint}'.toLowerCase();
+    return e.code == '42703' ||
+        e.code == 'PGRST204' ||
+        message.contains('subcategory');
   }
 
   bool _isMissingAvailabilityColumnError(PostgrestException e) {
@@ -250,28 +261,44 @@ class ListingsRepository {
     required String sellerName,
     required CreateListingInput input,
   }) async {
-    final listingRow = await _client
-        .from('listings')
-        .insert({
-          'seller_id': sellerId,
-          'name': input.name,
-          'category': input.category,
-          'make': input.make,
-          'model': input.model,
-          'year': input.year,
-          'condition': _conditionToDb(input.condition),
-          'price': 0,
-          'location': input.location,
-          'description': input.description,
-          'fulfillment': _fulfillmentToDb(input.fulfillment),
-          'pickup_address': input.pickupAddress,
-          'chassis_number': _nullableTrimmed(input.chassisNumber),
-          'part_number': _nullableTrimmed(input.partNumber),
-          'status': 'active',
-          'is_admin_listing': true,
-        })
-        .select(_listingSelect)
-        .single();
+    final insertPayload = {
+      'seller_id': sellerId,
+      'name': input.name,
+      'category': input.category,
+      if (input.subcategory != null && input.subcategory!.isNotEmpty)
+        'subcategory': input.subcategory,
+      'make': input.make,
+      'model': input.model,
+      'year': input.year,
+      'condition': _conditionToDb(input.condition),
+      'price': 0,
+      'location': input.location,
+      'description': input.description,
+      'fulfillment': _fulfillmentToDb(input.fulfillment),
+      'pickup_address': input.pickupAddress,
+      'chassis_number': _nullableTrimmed(input.chassisNumber),
+      'part_number': _nullableTrimmed(input.partNumber),
+      'status': 'active',
+      'is_admin_listing': true,
+    };
+
+    dynamic listingRow;
+    try {
+      listingRow = await _client
+          .from('listings')
+          .insert(insertPayload)
+          .select(_listingSelect)
+          .single();
+    } on PostgrestException catch (e) {
+      if (!_isMissingSubcategoryColumnError(e)) rethrow;
+      final fallbackPayload = Map<String, dynamic>.from(insertPayload)
+        ..remove('subcategory');
+      listingRow = await _client
+          .from('listings')
+          .insert(fallbackPayload)
+          .select(_listingSelect)
+          .single();
+    }
 
     final listingId = listingRow['id'] as String;
 
@@ -408,6 +435,7 @@ class ListingsRepository {
       id: row['id'] as String,
       name: row['name'] as String,
       category: row['category'] as String,
+      subcategory: row['subcategory'] as String?,
       make: row['make'] as String,
       model: row['model'] as String,
       year: (row['year'] as num).toInt(),

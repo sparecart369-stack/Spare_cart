@@ -5,6 +5,7 @@ import 'package:image_picker_platform_interface/image_picker_platform_interface.
 import 'package:spare_kart/app.dart';
 import 'package:spare_kart/core/config/env_config.dart';
 import 'package:spare_kart/data/india_locations.dart';
+import 'package:spare_kart/data/parts_catalog.dart';
 import 'package:spare_kart/data/vehicle_catalog.dart';
 import 'package:spare_kart/firebase_options.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -31,6 +32,7 @@ Future<void> main() async {
 
   await Future.wait([
     VehicleCatalog.load(),
+    PartsCatalog.load(),
     IndiaLocations.load(),
   ]);
 

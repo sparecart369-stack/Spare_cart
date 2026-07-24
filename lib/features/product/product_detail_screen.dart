@@ -224,6 +224,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       title: 'Part Info',
                       children: [
                         _DetailRow(label: 'Category', value: part.category),
+                        if (part.subcategory != null && part.subcategory!.isNotEmpty)
+                          _DetailRow(label: 'Subcategory', value: part.subcategory!),
                         _DetailRow(label: 'Make', value: part.make),
                         _DetailRow(label: 'Model', value: part.model),
                         _DetailRow(label: 'Year', value: '${part.year}'),

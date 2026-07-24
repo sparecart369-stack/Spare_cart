@@ -6,13 +6,16 @@ import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
+import 'package:spare_kart/core/widgets/catalog_image_tile.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/core/widgets/location_multi_select_field.dart';
+import 'package:spare_kart/core/widgets/subcategory_picker.dart';
 import 'package:spare_kart/core/widgets/vehicle_identifier_fields.dart';
 import 'package:spare_kart/core/widgets/vehicle_picker_field.dart';
 import 'package:spare_kart/data/dummy_data.dart';
 import 'package:spare_kart/data/india_locations.dart';
 import 'package:spare_kart/data/models/models.dart';
+import 'package:spare_kart/data/parts_catalog.dart';
 import 'package:spare_kart/data/vehicle_catalog.dart';
 
 class FiltersRouteArgs {
@@ -34,6 +37,7 @@ class FiltersScreen extends StatefulWidget {
 
 class _FiltersScreenState extends State<FiltersScreen> {
   String? _category;
+  String? _subcategoryId;
   String? _make;
   String? _model;
   int? _year;
@@ -62,6 +66,10 @@ class _FiltersScreenState extends State<FiltersScreen> {
         args is FiltersRouteArgs ? args.initialCategory : null;
     final filters = context.read<ListingsBloc>().state.filters;
     _category = initialCategory ?? filters.category;
+    _subcategoryId = PartsCatalog.instance
+        .categoryForName(_category)
+        ?.subcategoryByName(filters.subcategory)
+        ?.id;
     _make = filters.make;
     _model = filters.model;
     _year = filters.year;
@@ -81,6 +89,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
   void _reset() {
     setState(() {
       _category = null;
+      _subcategoryId = null;
       _make = null;
       _model = null;
       _year = null;
@@ -101,6 +110,10 @@ class _FiltersScreenState extends State<FiltersScreen> {
   void _apply() {
     context.read<ListingsBloc>().add(ListingFiltersApplied(PartFilters(
           category: _category,
+          subcategory: PartsCatalog.instance
+              .categoryForName(_category)
+              ?.subcategoryById(_subcategoryId)
+              ?.name,
           make: _make,
           model: _model,
           year: _year,
@@ -171,13 +184,28 @@ class _FiltersScreenState extends State<FiltersScreen> {
                                 index: i,
                                 selected: selected,
                                 compact: compact,
-                                onTap: () => setState(() => _category = selected ? null : c.$1),
+                                onTap: () => setState(() {
+                                  _category = selected ? null : c.$1;
+                                  _subcategoryId = null;
+                                }),
                               );
                             },
                           ),
                         );
                       },
                     ),
+                    if (_category != null &&
+                        PartsCatalog.instance
+                            .subcategoriesForCategory(_category)
+                            .isNotEmpty) ...[
+                      SizedBox(height: sectionGap),
+                      SubcategoryPicker(
+                        categoryName: _category,
+                        selectedSubcategoryId: _subcategoryId,
+                        compact: compact,
+                        onChanged: (v) => setState(() => _subcategoryId = v),
+                      ),
+                    ],
                     SizedBox(height: sectionGap),
                     _SectionLabel('Vehicle', compact: compact),
                     SizedBox(height: gap),
@@ -441,114 +469,16 @@ class _CategoryTile extends StatelessWidget {
   final bool compact;
   final VoidCallback onTap;
 
-  static const _iconColors = [
-    Color(0xFF2563EB),
-    Color(0xFF059669),
-    Color(0xFFD97706),
-    Color(0xFF9333EA),
-    Color(0xFFDC2626),
-    Color(0xFF0284C7),
-    Color(0xFF7C3AED),
-    Color(0xFF10B981),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final iconSize = compact ? 28.0 : 32.0;
-    final iconColor = _iconColors[index % _iconColors.length];
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: const Color(0xFF141414),
-            borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-            border: Border.all(
-              color: selected ? AppColors.primary : Colors.transparent,
-              width: selected ? 2 : 0,
-            ),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.35),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : AppDecorations.shadowSm,
-          ),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (imageAsset != null)
-                Image.asset(
-                  imageAsset!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                )
-              else
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        iconColor.withValues(alpha: 0.35),
-                        const Color(0xFF141414),
-                      ],
-                    ),
-                  ),
-                  child: Align(
-                    alignment: const Alignment(0, -0.15),
-                    child: Icon(icon, size: iconSize, color: iconColor.withValues(alpha: 0.85)),
-                  ),
-                ),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.55),
-                      Colors.black.withValues(alpha: 0.92),
-                    ],
-                    stops: const [0.35, 0.72, 1.0],
-                  ),
-                ),
-              ),
-              if (selected)
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.18),
-                  ),
-                ),
-              Positioned(
-                left: compact ? 6 : 8,
-                right: compact ? 6 : 8,
-                bottom: compact ? 6 : 8,
-                child: Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.textTheme.labelSmall?.copyWith(
-                    fontSize: compact ? 9 : 10,
-                    fontWeight: FontWeight.w700,
-                    height: 1.15,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return CatalogImageTile(
+      label: label,
+      imageAsset: imageAsset,
+      fallbackIcon: icon,
+      colorIndex: index,
+      selected: selected,
+      compact: compact,
+      onTap: onTap,
     );
   }
 }
