@@ -13,6 +13,7 @@ import 'package:spare_kart/core/theme/app_colors.dart';
 import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
+import 'package:spare_kart/features/main/main_shell_bottom_inset.dart';
 import 'package:spare_kart/core/validation/form_validators.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/core/widgets/vehicle_identifier_fields.dart';
@@ -120,36 +121,40 @@ class _SellScreenState extends State<SellScreen> {
   bool _validateDetails() {
     final nameError = FormValidators.listingName(_nameController.text);
     if (nameError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(nameError)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(nameError)));
       return false;
     }
     if (_category == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a category')));
       return false;
     }
     if (_make == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a make')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a make')));
       return false;
     }
     if (_model == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a model')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a model')));
       return false;
     }
     if (_year == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a year')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a year')));
       return false;
     }
     final descError = FormValidators.listingDescription(_descController.text);
     if (descError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(descError)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(descError)));
       return false;
     }
     return true;
@@ -157,9 +162,9 @@ class _SellScreenState extends State<SellScreen> {
 
   bool _validateLocation() {
     if (_sellerState == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your state')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select your state')));
       return false;
     }
     if (_sellerDistrict == null) {
@@ -189,7 +194,9 @@ class _SellScreenState extends State<SellScreen> {
       if (_pickupLocationSource == PickupLocationSource.current) {
         if (_currentLocationLoading) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Still fetching your current location')),
+            const SnackBar(
+              content: Text('Still fetching your current location'),
+            ),
           );
           return false;
         }
@@ -197,7 +204,8 @@ class _SellScreenState extends State<SellScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                _currentLocationError ?? 'Please allow location access to continue',
+                _currentLocationError ??
+                    'Please allow location access to continue',
               ),
             ),
           );
@@ -242,7 +250,8 @@ class _SellScreenState extends State<SellScreen> {
       setState(() {
         _currentDeviceLocation = null;
         _currentLocationLoading = false;
-        _currentLocationError = 'Unable to fetch your current location. Try again.';
+        _currentLocationError =
+            'Unable to fetch your current location. Try again.';
       });
     }
   }
@@ -296,12 +305,18 @@ class _SellScreenState extends State<SellScreen> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
+                leading: const Icon(
+                  Icons.photo_library_outlined,
+                  color: AppColors.primary,
+                ),
                 title: const Text('Choose from gallery'),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
               ListTile(
-                leading: const Icon(Icons.photo_camera_outlined, color: AppColors.primary),
+                leading: const Icon(
+                  Icons.photo_camera_outlined,
+                  color: AppColors.primary,
+                ),
                 title: const Text('Take a photo'),
                 onTap: () => Navigator.pop(ctx, ImageSource.camera),
               ),
@@ -326,7 +341,9 @@ class _SellScreenState extends State<SellScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not pick photo. Please try again.')),
+        const SnackBar(
+          content: Text('Could not pick photo. Please try again.'),
+        ),
       );
     }
   }
@@ -360,23 +377,21 @@ class _SellScreenState extends State<SellScreen> {
     return _customPickupLocationController.text.trim();
   }
 
-  String _fulfillmentDescription(ListingFulfillment fulfillment) => switch (fulfillment) {
-        ListingFulfillment.doorstepDelivery =>
-          'Ship the part to the buyer\'s address after payment. Great for buyers who prefer home delivery.',
-        ListingFulfillment.inStorePickup =>
-          'Let buyers collect the part from your store or location. No shipping required.',
-      };
-
-  double _footerBarHeight(bool compact) =>
-      (compact ? 10.0 : 12.0) + (compact ? 50.0 : 54.0) + (compact ? 10.0 : 12.0);
+  String _fulfillmentDescription(
+    ListingFulfillment fulfillment,
+  ) => switch (fulfillment) {
+    ListingFulfillment.doorstepDelivery =>
+      'Ship the part to the buyer\'s address after payment. Great for buyers who prefer home delivery.',
+    ListingFulfillment.inStorePickup =>
+      'Let buyers collect the part from your store or location. No shipping required.',
+  };
 
   @override
   Widget build(BuildContext context) {
     final r = Responsive(context);
     final pad = r.horizontalPadding();
     final compact = r.height < 740;
-    final navOverlay = r.mainShellNavOverlayHeight();
-    final footerHeight = _footerBarHeight(compact);
+    final bottomNavInset = MainShellBottomInset.footerInsetOf(context);
 
     return BlocListener<ListingsBloc, ListingsState>(
       listenWhen: (previous, current) =>
@@ -387,9 +402,9 @@ class _SellScreenState extends State<SellScreen> {
 
         if (state.errorMessage != null) {
           _awaitingPublishResult = false;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage!)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
           return;
         }
 
@@ -397,54 +412,55 @@ class _SellScreenState extends State<SellScreen> {
         _resetForm();
       },
       child: Scaffold(
-      backgroundColor: AppColors.background,
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            _SellHeader(step: _step, stepCount: _steps.length, steps: _steps, compact: compact),
-            Expanded(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned.fill(
-                    bottom: footerHeight + navOverlay,
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: EdgeInsets.fromLTRB(
-                        pad,
-                        compact ? 6 : 10,
-                        pad,
-                        compact ? 12 : 16,
+        backgroundColor: AppColors.background,
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              _SellHeader(
+                step: _step,
+                stepCount: _steps.length,
+                steps: _steps,
+                compact: compact,
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: EdgeInsets.fromLTRB(
+                          pad,
+                          compact ? 6 : 10,
+                          pad,
+                          compact ? 12 : 16,
+                        ),
+                        child: switch (_steps[_step]) {
+                          'Details' => _buildDetails(compact),
+                          'Location' => _buildLocation(compact),
+                          'Photos' => _buildPhotos(compact),
+                          _ => _buildReview(compact),
+                        },
                       ),
-                      child: switch (_steps[_step]) {
-                        'Details' => _buildDetails(compact),
-                        'Location' => _buildLocation(compact),
-                        'Photos' => _buildPhotos(compact),
-                        _ => _buildReview(compact),
-                      },
                     ),
-                  ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: navOverlay,
-                    child: _SellActionBar(
+                    _SellActionBar(
                       pad: pad,
                       compact: compact,
+                      bottomNavInset: bottomNavInset,
                       step: _step,
                       lastStep: _lastStep,
                       onBack: () => setState(() => _step--),
                       onNext: _next,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -489,7 +505,9 @@ class _SellScreenState extends State<SellScreen> {
         SizedBox(height: gap),
         Container(
           padding: EdgeInsets.all(compact ? 10 : 12),
-          decoration: AppDecorations.elevatedCard(radius: AppDecorations.radiusMd),
+          decoration: AppDecorations.elevatedCard(
+            radius: AppDecorations.radiusMd,
+          ),
           child: Column(
             children: [
               VehiclePickerField(
@@ -511,7 +529,10 @@ class _SellScreenState extends State<SellScreen> {
                     flex: 3,
                     child: VehiclePickerField(
                       hint: 'Model',
-                      value: VehicleCatalog.instance.modelDisplayLabel(make: _make, model: _model),
+                      value: VehicleCatalog.instance.modelDisplayLabel(
+                        make: _make,
+                        model: _model,
+                      ),
                       items: VehicleCatalog.instance.modelPickerItems(_make),
                       icon: Icons.apps_rounded,
                       compact: compact,
@@ -521,10 +542,11 @@ class _SellScreenState extends State<SellScreen> {
                           : (v) {
                               if (v == null) return;
                               setState(() {
-                                _model = VehicleCatalog.instance.modelValueFromPicker(
-                                  make: _make!,
-                                  pickerLabel: v,
-                                );
+                                _model = VehicleCatalog.instance
+                                    .modelValueFromPicker(
+                                      make: _make!,
+                                      pickerLabel: v,
+                                    );
                               });
                             },
                     ),
@@ -540,7 +562,9 @@ class _SellScreenState extends State<SellScreen> {
                       compact: compact,
                       enabled: _model != null,
                       display: (v) => '$v',
-                      onChanged: _model == null ? null : (v) => setState(() => _year = v),
+                      onChanged: _model == null
+                          ? null
+                          : (v) => setState(() => _year = v),
                     ),
                   ),
                 ],
@@ -563,7 +587,9 @@ class _SellScreenState extends State<SellScreen> {
               final selected = _condition == c;
               return Expanded(
                 child: Padding(
-                  padding: EdgeInsets.only(right: c != PartCondition.newPart ? 6 : 0),
+                  padding: EdgeInsets.only(
+                    right: c != PartCondition.newPart ? 6 : 0,
+                  ),
                   child: _ConditionChip(
                     label: _conditionLabel(c),
                     selected: selected,
@@ -624,7 +650,9 @@ class _SellScreenState extends State<SellScreen> {
           icon: Icons.location_city_outlined,
           compact: compact,
           enabled: _sellerState != null,
-          onChanged: _sellerState == null ? null : (v) => setState(() => _sellerDistrict = v),
+          onChanged: _sellerState == null
+              ? null
+              : (v) => setState(() => _sellerDistrict = v),
         ),
       ],
     );
@@ -637,7 +665,9 @@ class _SellScreenState extends State<SellScreen> {
         !_currentLocationLoading &&
         _currentDeviceLocation == null &&
         _currentLocationError == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _fetchCurrentLocation());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _fetchCurrentLocation(),
+      );
     }
 
     return Column(
@@ -675,7 +705,9 @@ class _SellScreenState extends State<SellScreen> {
           decoration: BoxDecoration(
             color: AppColors.primaryLight.withValues(alpha: 0.35),
             borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.12),
+            ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -735,7 +767,8 @@ class _SellScreenState extends State<SellScreen> {
               loading: _currentLocationLoading,
               address: _currentDeviceLocation?.address,
               error: _currentLocationError,
-              canOpenSettings: _locationSettingsAction != LocationSettingsAction.none,
+              canOpenSettings:
+                  _locationSettingsAction != LocationSettingsAction.none,
               onRetry: _fetchCurrentLocation,
               onOpenSettings: _openLocationSettings,
             )
@@ -779,7 +812,9 @@ class _SellScreenState extends State<SellScreen> {
             mainAxisSpacing: gap,
             childAspectRatio: 1,
           ),
-          itemCount: _photoPaths.length < _maxPhotos ? _photoPaths.length + 1 : _photoPaths.length,
+          itemCount: _photoPaths.length < _maxPhotos
+              ? _photoPaths.length + 1
+              : _photoPaths.length,
           itemBuilder: (context, i) {
             if (i == _photoPaths.length && _photoPaths.length < _maxPhotos) {
               return _PhotoAddTile(compact: compact, onTap: _pickPhoto);
@@ -809,7 +844,9 @@ class _SellScreenState extends State<SellScreen> {
         Container(
           width: double.infinity,
           padding: EdgeInsets.all(compact ? 14 : 18),
-          decoration: AppDecorations.elevatedCard(radius: AppDecorations.radiusLg),
+          decoration: AppDecorations.elevatedCard(
+            radius: AppDecorations.radiusLg,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -817,7 +854,9 @@ class _SellScreenState extends State<SellScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+                    borderRadius: BorderRadius.circular(
+                      AppDecorations.radiusSm,
+                    ),
                     child: _photoPaths.isNotEmpty
                         ? _ListingPhoto(
                             path: _photoPaths.first,
@@ -829,10 +868,16 @@ class _SellScreenState extends State<SellScreen> {
                             height: compact ? 64 : 72,
                             decoration: BoxDecoration(
                               color: AppColors.primaryLight,
-                              borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                AppDecorations.radiusSm,
+                              ),
                               border: Border.all(color: AppColors.border),
                             ),
-                            child: const Icon(Icons.image_rounded, color: AppColors.primary, size: 32),
+                            child: const Icon(
+                              Icons.image_rounded,
+                              color: AppColors.primary,
+                              size: 32,
+                            ),
                           ),
                   ),
                   SizedBox(width: gap + 2),
@@ -841,7 +886,9 @@ class _SellScreenState extends State<SellScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _nameController.text.isEmpty ? 'Part Name' : _nameController.text,
+                          _nameController.text.isEmpty
+                              ? 'Part Name'
+                              : _nameController.text,
                           style: AppTypography.textTheme.titleMedium?.copyWith(
                             fontSize: compact ? 15 : 16,
                           ),
@@ -851,7 +898,9 @@ class _SellScreenState extends State<SellScreen> {
                         SizedBox(height: compact ? 4 : 6),
                         Text(
                           '${_make ?? 'Make'} · ${_model ?? 'Model'} · ${_year ?? 'Year'}',
-                          style: AppTypography.textTheme.bodySmall?.copyWith(fontSize: compact ? 11 : 12),
+                          style: AppTypography.textTheme.bodySmall?.copyWith(
+                            fontSize: compact ? 11 : 12,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -895,10 +944,14 @@ class _SellScreenState extends State<SellScreen> {
                   border: Border.all(color: AppColors.border),
                 ),
                 child: Text(
-                  _descController.text.isEmpty ? 'No description provided' : _descController.text,
+                  _descController.text.isEmpty
+                      ? 'No description provided'
+                      : _descController.text,
                   style: AppTypography.textTheme.bodySmall?.copyWith(
                     fontSize: compact ? 12 : 13,
-                    color: _descController.text.isEmpty ? AppColors.textTertiary : AppColors.textSecondary,
+                    color: _descController.text.isEmpty
+                        ? AppColors.textTertiary
+                        : AppColors.textSecondary,
                     height: 1.45,
                   ),
                 ),
@@ -970,7 +1023,9 @@ class _SellScreenState extends State<SellScreen> {
                   padding: EdgeInsets.all(compact ? 10 : 12),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceElevated,
-                    borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
+                    borderRadius: BorderRadius.circular(
+                      AppDecorations.radiusSm,
+                    ),
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
@@ -978,23 +1033,48 @@ class _SellScreenState extends State<SellScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.account_balance_rounded, size: compact ? 14 : 16, color: AppColors.primary),
+                          Icon(
+                            Icons.account_balance_rounded,
+                            size: compact ? 14 : 16,
+                            color: AppColors.primary,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             'Payout Account',
-                            style: AppTypography.textTheme.labelMedium?.copyWith(
-                              fontSize: compact ? 11 : 12,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: AppTypography.textTheme.labelMedium
+                                ?.copyWith(
+                                  fontSize: compact ? 11 : 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
                           ),
                         ],
                       ),
                       SizedBox(height: compact ? 8 : 10),
-                      _ReviewDetailRow(label: 'UPI ID', value: _bankAccountForReview!.upiId, compact: compact),
-                      _ReviewDetailRow(label: 'Bank', value: _bankAccountForReview!.bankName, compact: compact),
-                      _ReviewDetailRow(label: 'Account No.', value: _bankAccountForReview!.accountNumber, compact: compact),
-                      _ReviewDetailRow(label: 'Account Name', value: _bankAccountForReview!.accountName, compact: compact),
-                      _ReviewDetailRow(label: 'IFSC', value: _bankAccountForReview!.ifscCode, compact: compact),
+                      _ReviewDetailRow(
+                        label: 'UPI ID',
+                        value: _bankAccountForReview!.upiId,
+                        compact: compact,
+                      ),
+                      _ReviewDetailRow(
+                        label: 'Bank',
+                        value: _bankAccountForReview!.bankName,
+                        compact: compact,
+                      ),
+                      _ReviewDetailRow(
+                        label: 'Account No.',
+                        value: _bankAccountForReview!.accountNumber,
+                        compact: compact,
+                      ),
+                      _ReviewDetailRow(
+                        label: 'Account Name',
+                        value: _bankAccountForReview!.accountName,
+                        compact: compact,
+                      ),
+                      _ReviewDetailRow(
+                        label: 'IFSC',
+                        value: _bankAccountForReview!.ifscCode,
+                        compact: compact,
+                      ),
                     ],
                   ),
                 ),
@@ -1002,11 +1082,17 @@ class _SellScreenState extends State<SellScreen> {
               ],
               Row(
                 children: [
-                  Icon(Icons.photo_library_outlined, size: compact ? 14 : 16, color: AppColors.textTertiary),
+                  Icon(
+                    Icons.photo_library_outlined,
+                    size: compact ? 14 : 16,
+                    color: AppColors.textTertiary,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     '${_photoPaths.length} photo${_photoPaths.length == 1 ? '' : 's'} attached',
-                    style: AppTypography.textTheme.labelSmall?.copyWith(fontSize: compact ? 10 : 11),
+                    style: AppTypography.textTheme.labelSmall?.copyWith(
+                      fontSize: compact ? 10 : 11,
+                    ),
                   ),
                 ],
               ),
@@ -1027,31 +1113,36 @@ class _SellScreenState extends State<SellScreen> {
     _awaitingPublishResult = true;
     _persistSellerLocation();
     context.read<ListingsBloc>().add(
-          ListingPublishRequested(
-            sellerName: user?.name ?? 'You',
-            input: CreateListingInput(
-              name: _nameController.text.isEmpty ? 'My Part' : _nameController.text.trim(),
-              category: _category ?? 'Engine',
-              make: make,
-              model: model,
-              year: year,
-              condition: _condition,
-              description:
-                  _descController.text.isEmpty ? 'Listed part' : _descController.text.trim(),
-              fulfillment: _fulfillment,
-              location: location,
-              pickupAddress: _fulfillment == ListingFulfillment.inStorePickup ? location : null,
-              localPhotoPaths: List<String>.from(_photoPaths),
-              chassisNumber: _chassisController.text.trim(),
-              partNumber: _partNumberController.text.trim(),
-              compatibility: [
-                '$make $model $year',
-                '$make $model ${year - 1}',
-                '$make $model ${year + 1}',
-              ],
-            ),
-          ),
-        );
+      ListingPublishRequested(
+        sellerName: user?.name ?? 'You',
+        input: CreateListingInput(
+          name: _nameController.text.isEmpty
+              ? 'My Part'
+              : _nameController.text.trim(),
+          category: _category ?? 'Engine',
+          make: make,
+          model: model,
+          year: year,
+          condition: _condition,
+          description: _descController.text.isEmpty
+              ? 'Listed part'
+              : _descController.text.trim(),
+          fulfillment: _fulfillment,
+          location: location,
+          pickupAddress: _fulfillment == ListingFulfillment.inStorePickup
+              ? location
+              : null,
+          localPhotoPaths: List<String>.from(_photoPaths),
+          chassisNumber: _chassisController.text.trim(),
+          partNumber: _partNumberController.text.trim(),
+          compatibility: [
+            '$make $model $year',
+            '$make $model ${year - 1}',
+            '$make $model ${year + 1}',
+          ],
+        ),
+      ),
+    );
   }
 
   void _resetForm() {
@@ -1085,7 +1176,9 @@ class _SellScreenState extends State<SellScreen> {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDecorations.radiusLg)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDecorations.radiusLg),
+        ),
         title: Row(
           children: [
             Container(
@@ -1094,7 +1187,11 @@ class _SellScreenState extends State<SellScreen> {
                 color: AppColors.successSoft,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_rounded, color: AppColors.success, size: 22),
+              child: const Icon(
+                Icons.check_rounded,
+                color: AppColors.success,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 12),
             const Expanded(child: Text('Listing Published')),
@@ -1106,7 +1203,9 @@ class _SellScreenState extends State<SellScreen> {
           children: [
             Text(
               'Your part is now live on SpareKart. Pricing will be set after review.',
-              style: AppTypography.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              style: AppTypography.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -1121,16 +1220,17 @@ class _SellScreenState extends State<SellScreen> {
   }
 
   String _conditionLabel(PartCondition c) => switch (c) {
-        PartCondition.used => 'Used',
-        PartCondition.refurbished => 'Refurbished',
-        PartCondition.newPart => 'New',
-      };
+    PartCondition.used => 'Used',
+    PartCondition.refurbished => 'Refurbished',
+    PartCondition.newPart => 'New',
+  };
 }
 
 class _SellActionBar extends StatelessWidget {
   const _SellActionBar({
     required this.pad,
     required this.compact,
+    required this.bottomNavInset,
     required this.step,
     required this.lastStep,
     required this.onBack,
@@ -1139,6 +1239,7 @@ class _SellActionBar extends StatelessWidget {
 
   final double pad;
   final bool compact;
+  final double bottomNavInset;
   final int step;
   final int lastStep;
   final VoidCallback onBack;
@@ -1146,17 +1247,12 @@ class _SellActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        boxShadow: AppDecorations.shadowNav,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+    return Padding(
       padding: EdgeInsets.fromLTRB(
         pad,
-        compact ? 10 : 12,
+        compact ? 8 : 12,
         pad,
-        compact ? 10 : 12,
+        bottomNavInset,
       ),
       child: BlocBuilder<ListingsBloc, ListingsState>(
         builder: (context, listingsState) {
@@ -1231,10 +1327,16 @@ class _SellHeader extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text('Sell Your Part', style: AppTypography.textTheme.titleLarge),
+                child: Text(
+                  'Sell Your Part',
+                  style: AppTypography.textTheme.titleLarge,
+                ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10, vertical: compact ? 4 : 5),
+                padding: EdgeInsets.symmetric(
+                  horizontal: compact ? 8 : 10,
+                  vertical: compact ? 4 : 5,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(20),
@@ -1268,7 +1370,9 @@ class _SellHeader extends StatelessWidget {
                             height: compact ? 3 : 4,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(4),
-                              gradient: active || done ? AppColors.primaryGradient : null,
+                              gradient: active || done
+                                  ? AppColors.primaryGradient
+                                  : null,
                               color: active || done ? null : AppColors.divider,
                             ),
                           ),
@@ -1280,12 +1384,14 @@ class _SellHeader extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.textTheme.labelSmall?.copyWith(
                               fontSize: compact ? 9 : 10,
-                              fontWeight: active ? FontWeight.w700 : FontWeight.w600,
+                              fontWeight: active
+                                  ? FontWeight.w700
+                                  : FontWeight.w600,
                               color: active
                                   ? AppColors.primary
                                   : done
-                                      ? AppColors.textPrimary
-                                      : AppColors.textTertiary,
+                                  ? AppColors.textPrimary
+                                  : AppColors.textTertiary,
                             ),
                           ),
                         ],
@@ -1347,7 +1453,9 @@ class _FormField extends StatelessWidget {
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       maxLines: maxLines,
-      textAlignVertical: (maxLines ?? 1) > 1 ? TextAlignVertical.top : TextAlignVertical.center,
+      textAlignVertical: (maxLines ?? 1) > 1
+          ? TextAlignVertical.top
+          : TextAlignVertical.center,
       style: AppTypography.textTheme.bodySmall?.copyWith(
         color: AppColors.textPrimary,
         fontWeight: FontWeight.w600,
@@ -1364,8 +1472,15 @@ class _FormField extends StatelessWidget {
           horizontal: compact ? 12 : 14,
           vertical: compact ? 10 : 12,
         ),
-        prefixIcon: Icon(icon, size: compact ? 18 : 20, color: AppColors.textTertiary),
-        prefixIconConstraints: BoxConstraints(minWidth: compact ? 40 : 44, minHeight: compact ? 40 : 44),
+        prefixIcon: Icon(
+          icon,
+          size: compact ? 18 : 20,
+          color: AppColors.textTertiary,
+        ),
+        prefixIconConstraints: BoxConstraints(
+          minWidth: compact ? 40 : 44,
+          minHeight: compact ? 40 : 44,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
           borderSide: const BorderSide(color: AppColors.border),
@@ -1415,7 +1530,9 @@ class _DropdownField<T> extends StatelessWidget {
       hint: Text(
         hint,
         style: AppTypography.textTheme.bodySmall?.copyWith(
-          color: enabled ? AppColors.textTertiary : AppColors.textTertiary.withValues(alpha: 0.45),
+          color: enabled
+              ? AppColors.textTertiary
+              : AppColors.textTertiary.withValues(alpha: 0.45),
           fontWeight: FontWeight.w500,
         ),
         overflow: TextOverflow.ellipsis,
@@ -1427,24 +1544,32 @@ class _DropdownField<T> extends StatelessWidget {
       icon: Icon(
         Icons.keyboard_arrow_down_rounded,
         size: compact ? 18 : 20,
-        color: enabled ? AppColors.textTertiary : AppColors.textTertiary.withValues(alpha: 0.4),
+        color: enabled
+            ? AppColors.textTertiary
+            : AppColors.textTertiary.withValues(alpha: 0.4),
       ),
       dropdownColor: AppColors.surface,
       borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
       decoration: InputDecoration(
         filled: true,
         fillColor: enabled ? AppColors.surfaceElevated : AppColors.chipBg,
-        contentPadding: EdgeInsets.symmetric(horizontal: compact ? 10 : 12, vertical: compact ? 8 : 10),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: compact ? 10 : 12,
+          vertical: compact ? 8 : 10,
+        ),
         prefixIcon: Icon(
           icon,
           size: compact ? 16 : 18,
           color: hasValue
               ? AppColors.primary
               : enabled
-                  ? AppColors.textTertiary
-                  : AppColors.textTertiary.withValues(alpha: 0.4),
+              ? AppColors.textTertiary
+              : AppColors.textTertiary.withValues(alpha: 0.4),
         ),
-        prefixIconConstraints: BoxConstraints(minWidth: compact ? 36 : 40, minHeight: compact ? 36 : 40),
+        prefixIconConstraints: BoxConstraints(
+          minWidth: compact ? 36 : 40,
+          minHeight: compact ? 36 : 40,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
           borderSide: const BorderSide(color: AppColors.border),
@@ -1455,7 +1580,9 @@ class _DropdownField<T> extends StatelessWidget {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
-          borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+          borderSide: BorderSide(
+            color: AppColors.border.withValues(alpha: 0.5),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDecorations.radiusSm),
@@ -1507,7 +1634,9 @@ class _ConditionChip extends StatelessWidget {
             gradient: selected ? AppColors.primaryGradient : null,
             color: selected ? null : AppColors.surface,
             borderRadius: BorderRadius.circular(compact ? 8 : 10),
-            border: Border.all(color: selected ? Colors.transparent : AppColors.border),
+            border: Border.all(
+              color: selected ? Colors.transparent : AppColors.border,
+            ),
             boxShadow: selected ? AppDecorations.shadowSm : null,
           ),
           child: Text(
@@ -1527,11 +1656,7 @@ class _ConditionChip extends StatelessWidget {
 }
 
 class _ListingPhoto extends StatelessWidget {
-  const _ListingPhoto({
-    required this.path,
-    this.width,
-    this.height,
-  });
+  const _ListingPhoto({required this.path, this.width, this.height});
 
   final String path;
   final double? width;
@@ -1546,7 +1671,11 @@ class _ListingPhoto extends StatelessWidget {
       width: width,
       height: height,
       color: AppColors.primaryLight,
-      child: const Icon(Icons.image_rounded, color: AppColors.primary, size: 32),
+      child: const Icon(
+        Icons.image_rounded,
+        color: AppColors.primary,
+        size: 32,
+      ),
     );
 
     if (_isNetworkPath(path)) {
@@ -1607,7 +1736,10 @@ class _PhotoTile extends StatelessWidget {
               ),
               child: Text(
                 '${index + 1}',
-                style: AppTypography.textTheme.labelSmall?.copyWith(fontSize: 9, fontWeight: FontWeight.w800),
+                style: AppTypography.textTheme.labelSmall?.copyWith(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ),
@@ -1654,7 +1786,10 @@ class _PhotoAddTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppDecorations.radiusMd),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.4), width: 1.5),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
             boxShadow: AppDecorations.shadowSm,
           ),
           child: Column(
@@ -1666,7 +1801,11 @@ class _PhotoAddTile extends StatelessWidget {
                   color: AppColors.primaryLight,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.add_a_photo_rounded, color: AppColors.primary, size: compact ? 20 : 24),
+                child: Icon(
+                  Icons.add_a_photo_rounded,
+                  color: AppColors.primary,
+                  size: compact ? 20 : 24,
+                ),
               ),
               SizedBox(height: compact ? 4 : 6),
               Text(
@@ -1713,7 +1852,11 @@ class _CurrentLocationCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.location_on_rounded, size: compact ? 18 : 20, color: AppColors.primary),
+          Icon(
+            Icons.location_on_rounded,
+            size: compact ? 18 : 20,
+            color: AppColors.primary,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -1776,7 +1919,10 @@ class _CurrentLocationCard extends StatelessWidget {
                       TextButton(
                         onPressed: onRetry,
                         style: TextButton.styleFrom(
-                          padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10, vertical: 4),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: compact ? 8 : 10,
+                            vertical: 4,
+                          ),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
@@ -1786,7 +1932,10 @@ class _CurrentLocationCard extends StatelessWidget {
                         TextButton(
                           onPressed: onOpenSettings,
                           style: TextButton.styleFrom(
-                            padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10, vertical: 4),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: compact ? 8 : 10,
+                              vertical: 4,
+                            ),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
@@ -1801,7 +1950,11 @@ class _CurrentLocationCard extends StatelessWidget {
           if (!loading && address != null)
             IconButton(
               onPressed: onRetry,
-              icon: Icon(Icons.refresh_rounded, size: compact ? 18 : 20, color: AppColors.primary),
+              icon: Icon(
+                Icons.refresh_rounded,
+                size: compact ? 18 : 20,
+                color: AppColors.primary,
+              ),
               tooltip: 'Refresh location',
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,

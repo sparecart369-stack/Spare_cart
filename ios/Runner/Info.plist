@@ -24,6 +24,24 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>amazonpay</string>
+		<string>upi</string>
+		<string>credpay</string>
+		<string>bhim</string>
+		<string>paytmmp</string>
+		<string>phonepe</string>
+		<string>tez</string>
+		<string>navipay</string>
+		<string>mobikwik</string>
+		<string>myairtel</string>
+		<string>popclubapp</string>
+		<string>super</string>
+		<string>kiwi</string>
+		<string>simplypayupi</string>
+		<string>whatsapp</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>

@@ -17,7 +17,7 @@ import 'package:spare_kart/core/utils/responsive.dart';
 import 'package:spare_kart/core/validation/form_validators.dart';
 import 'package:spare_kart/core/widgets/listing_image.dart';
 import 'package:spare_kart/data/models/models.dart';
-import 'package:spare_kart/core/services/razorpay_checkout_service.dart';
+import 'package:spare_kart/core/services/cashfree_checkout_service.dart';
 import 'package:spare_kart/data/models/chat_payment.dart';
 import 'package:spare_kart/data/models/chat_transaction.dart';
 import 'package:spare_kart/data/repositories/chat_transaction_repository.dart';
@@ -51,7 +51,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
   final _paymentRepository = ChatPaymentRepository();
   final _transactionRepository = ChatTransactionRepository();
   final _listingsRepository = ListingsRepository();
-  final _razorpayCheckout = RazorpayCheckoutService();
+  final _cashfreeCheckout = CashfreeCheckoutService();
 
   late List<ChatMessage> _messages;
   ChatSession? _session;
@@ -93,7 +93,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     FocusManager.instance.primaryFocus?.unfocus();
     _controller.dispose();
     _scrollController.dispose();
-    _razorpayCheckout.dispose();
+    _cashfreeCheckout.dispose();
     super.dispose();
   }
 
@@ -650,7 +650,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     }
   }
 
-  Future<void> _startRazorpayPayment() async {
+  Future<void> _startCashfreePayment() async {
     final session = _session;
     if (session == null || _busy) return;
 
@@ -665,12 +665,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     _safeSetState(() => _busy = true);
     try {
       final checkout = await _paymentRepository.createCheckoutSession(session.id);
-      final result = await _razorpayCheckout.openCheckout(checkout);
+      final result = await _cashfreeCheckout.openCheckout(checkout);
       final tokenAmount = await _paymentRepository.verifyPayment(
         threadId: session.id,
         orderId: result.orderId,
-        paymentId: result.paymentId,
-        signature: result.signature,
       );
 
       final agreedPrice = session.agreedPrice ?? session.listPrice;
@@ -683,7 +681,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
       );
       await _advanceFlow(ChatFlowStep.awaitingDeliveryChoice);
       await _refreshChatPayment();
-    } on RazorpayCheckoutException catch (error) {
+    } on CashfreeCheckoutException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error.message)),
@@ -1980,7 +1978,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
 
   List<Widget> _inlinePaymentWidgets(Responsive r) {
     if (_showInlinePaymentPrompt) {
-      return [_buildInlineRazorpayPaymentCard(r)];
+      return [_buildInlineCashfreePaymentCard(r)];
     }
     if (_showAdvanceTokenPaidInChat) {
       return [_buildAdvanceTokenPaidChatCard(r)];
@@ -2004,7 +2002,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
   bool get _showInlinePaymentPrompt =>
       _isActingAsBuyer &&
       !_showSellerControls &&
-      ChatFlow.showRazorpayPaymentPanel(_flowStep, isSeller: false) &&
+      ChatFlow.showCashfreePaymentPanel(_flowStep, isSeller: false) &&
       _chatPayment?.isPaid != true;
 
   Widget _buildWhatsAppQuickReplyBubble(Responsive r) {
@@ -2270,7 +2268,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
     );
   }
 
-  Widget _buildInlineRazorpayPaymentCard(Responsive r) {
+  Widget _buildInlineCashfreePaymentCard(Responsive r) {
     final agreedPrice = _session?.agreedPrice ?? _session?.listPrice ?? 0;
     final tokenAmount = ChatFlow.tokenAmount(agreedPrice);
 
@@ -2331,9 +2329,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
                 ),
                 const SizedBox(height: 12),
                 FilledButton.icon(
-                  onPressed: _busy || agreedPrice <= 0 ? null : _startRazorpayPayment,
+                  onPressed: _busy || agreedPrice <= 0 ? null : _startCashfreePayment,
                   icon: const Icon(Icons.payment_rounded),
-                  label: Text('Send ${ChatFlow.formatPrice(tokenAmount)} via Razorpay'),
+                  label: Text('Send ${ChatFlow.formatPrice(tokenAmount)} via Cashfree'),
                 ),
               ],
             ),
@@ -2381,9 +2379,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> with WidgetsBinding
             ChatFlow.formatPrice(tokenAmount),
             emphasized: true,
           ),
-          if (payment?.razorpayPaymentId != null) ...[
+          if (payment?.cashfreePaymentId != null) ...[
             const SizedBox(height: 6),
-            _tokenBreakdownRow('Payment ID', payment!.razorpayPaymentId!),
+            _tokenBreakdownRow('Payment ID', payment!.cashfreePaymentId!),
           ],
           const SizedBox(height: 8),
           Text(

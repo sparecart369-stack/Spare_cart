@@ -1,12 +1,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import {
   corsHeaders,
-  createRazorpayOrder,
-  getRazorpayCredentials,
+  createCashfreeOrder,
+  getCashfreeCredentials,
   jsonResponse,
   tokenAmountInr,
   tokenAmountPaise,
-} from "../_shared/razorpay.ts";
+} from "../_shared/cashfree.ts";
 
 type CreateOrderRequest = {
   thread_id?: string;
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
 
     const { data: existingPaid } = await adminClient
       .from("chat_payments")
-      .select("id, status, razorpay_order_id, amount_paise, token_amount")
+      .select("id, status, cashfree_order_id, amount_paise, token_amount")
       .eq("thread_id", threadId)
       .eq("status", "paid")
       .maybeSingle();
@@ -92,7 +92,9 @@ Deno.serve(async (req) => {
 
     const { data: existingPending } = await adminClient
       .from("chat_payments")
-      .select("id, razorpay_order_id, amount_paise, token_amount, agreed_price")
+      .select(
+        "id, cashfree_order_id, cashfree_payment_session_id, amount_paise, token_amount, agreed_price",
+      )
       .eq("thread_id", threadId)
       .eq("status", "pending")
       .eq("amount_paise", amountPaise)
@@ -100,9 +102,9 @@ Deno.serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    const credentials = getRazorpayCredentials();
+    const credentials = getCashfreeCredentials();
 
-    if (existingPending?.razorpay_order_id) {
+    if (existingPending?.cashfree_order_id && existingPending.cashfree_payment_session_id) {
       const { data: buyerProfileRow } = await adminClient
         .from("profiles")
         .select("name, phone")
@@ -110,8 +112,9 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       return jsonResponse({
-        key_id: credentials.keyId,
-        order_id: existingPending.razorpay_order_id,
+        app_id: credentials.appId,
+        order_id: existingPending.cashfree_order_id,
+        payment_session_id: existingPending.cashfree_payment_session_id,
         amount_paise: existingPending.amount_paise,
         token_amount: existingPending.token_amount,
         agreed_price: existingPending.agreed_price,
@@ -126,18 +129,31 @@ Deno.serve(async (req) => {
       });
     }
 
-    const receipt = `chat_${threadId.slice(0, 8)}_${Date.now()}`;
+    const orderId = `chat_${threadId.replace(/-/g, "").slice(0, 12)}_${Date.now()}`;
+    const orderNote = `Advance token (1%) for ${thread.part_title ?? "item"}`;
+    const returnUrl = Deno.env.get("CASHFREE_RETURN_URL") ??
+      "https://sparekart.app/payment-return";
 
-    const razorpayOrder = await createRazorpayOrder({
-      amountPaise,
-      receipt,
-      notes: {
-        thread_id: threadId,
-        buyer_id: thread.buyer_id,
-        seller_id: thread.seller_id,
-      },
-      keyId: credentials.keyId,
-      keySecret: credentials.keySecret,
+    const { data: buyerProfileRow } = await adminClient
+      .from("profiles")
+      .select("name, phone")
+      .eq("id", thread.buyer_id)
+      .maybeSingle();
+
+    const customerPhone = String(buyerProfileRow?.phone ?? "").replace(/\D/g, "");
+    const normalizedPhone = customerPhone.length >= 10
+      ? customerPhone.slice(-10)
+      : "9999999999";
+
+    const cashfreeOrder = await createCashfreeOrder({
+      orderId,
+      amountInr: tokenAmount,
+      customerId: thread.buyer_id,
+      customerName: String(buyerProfileRow?.name ?? buyerName) || "SpareKart buyer",
+      customerPhone: normalizedPhone,
+      orderNote,
+      returnUrl: `${returnUrl}?order_id=${orderId}`,
+      credentials,
     });
 
     const { data: paymentRow, error: insertError } = await adminClient
@@ -155,34 +171,32 @@ Deno.serve(async (req) => {
         token_percent: 0.01,
         amount_paise: amountPaise,
         currency: "INR",
-        razorpay_order_id: razorpayOrder.id,
-        razorpay_receipt: receipt,
-        razorpay_order_response: razorpayOrder,
+        cashfree_order_id: cashfreeOrder.order_id,
+        cashfree_payment_session_id: cashfreeOrder.payment_session_id,
+        cashfree_order_note: orderNote,
+        cashfree_order_response: cashfreeOrder,
         status: "pending",
       })
-      .select("id, razorpay_order_id, amount_paise, token_amount, agreed_price")
+      .select(
+        "id, cashfree_order_id, cashfree_payment_session_id, amount_paise, token_amount, agreed_price",
+      )
       .single();
 
     if (insertError || !paymentRow) {
       return jsonResponse({ error: insertError?.message ?? "Failed to save payment" }, 500);
     }
 
-    const { data: buyerProfileRow } = await adminClient
-      .from("profiles")
-      .select("name, phone")
-      .eq("id", thread.buyer_id)
-      .maybeSingle();
-
     return jsonResponse({
-      key_id: credentials.keyId,
-      order_id: paymentRow.razorpay_order_id,
+      app_id: credentials.appId,
+      order_id: paymentRow.cashfree_order_id,
+      payment_session_id: paymentRow.cashfree_payment_session_id,
       amount_paise: paymentRow.amount_paise,
       token_amount: paymentRow.token_amount,
       agreed_price: paymentRow.agreed_price,
       token_percent: 0.01,
       currency: "INR",
       payment_id: paymentRow.id,
-      description: `Advance token (1%) for ${thread.part_title ?? "item"}`,
+      description: orderNote,
       prefill: {
         name: (buyerProfileRow?.name as string | null) ?? buyerName,
         contact: (buyerProfileRow?.phone as string | null) ?? "",

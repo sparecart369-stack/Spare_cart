@@ -9,6 +9,8 @@ import 'package:spare_kart/features/home/home_screen.dart';
 import 'package:spare_kart/bloc/messages/messages_bloc.dart';
 import 'package:spare_kart/features/messages/messages_screen.dart';
 import 'package:spare_kart/features/search/search_screen.dart';
+import 'package:spare_kart/features/main/main_shell_bottom_inset.dart';
+import 'package:spare_kart/features/main/main_shell_nav_metrics.dart';
 import 'package:spare_kart/features/sell/sell_screen.dart';
 
 class MainShellTabController extends InheritedWidget {
@@ -37,6 +39,12 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _index = 0;
+  double? _measuredNavHeight;
+
+  void _onNavHeightMeasured(double height) {
+    if (_measuredNavHeight == height) return;
+    setState(() => _measuredNavHeight = height);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,53 +62,90 @@ class _MainShellState extends State<MainShell> {
           const AccountScreen(),
         ];
 
-        final unreadCount = context.watch<MessagesBloc>().state.threads
-            .fold(0, (sum, thread) => sum + thread.unreadCount);
+        final unreadCount = context.watch<MessagesBloc>().state.threads.fold(
+          0,
+          (sum, thread) => sum + thread.unreadCount,
+        );
+
+        final navBarHeight =
+            _measuredNavHeight ?? MainShellNavMetrics.totalHeight(context);
 
         return MainShellTabController(
           selectTab: (i) => setState(() => _index = i),
-          child: Scaffold(
-          backgroundColor: AppColors.background,
-          body: IndexedStack(index: _index, children: screens),
-          extendBody: true,
-          bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              boxShadow: AppDecorations.shadowNav,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-                child: NavigationBar(
-                  selectedIndex: _index,
-                  onDestinationSelected: (i) => setState(() => _index = i),
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  height: 64,
-                  labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-                  destinations: [
-                    _navDest(Icons.home_rounded, Icons.home_outlined, 'Home', 0),
-                    _navDest(Icons.search_rounded, Icons.search_rounded, 'Search', 1),
-                    const NavigationDestination(
-                      icon: _SellNavIcon(selected: false),
-                      selectedIcon: _SellNavIcon(selected: true),
-                      label: 'Sell',
+          child: MainShellBottomInset(
+            navBarHeight: navBarHeight,
+            child: Scaffold(
+              backgroundColor: AppColors.background,
+              body: IndexedStack(index: _index, children: screens),
+              extendBody: true,
+              bottomNavigationBar: ReportLayoutHeight(
+                onHeight: _onNavHeightMeasured,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    boxShadow: AppDecorations.shadowNav,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
                     ),
-                    _messagesNavDest(unreadCount),
-                    _navDest(Icons.person_rounded, Icons.person_outline_rounded, 'Account', 4),
-                  ],
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: MainShellNavMetrics.outerPadding,
+                      child: NavigationBar(
+                        selectedIndex: _index,
+                        onDestinationSelected: (i) =>
+                            setState(() => _index = i),
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        indicatorColor: Colors.transparent,
+                        height: MainShellNavMetrics.barHeight,
+                        labelBehavior:
+                            NavigationDestinationLabelBehavior.alwaysShow,
+                        destinations: [
+                          _navDest(
+                            Icons.home_rounded,
+                            Icons.home_outlined,
+                            'Home',
+                            0,
+                          ),
+                          _navDest(
+                            Icons.search_rounded,
+                            Icons.search_rounded,
+                            'Search',
+                            1,
+                          ),
+                          const NavigationDestination(
+                            icon: _SellNavIcon(),
+                            selectedIcon: _SellNavIcon(),
+                            label: 'Sell',
+                          ),
+                          _messagesNavDest(unreadCount),
+                          _navDest(
+                            Icons.person_rounded,
+                            Icons.person_outline_rounded,
+                            'Account',
+                            4,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
         );
       },
     );
   }
 
-  NavigationDestination _navDest(IconData selected, IconData unselected, String label, int index) {
+  NavigationDestination _navDest(
+    IconData selected,
+    IconData unselected,
+    String label,
+    int index,
+  ) {
     return NavigationDestination(
       icon: Icon(unselected),
       selectedIcon: Icon(selected),
@@ -126,25 +171,16 @@ class _MainShellState extends State<MainShell> {
 }
 
 class _SellNavIcon extends StatelessWidget {
-  const _SellNavIcon({required this.selected});
-
-  final bool selected;
+  const _SellNavIcon();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 44,
       height: 44,
-      decoration: BoxDecoration(
-        gradient: selected ? AppColors.primaryGradient : AppColors.primaryGradient,
+      decoration: const BoxDecoration(
+        gradient: AppColors.primaryGradient,
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: selected ? 0.4 : 0.25),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: const Icon(Icons.add_rounded, color: Colors.white, size: 26),
     );

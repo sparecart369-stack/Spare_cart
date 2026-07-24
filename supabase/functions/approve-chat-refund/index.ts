@@ -1,10 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import {
   corsHeaders,
-  createRazorpayRefund,
-  getRazorpayCredentials,
+  createCashfreeRefund,
+  getCashfreeCredentials,
   jsonResponse,
-} from "../_shared/razorpay.ts";
+} from "../_shared/cashfree.ts";
 
 type ApproveRefundRequest = {
   payment_id?: string;
@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
     const { data: paymentRow, error: paymentError } = await adminClient
       .from("chat_payments")
-      .select("id, status, razorpay_payment_id, amount_paise")
+      .select("id, status, cashfree_order_id, amount_paise, agreed_price")
       .eq("id", paymentId)
       .maybeSingle();
 
@@ -65,16 +65,17 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Payment is not awaiting refund approval" }, 400);
     }
 
-    if (!paymentRow.razorpay_payment_id) {
-      return jsonResponse({ error: "Missing Razorpay payment id" }, 400);
+    if (!paymentRow.cashfree_order_id) {
+      return jsonResponse({ error: "Missing Cashfree order id" }, 400);
     }
 
-    const credentials = getRazorpayCredentials();
-    const refund = await createRazorpayRefund({
-      paymentId: paymentRow.razorpay_payment_id,
-      amountPaise: paymentRow.amount_paise,
-      keyId: credentials.keyId,
-      keySecret: credentials.keySecret,
+    const credentials = getCashfreeCredentials();
+    const refundId = `refund_${paymentRow.id.replace(/-/g, "").slice(0, 12)}_${Date.now()}`;
+    const refund = await createCashfreeRefund({
+      orderId: paymentRow.cashfree_order_id,
+      refundId,
+      amountInr: paymentRow.amount_paise / 100,
+      credentials,
     });
 
     const approvedAt = new Date().toISOString();
@@ -84,8 +85,8 @@ Deno.serve(async (req) => {
         status: "refunded",
         refund_approved_by: authData.user.id,
         refund_approved_at: approvedAt,
-        razorpay_refund_id: refund.id,
-        razorpay_refund_response: refund,
+        cashfree_refund_id: refund.cf_refund_id ?? refund.refund_id ?? refundId,
+        cashfree_refund_response: refund,
       })
       .eq("id", paymentRow.id);
 
@@ -95,7 +96,7 @@ Deno.serve(async (req) => {
 
     return jsonResponse({
       success: true,
-      refund_id: refund.id,
+      refund_id: refund.cf_refund_id ?? refund.refund_id ?? refundId,
       status: "refunded",
     });
   } catch (error) {

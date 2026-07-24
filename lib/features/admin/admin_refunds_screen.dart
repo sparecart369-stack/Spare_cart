@@ -54,7 +54,7 @@ class _AdminRefundsScreenState extends State<AdminRefundsScreen> {
       await _repository.approveRefund(payment.id);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Refund approved and processed via Razorpay.')),
+        const SnackBar(content: Text('Refund approved and processed via Cashfree.')),
       );
       await _load();
     } on ChatPaymentException catch (error) {

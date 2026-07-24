@@ -79,7 +79,8 @@ class ChatSession {
     if (fromBuyer &&
         flowStep == ChatFlowStep.awaitingTokenPayment &&
         last.text.toLowerCase().contains('token payment') &&
-        last.text.toLowerCase().contains('razorpay')) {
+        (last.text.toLowerCase().contains('cashfree') ||
+            last.text.toLowerCase().contains('razorpay'))) {
       flowStep = ChatFlowStep.awaitingDeliveryChoice;
       return;
     }

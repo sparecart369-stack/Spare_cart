@@ -7,9 +7,9 @@ class ChatPaymentRepository {
 
   final SupabaseClient _client;
 
-  Future<RazorpayCheckoutSession> createCheckoutSession(String threadId) async {
+  Future<CashfreeCheckoutSession> createCheckoutSession(String threadId) async {
     final response = await _client.functions.invoke(
-      'create-razorpay-order',
+      'create-cashfree-order',
       body: {'thread_id': threadId},
     );
 
@@ -17,26 +17,22 @@ class ChatPaymentRepository {
     if (response.status != 200 || data is! Map<String, dynamic>) {
       final error = data is Map ? data['error'] : null;
       throw ChatPaymentException(
-        error?.toString() ?? 'Failed to create Razorpay order',
+        error?.toString() ?? 'Failed to create Cashfree order',
       );
     }
 
-    return RazorpayCheckoutSession.fromJson(data);
+    return CashfreeCheckoutSession.fromJson(data);
   }
 
   Future<double> verifyPayment({
     required String threadId,
     required String orderId,
-    required String paymentId,
-    required String signature,
   }) async {
     final response = await _client.functions.invoke(
-      'verify-razorpay-payment',
+      'verify-cashfree-payment',
       body: {
         'thread_id': threadId,
-        'razorpay_order_id': orderId,
-        'razorpay_payment_id': paymentId,
-        'razorpay_signature': signature,
+        'cashfree_order_id': orderId,
       },
     );
 
@@ -66,22 +62,22 @@ class ChatPaymentRepository {
     amount_paise,
     currency,
     status,
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_receipt,
-    razorpay_signature,
+    cashfree_order_id,
+    cashfree_payment_id,
+    cashfree_order_note,
+    cashfree_payment_session_id,
     payment_method,
-    razorpay_payment_status,
+    cashfree_payment_status,
     refund_reason,
-    razorpay_refund_id,
+    cashfree_refund_id,
     paid_at,
     refund_requested_at,
     refund_approved_at,
     created_at,
-    razorpay_order_response,
-    razorpay_payment_response,
-    razorpay_webhook_events,
-    razorpay_refund_response
+    cashfree_order_response,
+    cashfree_payment_response,
+    cashfree_webhook_events,
+    cashfree_refund_response
   ''';
 
   Future<ChatPayment?> fetchLatestForThread(String threadId) async {

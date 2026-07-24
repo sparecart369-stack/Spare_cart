@@ -58,7 +58,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
       await _repository.approveRefund(payment.id);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Refund approved via Razorpay.')),
+        const SnackBar(content: Text('Refund approved via Cashfree.')),
       );
       await _load();
     } on ChatPaymentException catch (error) {
@@ -98,7 +98,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
     if (_payments.isEmpty) {
       return const Center(
         child: Text(
-          'No Razorpay payments yet.',
+          'No Cashfree payments yet.',
           style: TextStyle(color: AppColors.textSecondary),
         ),
       );
@@ -215,7 +215,7 @@ class _PaymentCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        expanded ? 'Hide Razorpay details' : 'Show Razorpay details',
+                        expanded ? 'Hide Cashfree details' : 'Show Cashfree details',
                         style: const TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,
@@ -248,30 +248,30 @@ class _PaymentCard extends StatelessWidget {
                   _detailRow('Amount (paise)', '${payment.amountPaise}'),
                   _detailRow('Currency', payment.currency),
                   _detailRow('Token percent', '${(payment.tokenPercent * 100).toStringAsFixed(0)}%'),
-                  if (payment.razorpayOrderId != null)
-                    _detailRow('Razorpay order ID', payment.razorpayOrderId!),
-                  if (payment.razorpayPaymentId != null)
-                    _detailRow('Razorpay payment ID', payment.razorpayPaymentId!),
-                  if (payment.razorpayReceipt != null)
-                    _detailRow('Receipt', payment.razorpayReceipt!),
+                  if (payment.cashfreeOrderId != null)
+                    _detailRow('Cashfree order ID', payment.cashfreeOrderId!),
+                  if (payment.cashfreePaymentId != null)
+                    _detailRow('Cashfree payment ID', payment.cashfreePaymentId!),
+                  if (payment.cashfreeOrderNote != null)
+                    _detailRow('Order note', payment.cashfreeOrderNote!),
                   if (payment.paymentMethod != null && payment.paymentMethod!.isNotEmpty)
                     _detailRow('Payment method', payment.paymentMethod!),
-                  if (payment.razorpayPaymentStatus != null)
-                    _detailRow('Razorpay status', payment.razorpayPaymentStatus!),
+                  if (payment.cashfreePaymentStatus != null)
+                    _detailRow('Cashfree status', payment.cashfreePaymentStatus!),
                   if (payment.paidAt != null)
                     _detailRow('Paid at', dateFormat.format(payment.paidAt!.toLocal())),
                   if (payment.refundReason != null && payment.refundReason!.isNotEmpty)
                     _detailRow('Refund reason', payment.refundReason!),
-                  if (payment.razorpayRefundId != null)
-                    _detailRow('Razorpay refund ID', payment.razorpayRefundId!),
-                  if (payment.razorpayOrderResponse.isNotEmpty)
-                    _jsonBlock('Order response', payment.razorpayOrderResponse),
-                  if (payment.razorpayPaymentResponse.isNotEmpty)
-                    _jsonBlock('Payment response', payment.razorpayPaymentResponse),
-                  if (payment.razorpayWebhookEvents.isNotEmpty)
-                    _jsonBlock('Webhook events', payment.razorpayWebhookEvents),
-                  if (payment.razorpayRefundResponse != null)
-                    _jsonBlock('Refund response', payment.razorpayRefundResponse!),
+                  if (payment.cashfreeRefundId != null)
+                    _detailRow('Cashfree refund ID', payment.cashfreeRefundId!),
+                  if (payment.cashfreeOrderResponse.isNotEmpty)
+                    _jsonBlock('Order response', payment.cashfreeOrderResponse),
+                  if (payment.cashfreePaymentResponse.isNotEmpty)
+                    _jsonBlock('Payment response', payment.cashfreePaymentResponse),
+                  if (payment.cashfreeWebhookEvents.isNotEmpty)
+                    _jsonBlock('Webhook events', payment.cashfreeWebhookEvents),
+                  if (payment.cashfreeRefundResponse != null)
+                    _jsonBlock('Refund response', payment.cashfreeRefundResponse!),
                   if (onApproveRefund != null) ...[
                     const SizedBox(height: 12),
                     FilledButton.icon(

@@ -10,6 +10,7 @@ import 'package:spare_kart/core/theme/app_decorations.dart';
 import 'package:spare_kart/core/theme/app_typography.dart';
 import 'package:spare_kart/core/utils/app_currency.dart';
 import 'package:spare_kart/core/utils/responsive.dart';
+import 'package:spare_kart/features/main/main_shell_nav_metrics.dart';
 import 'package:spare_kart/core/widgets/common_widgets.dart';
 import 'package:spare_kart/core/widgets/listing_image.dart';
 import 'package:spare_kart/data/models/models.dart';
@@ -65,15 +66,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           boxShadow: AppDecorations.shadowNav,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-            child: NavigationBar(
-              selectedIndex: _index,
-              onDestinationSelected: (i) => setState(() => _index = i),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              height: 64,
+            child: SafeArea(
+              child: Padding(
+                padding: MainShellNavMetrics.outerPadding,
+                child: NavigationBar(
+                  selectedIndex: _index,
+                  onDestinationSelected: (i) => setState(() => _index = i),
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  height: MainShellNavMetrics.barHeight,
               labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
               destinations: const [
                 NavigationDestination(

@@ -19,10 +19,10 @@ class EnvConfig {
   static bool get isConfigured =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 
-  static const razorpayKeyId = String.fromEnvironment(
-    'RAZORPAY_KEY_ID',
-    defaultValue: 'rzp_test_TCWEC3A0feeLNE',
+  static const cashfreeAppId = String.fromEnvironment(
+    'CASHFREE_APP_ID',
+    defaultValue: '1331171fd10aa7c6788a622dbce1711331',
   );
 
-  static bool get isRazorpayConfigured => razorpayKeyId.isNotEmpty;
+  static bool get isCashfreeConfigured => cashfreeAppId.isNotEmpty;
 }

@@ -62,14 +62,14 @@ abstract final class ChatFlow {
 
   static String tokenPaymentNote(double agreedPrice) {
     final token = tokenAmount(agreedPrice);
-    return 'Send advance token of ${formatPrice(token)} (1% of ${formatPrice(agreedPrice)}) via Razorpay to confirm your purchase.';
+    return 'Send advance token of ${formatPrice(token)} (1% of ${formatPrice(agreedPrice)}) via Cashfree to confirm your purchase.';
   }
 
   static String advanceTokenPaidMessage({
     required double tokenAmount,
     required double agreedPrice,
   }) {
-    return 'Advance token of ${formatPrice(tokenAmount)} (1% of ${formatPrice(agreedPrice)}) paid successfully via Razorpay.';
+    return 'Advance token of ${formatPrice(tokenAmount)} (1% of ${formatPrice(agreedPrice)}) paid successfully via Cashfree.';
   }
 
   static String advanceTokenPaidChatTitle({required bool isSellerView}) =>
@@ -775,6 +775,6 @@ abstract final class ChatFlow {
   static bool showSpecialSellerPriceEditor(ChatFlowStep step) =>
       step == ChatFlowStep.awaitingPriceSet;
 
-  static bool showRazorpayPaymentPanel(ChatFlowStep step, {required bool isSeller}) =>
+  static bool showCashfreePaymentPanel(ChatFlowStep step, {required bool isSeller}) =>
       !isSeller && step == ChatFlowStep.awaitingTokenPayment;
 }

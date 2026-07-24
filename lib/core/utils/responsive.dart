@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:spare_kart/features/main/main_shell_bottom_inset.dart';
 
 class Responsive {
   const Responsive(this.context);
@@ -31,24 +32,15 @@ class Responsive {
 
   /// Scroll/list bottom inset for tab screens inside [MainShell].
   double bottomNavPadding({double extra = 16}) {
-    return MediaQuery.paddingOf(context).bottom + _mainShellNavContentHeight() + extra;
+    return MainShellBottomInset.footerInsetOf(context, extra: extra);
   }
 
   /// Bottom inset for content that must sit above [MainShell]'s bottom nav.
-  /// Uses [MediaQuery.viewPadding] because [MainShell] uses `extendBody: true`,
-  /// which clears bottom [MediaQuery.padding] on tab screens.
-  double mainShellNavOverlayHeight({double extra = 12}) {
-    return MediaQuery.viewPaddingOf(context).bottom + _mainShellNavContentHeight() + extra;
+  double mainShellNavOverlayHeight({double extra = 16}) {
+    return MainShellBottomInset.footerInsetOf(context, extra: extra);
   }
 
   /// Bottom padding for a sticky footer above [MainShell]'s bottom nav.
-  double stickyFooterBottomPadding({double extra = 12}) => mainShellNavOverlayHeight(extra: extra);
-
-  /// Matches [MainShell]'s bottom nav: top padding + bar + bottom padding.
-  double _mainShellNavContentHeight() {
-    const base = 8.0 + 64.0 + 4.0; // padding + NavigationBar + padding
-    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
-    if (textScale <= 1.0) return base;
-    return base + ((textScale - 1.0) * 16).clamp(0, 24);
-  }
+  double stickyFooterBottomPadding({double extra = 16}) =>
+      mainShellNavOverlayHeight(extra: extra);
 }
